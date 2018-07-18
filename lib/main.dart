@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:qr_reader/qr_reader.dart';
 
 import 'qrwidget.dart';
-import 'quicksend.dart';
+import 'send_receive.dart';
 import 'settings.dart';
 
 void main() => runApp(new MyApp());
@@ -49,6 +49,20 @@ class _ZapHomePageState extends State<ZapHomePage> {
     });
   }
 
+  void _send() {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => SendScreen()),
+      );
+  }
+
+  void _receive() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => SendScreen()),
+    );
+  }
+
   void _showSettings() {
     Navigator.push(
       context,
@@ -78,8 +92,21 @@ class _ZapHomePageState extends State<ZapHomePage> {
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),
-              child: RaisedButton(
-                  onPressed: _scanQrCode, child: Text('Scan QR Code')),
+              child: RaisedButton.icon(
+                onPressed: _scanQrCode, icon: Icon(Icons.center_focus_weak), label:  Text("Scan")
+                ),
+            ),
+            Container(
+              padding: const EdgeInsets.only(top: 18.0),
+              child: RaisedButton.icon(
+                  onPressed: _send, icon: Icon(Icons.arrow_drop_up), label:  Text("Send")
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.only(top: 18.0),
+              child: RaisedButton.icon(
+                  onPressed: _receive, icon: Icon(Icons.arrow_drop_down), label:  Text("Recieve")
+              ),
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),

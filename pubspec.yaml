@@ -11,6 +11,8 @@ dependencies:
 
   qr_reader: 0.1.2
   qr_flutter: 1.1.1
+  flushbar: 0.7.1
+  decimal: 0.2.0
 
 dev_dependencies:
   flutter_test:
