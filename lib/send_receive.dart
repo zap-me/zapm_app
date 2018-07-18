@@ -3,35 +3,13 @@ import 'package:decimal/decimal.dart';
 import 'package:flushbar/flushbar.dart';
 
 import 'send_form.dart';
-
-class QuickSendScreen extends StatelessWidget {
-  QuickSendScreen(this._addr) : super();
-
-  final String _addr;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          title: Text("Quick Send"),
-        ),
-        body: new Container(
-            padding: new EdgeInsets.all(20.0),
-            child: SendForm(() {
-              Navigator.pop(context);
-            }, () {
-              Flushbar()
-                ..title = "Sent"
-                ..message = "Sent"
-                ..duration = Duration(seconds: 1)
-                ..show(context);
-              Navigator.pop(context);
-            }, _addr, Decimal.parse('10'))));
-  }
-}
+import 'receive_form.dart';
 
 class SendScreen extends StatelessWidget {
-  final String _addr = '';
+  SendScreen(this._recipient, this._max) : super();
+
+  final String _recipient;
+  final Decimal _max;
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +28,25 @@ class SendScreen extends StatelessWidget {
                 ..duration = Duration(seconds: 1)
                 ..show(context);
               Navigator.pop(context);
-            }, _addr, Decimal.parse('10'))));
+            }, _recipient, _max)));
+  }
+}
+
+class ReceiveScreen extends StatelessWidget {
+  ReceiveScreen(this._address) : super();
+
+  final String _address;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(
+          title: Text("Recieve"),
+        ),
+        body: new Container(
+            padding: new EdgeInsets.all(20.0),
+            child: ReceiveForm(() {
+              Navigator.pop(context);
+            }, _address)));
   }
 }

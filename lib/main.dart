@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:qr_reader/qr_reader.dart';
+import 'package:decimal/decimal.dart';
 
 import 'qrwidget.dart';
 import 'send_receive.dart';
 import 'settings.dart';
+
+final balance = Decimal.fromInt(13);
+final address = "abc123XXX";
 
 void main() => runApp(new MyApp());
 
@@ -44,22 +48,24 @@ class _ZapHomePageState extends State<ZapHomePage> {
       if (value != null)
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => QuickSendScreen(value)),
+          MaterialPageRoute(
+              builder: (context) => SendScreen(value, balance)),
         );
     });
   }
 
   void _send() {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => SendScreen()),
-      );
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+          builder: (context) => SendScreen('', balance)),
+    );
   }
 
   void _receive() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => SendScreen()),
+      MaterialPageRoute(builder: (context) => ReceiveScreen(address)),
     );
   }
 
@@ -84,11 +90,11 @@ class _ZapHomePageState extends State<ZapHomePage> {
           children: <Widget>[
             Container(
               padding: const EdgeInsets.only(top: 18.0),
-              child: QrWidget("test stringxxx"),
+              child: QrWidget(address),
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),
-              child: Text("Balance: 10 ZAP"),
+              child: Text("Balance: $balance ZAP"),
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),

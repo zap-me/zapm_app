@@ -20,7 +20,10 @@ class SendFormState extends State<SendForm> {
   final _formKey = GlobalKey<FormState>();
   final _controller = new TextEditingController();
 
-  SendFormState() : super() {
+  @protected
+  @mustCallSuper
+  void initState() {
+    super.initState();
     _controller.text = widget.recipient;
   }
 
