@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
 import 'package:qr_reader/qr_reader.dart';
 
-class SendForm extends StatefulWidget {
-  final VoidCallback onCancelled;
-  final VoidCallback onSend;
-  final String recipient;
-  final Decimal max;
+import 'utils.dart';
 
-  SendForm(this.onCancelled, this.onSend, this.recipient, this.max) : super();
+class SendForm extends StatefulWidget {
+  final VoidCallback _onCancelled;
+  final VoidCallback _onSend;
+  final String _recipientOrUri;
+  final Decimal _max;
+
+  SendForm(this._onCancelled, this._onSend, this._recipientOrUri, this._max) : super();
 
   @override
   SendFormState createState() {
@@ -18,13 +20,24 @@ class SendForm extends StatefulWidget {
 
 class SendFormState extends State<SendForm> {
   final _formKey = GlobalKey<FormState>();
-  final _controller = new TextEditingController();
+  final _addressController = new TextEditingController();
+  final _amountController = new TextEditingController();
+
+  void setRecipientOrUri(String recipientOrUri) {
+    var parts = parseUri(recipientOrUri);
+    if (parts.item1.length > 0) {
+      _addressController.text = parts.item1;
+      _amountController.text = parts.item2.toString();
+    }
+    else
+      _addressController.text = recipientOrUri;
+  }
 
   @protected
   @mustCallSuper
   void initState() {
     super.initState();
-    _controller.text = widget.recipient;
+    setRecipientOrUri(widget._recipientOrUri);
   }
 
   @override
@@ -36,7 +49,7 @@ class SendFormState extends State<SendForm> {
         children: <Widget>[
           new Stack(alignment: const Alignment(1.0, 1.0), children: <Widget>[
             new TextFormField(
-              controller: _controller,
+              controller: _addressController,
               keyboardType: TextInputType.text,
               decoration: new InputDecoration(labelText: 'Recipient Address'),
               validator: (value) {
@@ -49,12 +62,14 @@ class SendFormState extends State<SendForm> {
                 onPressed: () {
                   var qrCode = new QRCodeReader().scan();
                   qrCode.then((value) {
-                    if (value != null) _controller.text = value;
+                    if (value != null)
+                      setRecipientOrUri(value);
                   });
                 },
                 child: new Icon(Icons.center_focus_weak))
           ]),
           TextFormField(
+            controller: _amountController,
             keyboardType: TextInputType.number,
             decoration: new InputDecoration(labelText: 'Amount'),
             validator: (value) {
@@ -62,8 +77,8 @@ class SendFormState extends State<SendForm> {
                 return 'Please enter a value';
               }
               final dv = Decimal.parse(value);
-              if (dv > widget.max) {
-                return 'Max value is ${widget.max}';
+              if (dv > widget._max) {
+                return 'Max value is ${widget._max}';
               }
               if (dv <= Decimal.fromInt(0)) {
                 return 'Please enter a value greater then zero';
@@ -75,14 +90,14 @@ class SendFormState extends State<SendForm> {
             child: RaisedButton.icon(
                 onPressed: () {
                   if (_formKey.currentState.validate()) {
-                    widget.onSend();
+                    widget._onSend();
                   }
                 },
                 icon: Icon(Icons.send),
                 label: Text('Submit')),
           ),
           RaisedButton.icon(
-              onPressed: widget.onCancelled,
+              onPressed: widget._onCancelled,
               icon: Icon(Icons.cancel),
               label: Text('Cancel')),
         ],

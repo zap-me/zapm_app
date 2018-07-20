@@ -6,9 +6,9 @@ import 'send_form.dart';
 import 'receive_form.dart';
 
 class SendScreen extends StatelessWidget {
-  SendScreen(this._recipient, this._max) : super();
+  SendScreen(this._recipientOrUri, this._max) : super();
 
-  final String _recipient;
+  final String _recipientOrUri;
   final Decimal _max;
 
   @override
@@ -28,7 +28,7 @@ class SendScreen extends StatelessWidget {
                 ..duration = Duration(seconds: 1)
                 ..show(context);
               Navigator.pop(context);
-            }, _recipient, _max)));
+            }, _recipientOrUri, _max)));
   }
 }
 
