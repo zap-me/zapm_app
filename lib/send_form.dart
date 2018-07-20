@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
 import 'package:qr_reader/qr_reader.dart';
+import 'package:flushbar/flushbar.dart';
 
 import 'utils.dart';
 
@@ -25,12 +26,18 @@ class SendFormState extends State<SendForm> {
 
   void setRecipientOrUri(String recipientOrUri) {
     var parts = parseUri(recipientOrUri);
-    if (parts.item1.length > 0) {
-      _addressController.text = parts.item1;
-      _amountController.text = parts.item2.toString();
-    }
-    else
+    if (parts.item5 == INVALID_WAVES_URI)
       _addressController.text = recipientOrUri;
+    else {
+      _addressController.text = parts.item1;
+      _amountController.text = parts.item3.toString();
+    }
+    if (parts.item5 == INVALID_ASSET_ID)
+      Flushbar()
+        ..title = "Invalid URI"
+        ..message = "The asset id does not match ZAP"
+        ..duration = Duration(seconds: 1)
+        ..show(context);
   }
 
   @protected
