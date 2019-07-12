@@ -33,10 +33,7 @@ class SendFormState extends State<SendForm> {
       _amountController.text = parts.item3.toString();
     }
     if (parts.item5 == INVALID_ASSET_ID)
-      Flushbar()
-        ..title = "Invalid URI"
-        ..message = "The asset id does not match ZAP"
-        ..duration = Duration(seconds: 1)
+      Flushbar(title: "Invalid URI", message: "The asset id does not match ZAP", duration: Duration(seconds: 1),)
         ..show(context);
   }
 

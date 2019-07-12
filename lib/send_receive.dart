@@ -22,10 +22,7 @@ class SendScreen extends StatelessWidget {
             child: SendForm(() {
               Navigator.pop(context);
             }, () {
-              Flushbar()
-                ..title = "Sent"
-                ..message = "Sent"
-                ..duration = Duration(seconds: 1)
+              Flushbar(title: "Sent", message: "Sent", duration: Duration(seconds: 1),)
                 ..show(context);
               Navigator.pop(context);
             }, _recipientOrUri, _max)));
