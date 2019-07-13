@@ -38,6 +38,13 @@ android {
             signingConfig signingConfigs.debug
         }
     }
+
+    sourceSets {
+        main {
+            // copy libzap into the APK
+            jniLibs.srcDir "${projectDir}/../../native-libraries"
+        }
+    }
 }
 
 flutter {

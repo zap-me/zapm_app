@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
 
 import 'qrwidget.dart';
-import 'utils.dart';
+import 'libzap.dart';
 
 class ReceiveForm extends StatefulWidget {
   final VoidCallback onClosed;
@@ -28,7 +28,7 @@ class ReceiveFormState extends State<ReceiveForm> {
       amount = Decimal.parse(_amountController.text);
     }
     catch (e) {}
-    _uri = buildUri(widget._address, amount);
+    _uri = LibZap.paymentUriDec(widget._address, amount);
     _uriController.text = _uri;
   }
 
@@ -63,6 +63,7 @@ class ReceiveFormState extends State<ReceiveForm> {
             controller: _uriController,
             enabled: false,
             decoration: new InputDecoration(labelText: 'Receive URI'),
+            maxLines: 5,
           ),
           TextFormField(
             controller: _amountController,
@@ -76,6 +77,7 @@ class ReceiveFormState extends State<ReceiveForm> {
               if (dv <= Decimal.fromInt(0)) {
                 return 'Please enter a value greater then zero';
               }
+              return null;
             },
           ),
           Padding(

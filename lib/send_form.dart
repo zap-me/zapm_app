@@ -4,6 +4,7 @@ import 'package:qr_reader/qr_reader.dart';
 import 'package:flushbar/flushbar.dart';
 
 import 'utils.dart';
+import 'libzap.dart';
 
 class SendForm extends StatefulWidget {
   final VoidCallback _onCancelled;
@@ -28,13 +29,14 @@ class SendFormState extends State<SendForm> {
     var parts = parseUri(recipientOrUri);
     if (parts.item5 == INVALID_WAVES_URI)
       _addressController.text = recipientOrUri;
+    else if (parts.item5 == INVALID_ASSET_ID)
+      Flushbar(title: "Invalid URI", message: "The asset id does not match ZAP", duration: Duration(seconds: 2),)
+        ..show(context);
     else {
       _addressController.text = parts.item1;
       _amountController.text = parts.item3.toString();
     }
-    if (parts.item5 == INVALID_ASSET_ID)
-      Flushbar(title: "Invalid URI", message: "The asset id does not match ZAP", duration: Duration(seconds: 1),)
-        ..show(context);
+
   }
 
   @protected
@@ -60,6 +62,12 @@ class SendFormState extends State<SendForm> {
                 if (value.isEmpty) {
                   return 'Please enter a value';
                 }
+                var libzap = new LibZap();
+                var res = libzap.addressCheck(value);
+                if (!res) {
+                  return 'Invalid address';
+                }
+                return null;
               },
             ),
             new FlatButton(
@@ -87,6 +95,7 @@ class SendFormState extends State<SendForm> {
               if (dv <= Decimal.fromInt(0)) {
                 return 'Please enter a value greater then zero';
               }
+              return null;
             },
           ),
           Padding(

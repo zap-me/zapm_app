@@ -19,7 +19,9 @@ class _QrWidgetState extends State<QrWidget> {
       return Text(_inputErrorText);
     return new QrImage(
         data: widget.data,
-        size: 200.0,
+        size: 300.0,
+        version: 10,
+        errorCorrectionLevel: QrErrorCorrectLevel.H,
         onError: (ex) {
           print("[QR] ERROR - $ex");
           setState(() {

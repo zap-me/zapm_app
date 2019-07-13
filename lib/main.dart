@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:qr_reader/qr_reader.dart';
 import 'package:decimal/decimal.dart';
+import 'package:flushbar/flushbar.dart';
 
 import 'qrwidget.dart';
 import 'send_receive.dart';
 import 'settings.dart';
-
-final balance = Decimal.fromInt(13);
-final address = "abc123XXX";
+import 'libzap.dart';
 
 void main() => runApp(new MyApp());
 
@@ -35,8 +34,31 @@ class ZapHomePage extends StatefulWidget {
 
 class _ZapHomePageState extends State<ZapHomePage> {
   int _counter = 0;
+  Decimal _balance = Decimal.fromInt(-1);
+
+  _ZapHomePageState() {
+    _balance = _getBalance();
+  }
+
+  String _getAddr() {
+    var libzap = LibZap();
+    return libzap.walletAddr();
+  }
+
+  Decimal _getBalance() {
+    var libzap = LibZap();
+    var res = libzap.addrBalance(libzap.walletAddr());
+    if (res.success)
+      return Decimal.fromInt(res.value) / Decimal.fromInt(100);
+    return Decimal.fromInt(-1);
+  }
 
   void _incrementCounter() {
+    var libzap = LibZap();
+    var version = libzap.version();
+    Flushbar(title: "libzap version", message: "$version", duration: Duration(seconds: 2),)
+      ..show(context);
+
     setState(() {
       _counter++;
     });
@@ -44,12 +66,13 @@ class _ZapHomePageState extends State<ZapHomePage> {
 
   void _scanQrCode() {
     var qrCode = new QRCodeReader().scan();
+    qrCode.
     qrCode.then((value) {
       if (value != null)
         Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => SendScreen(value, balance)),
+              builder: (context) => SendScreen(value, _balance)),
         );
     });
   }
@@ -58,14 +81,14 @@ class _ZapHomePageState extends State<ZapHomePage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (context) => SendScreen('', balance)),
+          builder: (context) => SendScreen('', _balance)),
     );
   }
 
   void _receive() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => ReceiveScreen(address)),
+      MaterialPageRoute(builder: (context) => ReceiveScreen(LibZap.ADDR)),
     );
   }
 
@@ -90,11 +113,11 @@ class _ZapHomePageState extends State<ZapHomePage> {
           children: <Widget>[
             Container(
               padding: const EdgeInsets.only(top: 18.0),
-              child: QrWidget(address),
+              child: QrWidget(_getAddr()),
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),
-              child: Text("Balance: $balance ZAP"),
+              child: Text("Balance: $_balance ZAP"),
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),
