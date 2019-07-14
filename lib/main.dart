@@ -6,6 +6,7 @@ import 'package:flushbar/flushbar.dart';
 import 'qrwidget.dart';
 import 'send_receive.dart';
 import 'settings.dart';
+import 'utils.dart';
 import 'libzap.dart';
 
 void main() => runApp(new MyApp());
@@ -66,14 +67,19 @@ class _ZapHomePageState extends State<ZapHomePage> {
 
   void _scanQrCode() {
     var qrCode = new QRCodeReader().scan();
-    qrCode.
     qrCode.then((value) {
-      if (value != null)
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => SendScreen(value, _balance)),
-        );
+      if (value != null) {
+        var result = parseRecipientOrUri(value);
+        if (result != null)
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => SendScreen(value, _balance)),
+          );
+        else
+          Flushbar(title: "Invalid QR Code", message: "Unable to decipher QR code data", duration: Duration(seconds: 2),)
+            ..show(context);
+      }
     });
   }
 

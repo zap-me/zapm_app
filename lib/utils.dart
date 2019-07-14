@@ -47,3 +47,13 @@ Tuple5<String, String, Decimal, String, int> parseUri(String uri) {
     error = INVALID_WAVES_URI;
   return Tuple5<String, String, Decimal, String, int>(address, assetId, amount, attachment, error);
 }
+
+String parseRecipientOrUri(String data) {
+  var libzap = LibZap();
+  if (libzap.addressCheck(data))
+    return data;                // return input, user can use this data as an address
+  var result = parseUri(data);
+  if (result.item5 == NO_ERROR)
+    return result.item1;        // return address part of waves uri, user should call parseUri directly for extra details
+  return null;                  // return null, data is not usable/valid
+}

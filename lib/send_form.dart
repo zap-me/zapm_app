@@ -26,17 +26,17 @@ class SendFormState extends State<SendForm> {
   final _amountController = new TextEditingController();
 
   void setRecipientOrUri(String recipientOrUri) {
-    var parts = parseUri(recipientOrUri);
-    if (parts.item5 == INVALID_WAVES_URI)
+    var result = parseRecipientOrUri(recipientOrUri);
+    if (result == recipientOrUri)
       _addressController.text = recipientOrUri;
-    else if (parts.item5 == INVALID_ASSET_ID)
-      Flushbar(title: "Invalid URI", message: "The asset id does not match ZAP", duration: Duration(seconds: 2),)
-        ..show(context);
-    else {
+    else if (result != null) {
+      var parts = parseUri(recipientOrUri);
       _addressController.text = parts.item1;
       _amountController.text = parts.item3.toString();
     }
-
+    else
+      Flushbar(title: "Invalid QR Code", message: "Unable to decipher QR code data", duration: Duration(seconds: 2),)
+        ..show(context);
   }
 
   @protected
