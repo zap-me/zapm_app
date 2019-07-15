@@ -1,4 +1,5 @@
 import 'dart:ffi';
+import 'package:flutter/foundation.dart';
 import 'package:decimal/decimal.dart';
 
 import 'dylib_utils.dart';
@@ -7,7 +8,6 @@ import 'utf8.dart';
 class IntResult {
   bool success;
   int value;
-
   IntResult(this.success, this.value);
 }
 
@@ -51,6 +51,28 @@ typedef lzap_address_check_ns_t = int Function(Pointer<Utf8> address);
 
 typedef lzap_address_balance_ns_native_t = Int8 Function(Pointer<Utf8> address, Pointer<Int64> balance_out);
 typedef lzap_address_balance_ns_t = int Function(Pointer<Utf8> address, Pointer<Int64> balance_out);
+
+//
+// helper functions
+//
+
+IntResult addressBalanceFromIsolate(String address) {
+  // as we are running this in an isolate we need to reinit a LibZap instance
+  // to get the function pointer as closures can not be passed to isolates
+  var libzap = LibZap();
+
+  var addrC = Utf8.allocate(address);
+  var balanceP = Pointer<Int64>.allocate();
+  var res = libzap.lzap_address_balance(addrC, balanceP) != 0;
+  int balance = balanceP.load();
+  balanceP.free();
+  addrC.free();
+return IntResult(res != 0, balance);
+}
+
+//
+// LibZap class
+//
 
 class LibZap {
 
@@ -110,13 +132,7 @@ class LibZap {
     return res;
   }
 
-  IntResult addrBalance(String address) {
-    var addrC = Utf8.allocate(address);
-    var balanceP = Pointer<Int64>.allocate();
-    var res = lzap_address_balance(addrC, balanceP) != 0;
-    int balance = balanceP.load();
-    balanceP.free();
-    addrC.free();
-    return IntResult(res != 0, balance);
+  Future<IntResult> addrBalance(String address) async {
+    return compute(addressBalanceFromIsolate, address);
   }
 }

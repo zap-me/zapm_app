@@ -36,9 +36,9 @@ class ZapHomePage extends StatefulWidget {
 class _ZapHomePageState extends State<ZapHomePage> {
   int _counter = 0;
   Decimal _balance = Decimal.fromInt(-1);
+  String _balanceText = "...";
 
   _ZapHomePageState() {
-    _balance = _getBalance();
   }
 
   String _getAddr() {
@@ -46,63 +46,77 @@ class _ZapHomePageState extends State<ZapHomePage> {
     return libzap.walletAddr();
   }
 
-  Decimal _getBalance() {
+  void _setBalance() async {
+    setState(() {
+      _balanceText = "...";
+    });
     var libzap = LibZap();
-    var res = libzap.addrBalance(libzap.walletAddr());
-    if (res.success)
-      return Decimal.fromInt(res.value) / Decimal.fromInt(100);
-    return Decimal.fromInt(-1);
+    var result = await libzap.addrBalance(libzap.walletAddr());
+    setState(() {
+      if (result.success) {
+        _balance = Decimal.fromInt(result.value) / Decimal.fromInt(100);
+        _balanceText = "Balance: $_balance ZAP";
+      }
+      else {
+        _balance = Decimal.fromInt(-1);
+        _balanceText = ":(";
+      }
+    });
   }
 
   void _incrementCounter() {
-    var libzap = LibZap();
-    var version = libzap.version();
-    Flushbar(title: "libzap version", message: "$version", duration: Duration(seconds: 2),)
-      ..show(context);
-
     setState(() {
       _counter++;
     });
   }
 
-  void _scanQrCode() {
-    var qrCode = new QRCodeReader().scan();
-    qrCode.then((value) {
-      if (value != null) {
-        var result = parseRecipientOrUri(value);
-        if (result != null)
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => SendScreen(value, _balance)),
-          );
-        else
-          Flushbar(title: "Invalid QR Code", message: "Unable to decipher QR code data", duration: Duration(seconds: 2),)
-            ..show(context);
+  void _scanQrCode() async {
+    var value = await new QRCodeReader().scan();
+    if (value != null) {
+      var result = parseRecipientOrUri(value);
+      if (result != null) {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => SendScreen(value, _balance)),
+        );
+        _setBalance();
       }
-    });
+      else
+        Flushbar(title: "Invalid QR Code", message: "Unable to decipher QR code data", duration: Duration(seconds: 2),)
+          ..show(context);
+    }
   }
 
-  void _send() {
-    Navigator.push(
+  void _send() async {
+    await Navigator.push(
       context,
       MaterialPageRoute(
           builder: (context) => SendScreen('', _balance)),
     );
+    _setBalance();
   }
 
-  void _receive() {
-    Navigator.push(
+  void _receive() async {
+    await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => ReceiveScreen(LibZap.ADDR)),
     );
+    _setBalance();
   }
 
-  void _showSettings() {
-    Navigator.push(
+  void _showSettings() async {
+    await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => SettingsScreen()),
     );
+    _setBalance();
+  }
+
+  @override
+  void initState() {
+    _setBalance();
+    super.initState();
   }
 
   @override
@@ -123,7 +137,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),
-              child: Text("Balance: $_balance ZAP"),
+              child: Text(_balanceText),
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),
