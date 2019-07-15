@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:package_info/package_info.dart';
-import 'package:tuple/tuple.dart';
 
 import 'libzap.dart';
+import 'prefs.dart';
 
 class SettingsScreen extends StatefulWidget {
 
@@ -14,13 +14,15 @@ class _SettingsState extends State<SettingsScreen> {
   String _appVersion = null;
   String _buildNumber = null;
   int _libzapVersion = -1;
+  bool _testnet = false;
 
   _SettingsState() {
-    _setAppVersion();
+    _initAppVersion();
     _libzapVersion = _getLibZapVersion();
+    _initTestnet();
   }
 
-  void _setAppVersion() {
+  void _initAppVersion() {
     PackageInfo.fromPlatform().then((PackageInfo packageInfo) {
       setState(() {
         _appVersion = packageInfo.version;
@@ -34,6 +36,20 @@ class _SettingsState extends State<SettingsScreen> {
     return libzap.version();
   }
 
+  void _initTestnet() async {
+    var testnet = await Prefs.TestnetGet();
+    setState(() {
+      _testnet = testnet;
+    });
+  }
+
+  void _toggleTestnet() async {
+    await Prefs.TestnetSet(!_testnet);
+    setState(() {
+      _testnet = !_testnet;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -45,24 +61,34 @@ class _SettingsState extends State<SettingsScreen> {
           children: <Widget>[
             Container(
               padding: const EdgeInsets.only(top: 18.0),
-              child: Text("version: $_appVersion, build: $_buildNumber"),
+              child: ListTile(title: Text("Version: $_appVersion"), subtitle: Text("Build: $_buildNumber")),
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),
-              child: Text("libzap version: $_libzapVersion"),
+              child: ListTile(title: Text("Libzap Version: $_libzapVersion")),
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),
-              child: RaisedButton(
-                onPressed: () {
-                  Navigator.pop(context, );
+              child: SwitchListTile(
+                value: _testnet,
+                title: Text("Testnet"),
+                onChanged: (value) async {
+                  await _toggleTestnet();
                 },
-                child: Text('Go back!'),
               ),
             ),
-          ],
+            Container(
+              padding: const EdgeInsets.only(top: 18.0),
+              child: RaisedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  icon: Icon(Icons.close),
+                  label: Text('Close'))
+              ),
+            ],
+          ),
         )
-      )
     );
   }
 }

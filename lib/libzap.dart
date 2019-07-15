@@ -45,6 +45,11 @@ class WavesPaymentRequest extends Struct<WavesPaymentRequest> {
 typedef lzap_version_native_t = Int32 Function();
 typedef lzap_version_t = int Function();
 
+typedef lzap_network_get_native_t = Int8 Function();
+typedef lzap_network_get_t = int Function();
+typedef lzap_network_set_native_t = Int32 Function(Int8 network_byte);
+typedef lzap_network_set_t = int Function(int network_byte);
+
 typedef lzap_address_check_native_t = IntResult Function(Pointer<Utf8> address);
 typedef lzap_address_check_ns_native_t = Int8 Function(Pointer<Utf8> address);
 typedef lzap_address_check_ns_t = int Function(Pointer<Utf8> address);
@@ -81,6 +86,15 @@ class LibZap {
     lzap_version = libzap
         .lookup<NativeFunction<lzap_version_native_t>>("lzap_version")
         .asFunction();
+    lzap_network_get = libzap
+        .lookup<NativeFunction<lzap_network_get_native_t>>("lzap_network_get")
+        .asFunction();
+    lzap_network_set = libzap
+        .lookup<NativeFunction<lzap_network_set_native_t>>("lzap_network_set")
+        .asFunction();
+    lzap_version = libzap
+        .lookup<NativeFunction<lzap_version_native_t>>("lzap_version")
+        .asFunction();
     lzap_address_check = libzap
         .lookup<NativeFunction<lzap_address_check_ns_native_t>>("lzap_address_check_ns")
         .asFunction();
@@ -94,6 +108,8 @@ class LibZap {
 
   DynamicLibrary libzap;
   lzap_version_t lzap_version;
+  lzap_network_get_t lzap_network_get;
+  lzap_network_set_t lzap_network_set;
   lzap_address_check_ns_t lzap_address_check;
   lzap_address_balance_ns_t lzap_address_balance;
 
@@ -123,6 +139,26 @@ class LibZap {
 
   int version() {
     return lzap_version();
+  }
+
+  bool testnetGet() {
+    var networkByte = String.fromCharCode(lzap_network_get());
+    if (networkByte == 'T')
+      return true;
+    else if (networkByte == 'W')
+      return false;
+    else
+      throw new FormatException("network byte not recognised");
+  }
+
+  bool testnetSet(bool value) {
+    String networkByte;
+    if (value)
+      networkByte = 'T';
+    else
+      networkByte = 'W';
+    int char = networkByte.codeUnitAt(0);
+    return lzap_network_set(char) != 0;
   }
 
   bool addressCheck(String address) {

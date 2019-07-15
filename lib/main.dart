@@ -8,6 +8,7 @@ import 'send_receive.dart';
 import 'settings.dart';
 import 'utils.dart';
 import 'libzap.dart';
+import 'prefs.dart';
 
 void main() => runApp(new MyApp());
 
@@ -50,12 +51,15 @@ class _ZapHomePageState extends State<ZapHomePage> {
     setState(() {
       _balanceText = "...";
     });
+    var testnet = await Prefs.TestnetGet();
     var libzap = LibZap();
     var result = await libzap.addrBalance(libzap.walletAddr());
     setState(() {
       if (result.success) {
         _balance = Decimal.fromInt(result.value) / Decimal.fromInt(100);
         _balanceText = "Balance: $_balance ZAP";
+        if (testnet)
+          _balanceText += " TESTNET";
       }
       else {
         _balance = Decimal.fromInt(-1);
@@ -115,7 +119,13 @@ class _ZapHomePageState extends State<ZapHomePage> {
 
   @override
   void initState() {
-    _setBalance();
+    Prefs.TestnetGet().then((testnet) {
+      // set libzap testnet
+      LibZap().testnetSet(testnet);
+      // init first balance
+      _setBalance();
+    });
+
     super.initState();
   }
 
@@ -134,6 +144,10 @@ class _ZapHomePageState extends State<ZapHomePage> {
             Container(
               padding: const EdgeInsets.only(top: 18.0),
               child: QrWidget(_getAddr()),
+            ),
+            Container(
+              padding: const EdgeInsets.only(top: 0.0),
+              child: Text(LibZap.ADDR),
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),
