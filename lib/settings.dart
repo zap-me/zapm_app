@@ -5,6 +5,9 @@ import 'libzap.dart';
 import 'prefs.dart';
 
 class SettingsScreen extends StatefulWidget {
+  String _mnemonic = null;
+
+  SettingsScreen(this._mnemonic) : super();
 
   @override
   _SettingsState createState() => new _SettingsState();
@@ -76,6 +79,10 @@ class _SettingsState extends State<SettingsScreen> {
                   await _toggleTestnet();
                 },
               ),
+            ),
+            Container(
+              padding: const EdgeInsets.only(top: 18.0),
+              child: ListTile(title: Text("Mnemonic"), subtitle: Text(widget._mnemonic)),
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),

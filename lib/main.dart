@@ -9,6 +9,7 @@ import 'settings.dart';
 import 'utils.dart';
 import 'libzap.dart';
 import 'prefs.dart';
+import 'new_mnemonic_form.dart';
 
 void main() => runApp(new MyApp());
 
@@ -36,27 +37,41 @@ class ZapHomePage extends StatefulWidget {
 
 class _ZapHomePageState extends State<ZapHomePage> {
   int _counter = 0;
+  bool _newMnemonic = false;
+  String _mnemonic = "";
+  String _address = "";
   Decimal _balance = Decimal.fromInt(-1);
   String _balanceText = "...";
 
   _ZapHomePageState() {
   }
 
-  String _getAddr() {
-    var libzap = LibZap();
-    return libzap.walletAddr();
-  }
-
-  void _setBalance() async {
+  void _setWalletDetails() async {
     setState(() {
       _balanceText = "...";
     });
-    var testnet = await Prefs.TestnetGet();
     var libzap = LibZap();
-    var result = await libzap.addrBalance(libzap.walletAddr());
+    // get testnet value
+    var testnet = await Prefs.TestnetGet();
+    // check mnemonic
+    var newMnemonic = false;
+    var mnemonic = await PrefsSecure.MnemonicGet();
+    if (mnemonic == null || mnemonic == "") {
+      mnemonic = libzap.mnemonicCreate();
+      newMnemonic = true;
+      await PrefsSecure.MnemonicSet(mnemonic);
+    }
+    // create address
+    var address = libzap.seedAddress(mnemonic);
+    // get balance
+    var balanceResult = await libzap.addrBalance(address);
+    // update state
     setState(() {
-      if (result.success) {
-        _balance = Decimal.fromInt(result.value) / Decimal.fromInt(100);
+      _newMnemonic = newMnemonic;
+      _mnemonic = mnemonic;
+      _address = address;
+      if (balanceResult.success) {
+        _balance = Decimal.fromInt(balanceResult.value) / Decimal.fromInt(100);
         _balanceText = "Balance: $_balance ZAP";
         if (testnet)
           _balanceText += " TESTNET";
@@ -66,6 +81,12 @@ class _ZapHomePageState extends State<ZapHomePage> {
         _balanceText = ":(";
       }
     });
+    // show warning for new mnemonic
+    if (newMnemonic)
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => NewMnemonicForm(mnemonic)),
+    );
   }
 
   void _incrementCounter() {
@@ -84,7 +105,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
           MaterialPageRoute(
               builder: (context) => SendScreen(value, _balance)),
         );
-        _setBalance();
+        _setWalletDetails();
       }
       else
         Flushbar(title: "Invalid QR Code", message: "Unable to decipher QR code data", duration: Duration(seconds: 2),)
@@ -98,23 +119,23 @@ class _ZapHomePageState extends State<ZapHomePage> {
       MaterialPageRoute(
           builder: (context) => SendScreen('', _balance)),
     );
-    _setBalance();
+    _setWalletDetails();
   }
 
   void _receive() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => ReceiveScreen(LibZap.ADDR)),
+      MaterialPageRoute(builder: (context) => ReceiveScreen(_address)),
     );
-    _setBalance();
+    _setWalletDetails();
   }
 
   void _showSettings() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => SettingsScreen()),
+      MaterialPageRoute(builder: (context) => SettingsScreen(_mnemonic)),
     );
-    _setBalance();
+    _setWalletDetails();
   }
 
   @override
@@ -122,8 +143,8 @@ class _ZapHomePageState extends State<ZapHomePage> {
     Prefs.TestnetGet().then((testnet) {
       // set libzap testnet
       LibZap().testnetSet(testnet);
-      // init first balance
-      _setBalance();
+      // init wallet details
+      _setWalletDetails();
     });
 
     super.initState();
@@ -143,11 +164,11 @@ class _ZapHomePageState extends State<ZapHomePage> {
           children: <Widget>[
             Container(
               padding: const EdgeInsets.only(top: 18.0),
-              child: QrWidget(_getAddr()),
+              child: QrWidget(_address),
             ),
             Container(
               padding: const EdgeInsets.only(top: 0.0),
-              child: Text(LibZap.ADDR),
+              child: Text(_address),
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),
