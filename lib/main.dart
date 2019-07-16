@@ -103,7 +103,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
         await Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => SendScreen(value, _balance)),
+              builder: (context) => SendScreen(_mnemonic, value, _balance)),
         );
         _setWalletDetails();
       }
@@ -117,7 +117,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
     await Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (context) => SendScreen('', _balance)),
+          builder: (context) => SendScreen(_mnemonic, '', _balance)),
     );
     _setWalletDetails();
   }

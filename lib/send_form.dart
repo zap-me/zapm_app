@@ -7,12 +7,11 @@ import 'utils.dart';
 import 'libzap.dart';
 
 class SendForm extends StatefulWidget {
-  final VoidCallback _onCancelled;
-  final VoidCallback _onSend;
+  final String _seed;
   final String _recipientOrUri;
   final Decimal _max;
 
-  SendForm(this._onCancelled, this._onSend, this._recipientOrUri, this._max) : super();
+  SendForm(this._seed, this._recipientOrUri, this._max) : super();
 
   @override
   SendFormState createState() {
@@ -36,6 +35,34 @@ class SendFormState extends State<SendForm> {
     }
     else
       Flushbar(title: "Invalid QR Code", message: "Unable to decipher QR code data", duration: Duration(seconds: 2),)
+        ..show(context);
+  }
+
+  void send() {
+    if (_formKey.currentState.validate()) {
+      var recipient = _addressController.text;
+      var amount = (Decimal.parse(_amountController.text) * Decimal.fromInt(100)).toInt();
+      var libzap = LibZap();
+      //TODO: get fee from network
+      // - allow to specify attachment
+      // - update widget._max with network fee
+      var spendTx = libzap.transactionCreate(widget._seed, recipient, amount, 1, "");
+
+      Flushbar(title: "Tx", message: "${spendTx.success} ${spendTx.data.length}", duration: Duration(seconds: 2),)
+        ..show(context);
+
+      var tx = libzap.transactionBroadcast(spendTx);
+      if (tx != null)
+        Flushbar(title: "Tx Broadcast", message: "${tx.id}", duration: Duration(seconds: 2),)
+          ..show(context);
+      else
+        Flushbar(title: "Tx Broadcast Failed", message: ":(", duration: Duration(seconds: 2),)
+          ..show(context);
+
+      //Navigator.pop(context);
+    }
+    else
+      Flushbar(title: "Validation failed", message: "correct data please", duration: Duration(seconds: 2),)
         ..show(context);
   }
 
@@ -101,16 +128,12 @@ class SendFormState extends State<SendForm> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16.0),
             child: RaisedButton.icon(
-                onPressed: () {
-                  if (_formKey.currentState.validate()) {
-                    widget._onSend();
-                  }
-                },
+                onPressed: send,
                 icon: Icon(Icons.send),
                 label: Text('Submit')),
           ),
           RaisedButton.icon(
-              onPressed: widget._onCancelled,
+              onPressed: () { Navigator.pop(context); },
               icon: Icon(Icons.cancel),
               label: Text('Cancel')),
         ],

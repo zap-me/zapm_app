@@ -6,8 +6,9 @@ import 'send_form.dart';
 import 'receive_form.dart';
 
 class SendScreen extends StatelessWidget {
-  SendScreen(this._recipientOrUri, this._max) : super();
+  SendScreen(this._seed, this._recipientOrUri, this._max) : super();
 
+  final String _seed;
   final String _recipientOrUri;
   final Decimal _max;
 
@@ -19,13 +20,9 @@ class SendScreen extends StatelessWidget {
         ),
         body: new Container(
             padding: new EdgeInsets.all(20.0),
-            child: SendForm(() {
-              Navigator.pop(context);
-            }, () {
-              Flushbar(title: "Sent", message: "Sent", duration: Duration(seconds: 2),)
-                ..show(context);
-              Navigator.pop(context);
-            }, _recipientOrUri, _max)));
+            child: SendForm(_seed, _recipientOrUri, _max)
+        )
+    );
   }
 }
 
