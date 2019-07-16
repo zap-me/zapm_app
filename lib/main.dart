@@ -37,22 +37,24 @@ class ZapHomePage extends StatefulWidget {
 
 class _ZapHomePageState extends State<ZapHomePage> {
   int _counter = 0;
-  bool _newMnemonic = false;
+  bool _testnet = true;
   String _mnemonic = "";
   String _address = "";
+  Decimal _fee = Decimal.parse("0.01");
   Decimal _balance = Decimal.fromInt(-1);
   String _balanceText = "...";
+  bool _updatingBalance = true;
 
   _ZapHomePageState() {
   }
 
   void _setWalletDetails() async {
     setState(() {
-      _balanceText = "...";
+      _updatingBalance = true;
     });
     var libzap = LibZap();
     // get testnet value
-    var testnet = await Prefs.TestnetGet();
+    _testnet = await Prefs.TestnetGet();
     // check mnemonic
     var newMnemonic = false;
     var mnemonic = await PrefsSecure.MnemonicGet();
@@ -63,23 +65,30 @@ class _ZapHomePageState extends State<ZapHomePage> {
     }
     // create address
     var address = libzap.seedAddress(mnemonic);
-    // get balance
-    var balanceResult = await libzap.addrBalance(address);
     // update state
     setState(() {
-      _newMnemonic = newMnemonic;
       _mnemonic = mnemonic;
       _address = address;
+    });
+    // get fee
+    var feeResult = await LibZap.transactionFee();
+    // get balance
+    var balanceResult = await LibZap.addrBalance(address);
+    // update state
+    setState(() {
+      if (feeResult.success)
+        _fee = Decimal.fromInt(feeResult.value) / Decimal.fromInt(100);
       if (balanceResult.success) {
         _balance = Decimal.fromInt(balanceResult.value) / Decimal.fromInt(100);
         _balanceText = "Balance: $_balance ZAP";
-        if (testnet)
+        if (_testnet)
           _balanceText += " TESTNET";
       }
       else {
         _balance = Decimal.fromInt(-1);
         _balanceText = ":(";
       }
+      _updatingBalance = false;
     });
     // show warning for new mnemonic
     if (newMnemonic)
@@ -98,12 +107,12 @@ class _ZapHomePageState extends State<ZapHomePage> {
   void _scanQrCode() async {
     var value = await new QRCodeReader().scan();
     if (value != null) {
-      var result = parseRecipientOrUri(value);
+      var result = parseRecipientOrUri(_testnet, value);
       if (result != null) {
         await Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => SendScreen(_mnemonic, value, _balance)),
+              builder: (context) => SendScreen(_testnet, _mnemonic, _fee, value, _balance)),
         );
         _setWalletDetails();
       }
@@ -117,7 +126,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
     await Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (context) => SendScreen(_mnemonic, '', _balance)),
+          builder: (context) => SendScreen(_testnet, _mnemonic, _fee, '', _balance)),
     );
     _setWalletDetails();
   }
@@ -125,7 +134,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
   void _receive() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => ReceiveScreen(_address)),
+      MaterialPageRoute(builder: (context) => ReceiveScreen(_testnet, _address)),
     );
     _setWalletDetails();
   }
@@ -170,9 +179,19 @@ class _ZapHomePageState extends State<ZapHomePage> {
               padding: const EdgeInsets.only(top: 0.0),
               child: Text(_address),
             ),
-            Container(
-              padding: const EdgeInsets.only(top: 18.0),
-              child: Text(_balanceText),
+            Visibility(
+              visible: _updatingBalance,
+              child: Container(
+                padding: const EdgeInsets.only(top: 18.0),
+                child: SizedBox(child: CircularProgressIndicator(), height: 16.0, width: 16.0,),
+              ),
+            ),
+            Visibility(
+              visible: !_updatingBalance,
+              child: Container(
+                padding: const EdgeInsets.only(top: 18.0),
+                child: Text(_balanceText),
+              ),
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),

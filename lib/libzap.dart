@@ -193,10 +193,10 @@ typedef lzap_version_t = int Function();
 
 typedef lzap_network_get_native_t = Int8 Function();
 typedef lzap_network_get_t = int Function();
-typedef lzap_network_set_native_t = Int32 Function(Int8 network_byte);
+typedef lzap_network_set_native_t = Int8 Function(Int8 network_byte);
 typedef lzap_network_set_t = int Function(int network_byte);
 
-typedef lzap_mnemonic_create_native_t = Int32 Function(Pointer<Utf8> output, Int32 size);
+typedef lzap_mnemonic_create_native_t = Int8 Function(Pointer<Utf8> output, Int32 size);
 typedef lzap_mnemonic_create_t = int Function(Pointer<Utf8> output, int size);
 
 //TODO: this function does not actually return anything, but dart:ffi does not seem to handle void functions yet
@@ -209,6 +209,9 @@ typedef lzap_address_check_ns_t = int Function(Pointer<Utf8> address);
 
 typedef lzap_address_balance_ns_native_t = Int8 Function(Pointer<Utf8> address, Pointer<Int64> balance_out);
 typedef lzap_address_balance_ns_t = int Function(Pointer<Utf8> address, Pointer<Int64> balance_out);
+
+typedef lzap_transaction_fee_ns_native_t = Int8 Function(Pointer<Int64> fee_out);
+typedef lzap_transaction_Fee_ns_t = int Function(Pointer<Int64> fee_out);
 
 //TODO: this function does not actually return anything, but dart:ffi does not seem to handle void functions yet
 typedef lzap_transaction_create_ns_native_t = Int32 Function(Pointer<Utf8> seed, Pointer<Utf8> recipient, Int64 amount, Int64 fee, Pointer<Utf8> attachment, Pointer<CBuffer> spend_tx_out);
@@ -244,6 +247,34 @@ IntResult addressBalanceFromIsolate(String address) {
   return IntResult(res != 0, balance);
 }
 
+IntResult transactionFeeFromIsolate(int _dummy) {
+  // as we are running this in an isolate we need to reinit a LibZap instance
+  // to get the function pointer as closures can not be passed to isolates
+  var libzap = LibZap();
+
+  var feeP = Pointer<Int64>.allocate();
+  var res = libzap.lzap_transaction_fee(feeP) != 0;
+  int fee = feeP.load();
+  feeP.free();
+  return IntResult(res != 0, fee);
+}
+
+Tx transactionBroadcastFromIsolate(SpendTx spendTx) {
+  // as we are running this in an isolate we need to reinit a LibZap instance
+  // to get the function pointer as closures can not be passed to isolates
+  var libzap = LibZap();
+
+  var spendTxC = spendTx.toBuffer();
+  var txC = Tx.allocate();
+  var result = libzap.lzap_transaction_broadcast(spendTxC, txC);
+  Tx tx = null;
+  if (result != 0)
+    tx = Tx.fromCBuffer(txC.load());
+  txC.free();
+  spendTxC.free();
+  return tx;
+}
+
 //
 // LibZap class
 //
@@ -276,6 +307,9 @@ class LibZap {
     lzap_address_balance = libzap
         .lookup<NativeFunction<lzap_address_balance_ns_native_t>>("lzap_address_balance_ns")
         .asFunction();
+    lzap_transaction_fee = libzap
+        .lookup<NativeFunction<lzap_transaction_fee_ns_native_t>>("lzap_transaction_fee_ns")
+        .asFunction();
     lzap_transaction_create = libzap
         .lookup<NativeFunction<lzap_transaction_create_ns_native_t>>("lzap_transaction_create_ns")
         .asFunction();
@@ -284,7 +318,8 @@ class LibZap {
         .asFunction();
   }
 
-  static const String ASSET_ID = "CgUrFtinLXEbJwJVjwwcppk4Vpz1nMmR3H5cQaDcUcfe";
+  static const String TESTNET_ASSET_ID = "CgUrFtinLXEbJwJVjwwcppk4Vpz1nMmR3H5cQaDcUcfe";
+  static const String MAINNET_ASSET_ID = "9R3iLi4qGLVWKc16Tg98gmRvgg1usGEYd7SgC1W5D6HB";
 
   DynamicLibrary libzap;
   lzap_version_t lzap_version;
@@ -294,23 +329,24 @@ class LibZap {
   lzap_seed_address_t lzap_seed_address;
   lzap_address_check_ns_t lzap_address_check;
   lzap_address_balance_ns_t lzap_address_balance;
+  lzap_transaction_Fee_ns_t lzap_transaction_fee;
   lzap_transaction_create_ns_t lzap_transaction_create;
   lzap_transaction_broadcast_ns_t lzap_transaction_broadcast;
 
-  static String paymentUri(String address, int amount) {
-    var uri = "waves://$address?asset=$ASSET_ID";
+  static String paymentUri(bool testnet, String address, int amount) {
+    var uri = "waves://$address?asset=${testnet ? TESTNET_ASSET_ID : MAINNET_ASSET_ID}";
     if (amount != null)
       uri += "&amount=$amount";
     return uri;
   }
 
-  static String paymentUriDec(String address, Decimal amount) {
+  static String paymentUriDec(bool testnet, String address, Decimal amount) {
     if (amount != null && amount > Decimal.fromInt(0)) {
       amount = amount * Decimal.fromInt(100);
       var amountInt = amount.toInt();
-      return paymentUri(address, amountInt);
+      return paymentUri(testnet, address, amountInt);
     }
-    return paymentUri(address, null);
+    return paymentUri(testnet, address, null);
   }
 
   //
@@ -370,8 +406,12 @@ class LibZap {
     return res;
   }
 
-  Future<IntResult> addrBalance(String address) async {
+  static Future<IntResult> addrBalance(String address) async {
     return compute(addressBalanceFromIsolate, address);
+  }
+
+  static Future<IntResult> transactionFee() async {
+    return compute(transactionFeeFromIsolate, null);
   }
 
   SpendTx transactionCreate(String seed, String recipient, int amount, int fee, String attachment) {
@@ -390,15 +430,7 @@ class LibZap {
     return spendTx;
   }
 
-  Tx transactionBroadcast(SpendTx spendTx) {
-    var spendTxC = spendTx.toBuffer();
-    var txC = Tx.allocate();
-    var result = lzap_transaction_broadcast(spendTxC, txC);
-    Tx tx = null;
-    if (result != 0)
-     tx = Tx.fromCBuffer(txC.load());
-    txC.free();
-    spendTxC.free();
-    return tx;
+  static Future<Tx> transactionBroadcast(SpendTx spendTx) {
+    return compute(transactionBroadcastFromIsolate, spendTx);
   }
 }

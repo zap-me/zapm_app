@@ -6,9 +6,10 @@ import 'libzap.dart';
 
 class ReceiveForm extends StatefulWidget {
   final VoidCallback onClosed;
+  final bool _testnet;
   final String _address;
 
-  ReceiveForm(this.onClosed, this._address) : super();
+  ReceiveForm(this.onClosed, this._testnet, this._address) : super();
 
   @override
   ReceiveFormState createState() {
@@ -28,7 +29,7 @@ class ReceiveFormState extends State<ReceiveForm> {
       amount = Decimal.parse(_amountController.text);
     }
     catch (e) {}
-    _uri = LibZap.paymentUriDec(widget._address, amount);
+    _uri = LibZap.paymentUriDec(widget._testnet, widget._address, amount);
     _uriController.text = _uri;
   }
 

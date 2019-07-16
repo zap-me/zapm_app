@@ -18,7 +18,7 @@ String parseUriParameter(String input, String token) {
   return null;
 }
 
-Tuple5<String, String, Decimal, String, int> parseUri(String uri) {
+Tuple5<String, String, Decimal, String, int> parseUri(bool testnet, String uri) {
   var address = '';
   var assetId = '';
   var amount = Decimal.fromInt(0);
@@ -38,7 +38,8 @@ Tuple5<String, String, Decimal, String, int> parseUri(String uri) {
         if (res != null) attachment = res;
       }
     }
-    if (assetId != LibZap.ASSET_ID) {
+    var zapAssetId = testnet ? LibZap.TESTNET_ASSET_ID : LibZap.MAINNET_ASSET_ID;
+    if (assetId != zapAssetId) {
       address = '';
       error = INVALID_ASSET_ID;
     }
@@ -48,11 +49,11 @@ Tuple5<String, String, Decimal, String, int> parseUri(String uri) {
   return Tuple5<String, String, Decimal, String, int>(address, assetId, amount, attachment, error);
 }
 
-String parseRecipientOrUri(String data) {
+String parseRecipientOrUri(bool testnet, String data) {
   var libzap = LibZap();
   if (libzap.addressCheck(data))
     return data;                // return input, user can use this data as an address
-  var result = parseUri(data);
+  var result = parseUri(testnet, data);
   if (result.item5 == NO_ERROR)
     return result.item1;        // return address part of waves uri, user should call parseUri directly for extra details
   return null;                  // return null, data is not usable/valid

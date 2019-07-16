@@ -6,9 +6,11 @@ import 'send_form.dart';
 import 'receive_form.dart';
 
 class SendScreen extends StatelessWidget {
-  SendScreen(this._seed, this._recipientOrUri, this._max) : super();
+  SendScreen(this._testnet, this._seed, this._fee, this._recipientOrUri, this._max) : super();
 
+  final bool _testnet;
   final String _seed;
+  final Decimal _fee;
   final String _recipientOrUri;
   final Decimal _max;
 
@@ -20,15 +22,16 @@ class SendScreen extends StatelessWidget {
         ),
         body: new Container(
             padding: new EdgeInsets.all(20.0),
-            child: SendForm(_seed, _recipientOrUri, _max)
+            child: SendForm(_testnet, _seed, _fee, _recipientOrUri, _max)
         )
     );
   }
 }
 
 class ReceiveScreen extends StatelessWidget {
-  ReceiveScreen(this._address) : super();
+  ReceiveScreen(this._testnet, this._address) : super();
 
+  final bool _testnet;
   final String _address;
 
   @override
@@ -41,6 +44,6 @@ class ReceiveScreen extends StatelessWidget {
             padding: new EdgeInsets.all(20.0),
             child: ReceiveForm(() {
               Navigator.pop(context);
-            }, _address)));
+            }, _testnet, _address)));
   }
 }
