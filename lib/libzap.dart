@@ -109,11 +109,10 @@ class Tx {
 }
 
 class SpendTx {
-  static final successFieldSize = 1;
+  static final int32FieldSize = 4;
   static final dataFieldSize = 364;
-  static final dataSizeFieldSize = 4;
   static final sigFieldSize = 64;
-  static final totalSize = successFieldSize + dataFieldSize + dataSizeFieldSize + sigFieldSize;
+  static final totalSize = int32FieldSize + dataFieldSize + int32FieldSize + sigFieldSize;
 
   bool success;
   Iterable<int> data;
@@ -125,16 +124,17 @@ class SpendTx {
     var buf = CBuffer.allocate(totalSize);
 
     // success field
-    buf.elementAt(0).load<CBuffer>().byte = success ? 1 : 0;
+    var int32List = new Uint8List(int32FieldSize);
+    var int32ByteData = new ByteData.view(int32List.buffer);
+    int32ByteData.setInt32(0, 1);
+    buf.load().copyInto(0, int32List);
     // data field
-    buf.load().copyInto(successFieldSize, data);
+    buf.load().copyInto(int32FieldSize, data);
     // data_size field
-    var dataSizeList = new Uint8List(dataSizeFieldSize);
-    var dataSizeByteData = new ByteData.view(dataSizeList.buffer);
-    dataSizeByteData.setInt32(0, data.length);
-    buf.load().copyInto(successFieldSize + dataFieldSize, dataSizeList);
+    int32ByteData.setInt32(0, data.length);
+    buf.load().copyInto(int32FieldSize + dataFieldSize, int32List);
     // signature field
-    buf.load().copyInto(successFieldSize + dataFieldSize + dataSizeFieldSize, signature);
+    buf.load().copyInto(int32FieldSize + dataFieldSize + int32FieldSize, signature);
 
     return buf;
   }
@@ -142,13 +142,13 @@ class SpendTx {
   static SpendTx fromCBuffer(CBuffer buf) {
     var ints = buf.toIntList(totalSize);
 
-    var success = ints[0] != 0;
-    var dataSize = Int8List.fromList(ints).buffer.asByteData().getInt32(successFieldSize + dataFieldSize, Endian.big);
+    var success = Int8List.fromList(ints).buffer.asByteData().getInt32(0, Endian.little);
+    var dataSize = Int8List.fromList(ints).buffer.asByteData().getInt32(int32FieldSize + dataFieldSize, Endian.little);
     assert(dataSize >= 0 && dataSize <= dataFieldSize);
-    var data = ints.skip(successFieldSize).take(dataSize);
-    var sig = ints.skip(successFieldSize + dataFieldSize + dataSizeFieldSize).take(sigFieldSize);
+    var data = ints.skip(int32FieldSize).take(dataSize);
+    var sig = ints.skip(int32FieldSize + dataFieldSize + int32FieldSize).take(sigFieldSize);
 
-    return SpendTx(success, data, sig);
+    return SpendTx(success != 0, data, sig);
   }
 
   static Pointer<CBuffer> allocate() {
@@ -161,7 +161,7 @@ class SpendTx {
 //
 
 class IntResultNative extends Struct<IntResultNative> {
-  @Int8()
+  @Int32()
   int success;
 
   @Int64()
