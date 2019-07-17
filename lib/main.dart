@@ -10,6 +10,7 @@ import 'utils.dart';
 import 'libzap.dart';
 import 'prefs.dart';
 import 'new_mnemonic_form.dart';
+import 'transactions.dart';
 
 void main() => runApp(new MyApp());
 
@@ -36,7 +37,6 @@ class ZapHomePage extends StatefulWidget {
 }
 
 class _ZapHomePageState extends State<ZapHomePage> {
-  int _counter = 0;
   bool _testnet = true;
   String _mnemonic = "";
   String _address = "";
@@ -73,7 +73,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
     // get fee
     var feeResult = await LibZap.transactionFee();
     // get balance
-    var balanceResult = await LibZap.addrBalance(address);
+    var balanceResult = await LibZap.addressBalance(address);
     // update state
     setState(() {
       if (feeResult.success)
@@ -96,12 +96,6 @@ class _ZapHomePageState extends State<ZapHomePage> {
       context,
       MaterialPageRoute(builder: (context) => NewMnemonicForm(mnemonic)),
     );
-  }
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
   }
 
   void _scanQrCode() async {
@@ -135,6 +129,14 @@ class _ZapHomePageState extends State<ZapHomePage> {
     await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => ReceiveScreen(_testnet, _address)),
+    );
+    _setWalletDetails();
+  }
+
+  void _transactions() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => TransactionsScreen(_address)),
     );
     _setWalletDetails();
   }
@@ -213,26 +215,12 @@ class _ZapHomePageState extends State<ZapHomePage> {
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  new Text(
-                    'You have pushed the button this many times:',
-                  ),
-                  new Text(
-                    '$_counter',
-                    style: Theme.of(context).textTheme.display1,
-                  ),
-                ],
+              child: RaisedButton.icon(
+                  onPressed: _transactions, icon: Icon(Icons.list), label:  Text("Transactions")
               ),
             ),
           ],
         ),
-      ),
-      floatingActionButton: new FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: new Icon(Icons.add),
       ),
     );
   }

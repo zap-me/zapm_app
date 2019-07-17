@@ -103,8 +103,18 @@ class Tx {
     return Tx(type, id, sender, recipient, assetId, feeAsset, attachment, amount, fee, timestamp);
   }
 
-  static Pointer<CBuffer> allocate() {
-    return Pointer.allocate(count: totalSize);
+  static Iterable<Tx> fromCBufferMulti(Pointer<CBuffer> buf, int count) {
+    var res = List<Tx>();
+    for (int i=0; i < count; i++) {
+      var offset = i * totalSize;
+      var tx = fromCBuffer(buf.elementAt(offset).load<CBuffer>());
+      res.add(tx);
+    }
+    return res;
+  }
+
+  static Pointer<CBuffer> allocate({int count=1}) {
+    return Pointer.allocate(count: totalSize * count);
   }
 }
 
@@ -204,11 +214,17 @@ typedef lzap_seed_address_native_t = Int32 Function(Pointer<Utf8> seed, Pointer<
 typedef lzap_seed_address_t = int Function(Pointer<Utf8> seed, Pointer<Utf8> output);
 
 typedef lzap_address_check_native_t = IntResult Function(Pointer<Utf8> address);
+//TODO: ns version
 typedef lzap_address_check_ns_native_t = Int8 Function(Pointer<Utf8> address);
 typedef lzap_address_check_ns_t = int Function(Pointer<Utf8> address);
 
+//TODO: ns version
 typedef lzap_address_balance_ns_native_t = Int8 Function(Pointer<Utf8> address, Pointer<Int64> balance_out);
 typedef lzap_address_balance_ns_t = int Function(Pointer<Utf8> address, Pointer<Int64> balance_out);
+
+//TODO: ns version of transaction list
+typedef lzap_address_transactions2_ns_native_t = Int8 Function(Pointer<Utf8> address, Pointer<CBuffer> txs, Int32 count, Pointer<Utf8> after, Pointer<Int64> count_out);
+typedef lzap_address_transactions2_ns_t = int Function(Pointer<Utf8> address, Pointer<CBuffer> txs, int count, Pointer<Utf8> after, Pointer<Int64> count_out);
 
 typedef lzap_transaction_fee_ns_native_t = Int8 Function(Pointer<Int64> fee_out);
 typedef lzap_transaction_Fee_ns_t = int Function(Pointer<Int64> fee_out);
@@ -245,6 +261,36 @@ IntResult addressBalanceFromIsolate(String address) {
   balanceP.free();
   addrC.free();
   return IntResult(res != 0, balance);
+}
+
+class AddrTxsRequest {
+  String address;
+  int count;
+  String after;
+  AddrTxsRequest(this.address, this.count, this.after);
+}
+Iterable<Tx> addressTransactionsFromIsolate(AddrTxsRequest req) {
+  // as we are running this in an isolate we need to reinit a LibZap instance
+  // to get the function pointer as closures can not be passed to isolates
+  var libzap = LibZap();
+
+  var addrC = Utf8.allocate(req.address);
+  var txsC = Tx.allocate(count: req.count);
+  Pointer afterC = nullptr;
+  if (req.after != null)
+    afterC = Utf8.allocate(req.after);
+  var countOutP = Pointer<Int64>.allocate();
+  var res = libzap.lzap_address_transactions(addrC, txsC, req.count, afterC.cast<Utf8>(), countOutP) != 0;
+  Iterable<Tx> txs = null;
+  if (res) {
+    int count = countOutP.load();
+    txs = Tx.fromCBufferMulti(txsC, count);
+  }
+  countOutP.free();
+  afterC.free();
+  txsC.free();
+  addrC.free();
+  return txs;
 }
 
 IntResult transactionFeeFromIsolate(int _dummy) {
@@ -307,6 +353,9 @@ class LibZap {
     lzap_address_balance = libzap
         .lookup<NativeFunction<lzap_address_balance_ns_native_t>>("lzap_address_balance_ns")
         .asFunction();
+    lzap_address_transactions = libzap
+        .lookup<NativeFunction<lzap_address_transactions2_ns_native_t>>("lzap_address_transactions2_ns")
+        .asFunction();
     lzap_transaction_fee = libzap
         .lookup<NativeFunction<lzap_transaction_fee_ns_native_t>>("lzap_transaction_fee_ns")
         .asFunction();
@@ -329,6 +378,7 @@ class LibZap {
   lzap_seed_address_t lzap_seed_address;
   lzap_address_check_ns_t lzap_address_check;
   lzap_address_balance_ns_t lzap_address_balance;
+  lzap_address_transactions2_ns_t lzap_address_transactions;
   lzap_transaction_Fee_ns_t lzap_transaction_fee;
   lzap_transaction_create_ns_t lzap_transaction_create;
   lzap_transaction_broadcast_ns_t lzap_transaction_broadcast;
@@ -406,8 +456,12 @@ class LibZap {
     return res;
   }
 
-  static Future<IntResult> addrBalance(String address) async {
+  static Future<IntResult> addressBalance(String address) async {
     return compute(addressBalanceFromIsolate, address);
+  }
+
+  static Future<Iterable<Tx>> addressTransactions(String address, int count, String after) async {
+    return compute(addressTransactionsFromIsolate, AddrTxsRequest(address, count, after));
   }
 
   static Future<IntResult> transactionFee() async {
