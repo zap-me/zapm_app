@@ -8,8 +8,11 @@
 .pub/
 
 build/
+android/.idea
 
 .flutter-plugins
+.gradle
+.vscode
 
 
 

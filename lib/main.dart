@@ -1,3 +1,6 @@
+import 'package:flutter/foundation.dart'
+    show debugDefaultTargetPlatformOverride;
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:qr_reader/qr_reader.dart';
 import 'package:decimal/decimal.dart';
@@ -12,7 +15,27 @@ import 'prefs.dart';
 import 'new_mnemonic_form.dart';
 import 'transactions.dart';
 
-void main() => runApp(new MyApp());
+void main() {
+  // See https://github.com/flutter/flutter/wiki/Desktop-shells#target-platform-override
+  _setTargetPlatformForDesktop();  
+
+  runApp(new MyApp());
+}
+
+/// If the current platform is desktop, override the default platform to
+/// a supported platform (iOS for macOS, Android for Linux and Windows).
+/// Otherwise, do nothing.
+void _setTargetPlatformForDesktop() {
+  TargetPlatform targetPlatform;
+  if (Platform.isMacOS) {
+    targetPlatform = TargetPlatform.iOS;
+  } else if (Platform.isLinux || Platform.isWindows) {
+    targetPlatform = TargetPlatform.android;
+  }
+  if (targetPlatform != null) {
+    debugDefaultTargetPlatformOverride = targetPlatform;
+  }
+}
 
 class MyApp extends StatelessWidget {
   @override

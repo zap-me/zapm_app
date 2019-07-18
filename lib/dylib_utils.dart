@@ -10,7 +10,7 @@ String _platformPath(String name, {String path}) {
   if (Platform.isLinux || Platform.isAndroid)
     return path + "lib" + name + ".so";
   if (Platform.isMacOS) return path + "lib" + name + ".dylib";
-  if (Platform.isWindows) return path + name + ".dll";
+  if (Platform.isWindows) return path + "lib" + name + ".dll";
   throw Exception("Platform not implemented");
 }
 

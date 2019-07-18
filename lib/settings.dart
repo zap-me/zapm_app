@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:package_info/package_info.dart';
 
@@ -26,6 +27,11 @@ class _SettingsState extends State<SettingsScreen> {
   }
 
   void _initAppVersion() {
+    if (!Platform.isAndroid && !Platform.isIOS) {
+      _appVersion = "Unknown ('package_info' not supported on ${Platform.operatingSystem})";
+      _buildNumber = "N/A";
+      return;
+    }
     PackageInfo.fromPlatform().then((PackageInfo packageInfo) {
       setState(() {
         _appVersion = packageInfo.version;
