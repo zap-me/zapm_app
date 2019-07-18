@@ -209,6 +209,9 @@ typedef lzap_network_set_t = int Function(int network_byte);
 typedef lzap_mnemonic_create_native_t = Int8 Function(Pointer<Utf8> output, Int32 size);
 typedef lzap_mnemonic_create_t = int Function(Pointer<Utf8> output, int size);
 
+typedef lzap_mnemonic_check_native_t = Int8 Function(Pointer<Utf8> mnemonic);
+typedef lzap_mnemonic_check_t = int Function(Pointer<Utf8> mnemonic);
+
 //TODO: this function does not actually return anything, but dart:ffi does not seem to handle void functions yet
 typedef lzap_seed_address_native_t = Int32 Function(Pointer<Utf8> seed, Pointer<Utf8> output);
 typedef lzap_seed_address_t = int Function(Pointer<Utf8> seed, Pointer<Utf8> output);
@@ -344,6 +347,9 @@ class LibZap {
     lzap_mnemonic_create = libzap
         .lookup<NativeFunction<lzap_mnemonic_create_native_t>>("lzap_mnemonic_create")
         .asFunction();
+    lzap_mnemonic_check = libzap
+        .lookup<NativeFunction<lzap_mnemonic_check_native_t>>("lzap_mnemonic_check")
+        .asFunction();
     lzap_seed_address = libzap
         .lookup<NativeFunction<lzap_seed_address_native_t>>("lzap_seed_address")
         .asFunction();
@@ -375,6 +381,7 @@ class LibZap {
   lzap_network_get_t lzap_network_get;
   lzap_network_set_t lzap_network_set;
   lzap_mnemonic_create_t lzap_mnemonic_create;
+  lzap_mnemonic_check_t lzap_mnemonic_check;
   lzap_seed_address_t lzap_seed_address;
   lzap_address_check_ns_t lzap_address_check;
   lzap_address_balance_ns_t lzap_address_balance;
@@ -436,6 +443,13 @@ class LibZap {
     if (res != 0)
       return mnemonic;
     return null;
+  }
+
+  bool mnemonicCheck(String mnemonic) {
+    var mnemonicC = Utf8.allocate(mnemonic);
+    var res = lzap_mnemonic_check(mnemonicC) != 0;
+    mnemonicC.free();
+    return res;
   }
 
   String seedAddress(String seed) {

@@ -59,6 +59,8 @@ class ZapHomePage extends StatefulWidget {
   _ZapHomePageState createState() => new _ZapHomePageState();
 }
 
+enum NoMnemonicAction { CreateNew, Recover }
+
 class _ZapHomePageState extends State<ZapHomePage> {
   bool _testnet = true;
   String _mnemonic = "";
@@ -68,10 +70,122 @@ class _ZapHomePageState extends State<ZapHomePage> {
   String _balanceText = "...";
   bool _updatingBalance = true;
 
-  _ZapHomePageState() {
+  _ZapHomePageState();
+
+  Future<NoMnemonicAction> _noMnemonicDialog(BuildContext context) async {
+    return await showDialog<NoMnemonicAction>(
+        context: context,
+        barrierDismissible: true,
+        builder: (BuildContext context) {
+          return SimpleDialog(
+            title: const Text("You do not have a mnemonic saved, what would you like to do?"),
+            children: <Widget>[
+              SimpleDialogOption(
+                onPressed: () {
+                  Navigator.pop(context, NoMnemonicAction.CreateNew);
+                },
+                child: const Text("Create a new mnemonic"),
+              ),
+              SimpleDialogOption(
+                onPressed: () {
+                  Navigator.pop(context, NoMnemonicAction.Recover);
+                },
+                child: const Text("Recover using your mnemonic"),
+              ),
+            ],
+          );
+        });
   }
 
-  void _setWalletDetails() async {
+  Future<String> _recoverMnemonic(BuildContext context) async {
+    String mnemonic = "";
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false, // dialog is dismissible with a tap on the barrier
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Enter your mnemonic to recover your account"),
+          content: new Row(
+            children: <Widget>[
+              new Expanded(
+                  child: new TextField(
+                    autofocus: true,
+                    decoration: new InputDecoration(
+                        labelText: "Mnemonic",),
+                    onChanged: (value) {
+                      mnemonic = value;
+                    },
+                  ))
+            ],
+          ),
+          actions: <Widget>[
+            FlatButton(
+              child: Text("Ok"),
+              onPressed: () {
+                Navigator.of(context).pop(mnemonic);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _alert(BuildContext context, String title, String msg) {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(msg),
+          actions: <Widget>[
+            FlatButton(
+              child: Text("Ok"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _noMnemonic() async {
+    var libzap = LibZap();
+    while (true) {
+      String mnemonic = null;
+      var action = await _noMnemonicDialog(context);
+      switch (action) {
+        case NoMnemonicAction.CreateNew:
+          mnemonic = libzap.mnemonicCreate();
+          // show warning for new mnemonic
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => NewMnemonicForm(mnemonic)),
+          );
+          break;
+        case NoMnemonicAction.Recover:
+        // recover mnemonic
+          mnemonic = await _recoverMnemonic(context);
+          mnemonic = mnemonic.trim();
+          mnemonic = mnemonic.replaceAll(RegExp(r"\s+"), " ");
+          mnemonic = mnemonic.toLowerCase();
+          if (!libzap.mnemonicCheck(mnemonic)) {
+            mnemonic = null;
+            await _alert(context, "Mnemonic not valid", "The mnemonic you entered is not valid");
+          }
+          break;
+      }
+      if (mnemonic != null) {
+        await PrefsSecure.MnemonicSet(mnemonic);
+        await _alert(context, "Mnemonic saved", ":)");
+        break;        
+      }
+    }
+  }
+
+  Future<bool> _setWalletDetails() async {
     setState(() {
       _updatingBalance = true;
     });
@@ -79,12 +193,9 @@ class _ZapHomePageState extends State<ZapHomePage> {
     // get testnet value
     _testnet = await Prefs.TestnetGet();
     // check mnemonic
-    var newMnemonic = false;
     var mnemonic = await PrefsSecure.MnemonicGet();
     if (mnemonic == null || mnemonic == "") {
-      mnemonic = libzap.mnemonicCreate();
-      newMnemonic = true;
-      await PrefsSecure.MnemonicSet(mnemonic);
+      return false;
     }
     // create address
     var address = libzap.seedAddress(mnemonic);
@@ -113,12 +224,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
       }
       _updatingBalance = false;
     });
-    // show warning for new mnemonic
-    if (newMnemonic)
-    await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => NewMnemonicForm(mnemonic)),
-    );
+    return true;
   }
 
   void _scanQrCode() async {
@@ -178,7 +284,12 @@ class _ZapHomePageState extends State<ZapHomePage> {
       // set libzap testnet
       LibZap().testnetSet(testnet);
       // init wallet details
-      _setWalletDetails();
+      _setWalletDetails().then((hasMnemonic) {
+        if (!hasMnemonic) {
+          _noMnemonic();
+          _setWalletDetails();
+        }
+      });
     });
 
     super.initState();
