@@ -265,7 +265,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
   void _transactions() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => TransactionsScreen(_address)),
+      MaterialPageRoute(builder: (context) => TransactionsScreen(_address, _testnet)),
     );
     _setWalletDetails();
   }

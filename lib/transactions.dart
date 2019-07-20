@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'libzap.dart';
 
 class TransactionsScreen extends StatefulWidget {
   String _address = null;
+  bool _testnet = true;
 
-  TransactionsScreen(this._address) : super();
+  TransactionsScreen(this._address, this._testnet) : super();
 
   @override
   _TransactionsState createState() => new _TransactionsState();
@@ -52,13 +54,15 @@ class _TransactionsState extends State<TransactionsScreen> {
     var outgoing = tx.sender == widget._address;
     var icon = outgoing ? Icons.remove_circle : Icons.add_circle;
     var amount = Decimal.fromInt(tx.amount) / Decimal.fromInt(100);
-    var amountText = outgoing ? "-$amount" : "+$amount";
+    var amountText = amount.toStringAsFixed(2);
+    amountText = outgoing ? "-$amountText" : "+$amountText";
     var color = outgoing ? Colors.red : Colors.green;
     var date = new DateTime.fromMillisecondsSinceEpoch(tx.timestamp);
     var dateStr = DateFormat("yyyyMMdd").format(date);
     var dateStrLong = DateFormat("yyyy-MM-dd HH:mm").format(date);
-    var to = outgoing ? "Recipient: ${tx.recipient}" : "Sender: ${tx.sender}";
-    var subtitle = "$dateStr: $to";
+    var tofrom = outgoing ? "Recipient: ${tx.recipient}" : "Sender: ${tx.sender}";
+    var subtitle = "$dateStr: $tofrom";
+    var link = widget._testnet ? "https://wavesexplorer.com/testnet/tx/${tx.id}" : "https://wavesexplorer.com/tx/${tx.id}";
     return Card(
       child: ListTile(
         leading: Icon(icon, color: color,),
@@ -78,23 +82,36 @@ class _TransactionsState extends State<TransactionsScreen> {
                       child: Column(
                         children: <Widget>[
                           Container(
-                            padding: const EdgeInsets.only(top: 18.0),
-                            child: ListTile(title: Text(tx.id)),
+                            padding: const EdgeInsets.only(top: 5.0),
+                            child: ListTile(title: Text("Transaction ID"),
+                                subtitle: InkWell(
+                                  child: Text(tx.id, style: new TextStyle(color: Colors.blue, decoration: TextDecoration.underline))),
+                                  onTap: () => launch(link),
+                                ),
+
                           ),
                           Container(
-                            padding: const EdgeInsets.only(top: 18.0),
-                            child: ListTile(title: Text(dateStrLong)),
+                            padding: const EdgeInsets.only(top: 5.0),
+                            child: ListTile(title: Text("Date"), subtitle: Text(dateStrLong)),
                           ),
                           Container(
-                            padding: const EdgeInsets.only(top: 10.0),
-                            child: ListTile(title: Text(to)),
+                            padding: const EdgeInsets.only(top: 5.0),
+                            child: ListTile(title: Text("Sender"), subtitle: Text(tx.sender)),
                           ),
                           Container(
-                            padding: const EdgeInsets.only(top: 10.0),
-                            child: ListTile(title: Text("$amountText ZAP", style: TextStyle(color: color),)),
+                            padding: const EdgeInsets.only(top: 5.0),
+                            child: ListTile(title: Text("Recipient"), subtitle: Text(tx.recipient)),
                           ),
                           Container(
-                            padding: const EdgeInsets.only(top: 18.0),
+                            padding: const EdgeInsets.only(top: 5.0),
+                            child: ListTile(title: Text("Amount"), subtitle: Text("$amountText ZAP", style: TextStyle(color: color),)),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.only(top: 5.0),
+                            child: ListTile(title: Text("Attachment"), subtitle: Text(tx.attachment)),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.only(top: 5.0),
                             child: RaisedButton.icon(
                                 onPressed: () {
                                   Navigator.pop(context);
