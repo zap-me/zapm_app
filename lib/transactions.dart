@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flushbar/flushbar.dart';
 
 import 'libzap.dart';
 
 class TransactionsScreen extends StatefulWidget {
-  String _address = null;
+  String _address;
   bool _testnet = true;
 
   TransactionsScreen(this._address, this._testnet) : super();
@@ -15,42 +16,77 @@ class TransactionsScreen extends StatefulWidget {
   _TransactionsState createState() => new _TransactionsState();
 }
 
+enum LoadDirection {
+  Next, Previous, Initial
+}
+
 class _TransactionsState extends State<TransactionsScreen> {
   bool _loading = true;
   List<Tx> _txs = List<Tx>();
-  String _after = null;
+  int _offset = 0;
+  int _count = 10;
+  String _after;
   bool _more = false;
-  int _count = 20;
+  bool _less = false;
+  bool _foundEnd = false;
 
   @override
   void initState() {
-    _loadTxs();
+    _loadTxs(LoadDirection.Initial);
     super.initState();
   }
 
-  void _loadTxs() async {
-    setState(() {
-      _loading = true;
-    });
-    var libzap = LibZap();
-    var txs = await LibZap.addressTransactions(widget._address, _count, _after);
-    setState(() {
-      if (txs != null && txs.length > 0) {
-        _txs = txs;
-        var lastTx = _txs[txs.length-1];
-        _after = lastTx.id;
-        _more = txs.length == _count;
-      }
-      else {
-        _more = true;
-        _txs.clear();
-      }
-      _loading = false;
-    });
+  void _loadTxs(LoadDirection dir) async {
+    var newOffset = _offset;
+    if (dir == LoadDirection.Next) {
+      newOffset += _count;
+      if (newOffset > _txs.length)
+        newOffset = _txs.length;
+    }
+    else if (dir == LoadDirection.Previous) {
+      newOffset -= _count;
+      if (newOffset < 0)
+        newOffset = 0;
+    }
+    if (newOffset == _txs.length) {
+      // set loading
+      setState(() {
+        _loading = true;
+      });
+      // load new txs
+      var txs = await LibZap.addressTransactions(widget._address, _count, _after);
+      setState(() {
+        if (txs != null && txs.length > 0) {
+          _txs = _txs + txs;
+          var lastTx = _txs[_txs.length-1];
+          _after = lastTx.id;
+          _more = txs.length == _count;
+          _less = newOffset > 0;
+          if (txs.length < _count)
+            _foundEnd = true;
+          _offset = newOffset;
+        }
+        else {
+          Flushbar(title: "Failed to load transactions", message: "try again? :(", duration: Duration(seconds: 2),)
+            ..show(context);
+        }
+        _loading = false;
+      });
+    }
+    else {
+      setState(() {
+        _more = !_foundEnd || newOffset < _txs.length - _count;
+        _less = newOffset > 0;
+        _offset = newOffset;
+      });
+    }
   }
 
   Widget _buildTxList(BuildContext context, int index) {
-    var tx = _txs[index];
+    var offsetIndex = _offset + index;
+    if (offsetIndex >= _offset + _count || offsetIndex >= _txs.length)
+      return null;
+    var tx = _txs[offsetIndex];
     var outgoing = tx.sender == widget._address;
     var icon = outgoing ? Icons.remove_circle : Icons.add_circle;
     var amount = Decimal.fromInt(tx.amount) / Decimal.fromInt(100);
@@ -149,24 +185,37 @@ class _TransactionsState extends State<TransactionsScreen> {
                   itemCount: _txs.length,
                   itemBuilder: (BuildContext context, int index) => _buildTxList(context, index),
                 ))),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Visibility(
+                    visible: !_loading && _less,
+                    child: Container(
+                        padding: const EdgeInsets.only(top: 18.0),
+                        child: RaisedButton.icon(
+                            onPressed: () => _loadTxs(LoadDirection.Previous),
+                            icon: Icon(Icons.navigate_before),
+                            label: Text('Prev'))
+                    )),
+                Visibility(
+                    visible: !_loading && _more,
+                    child: Container(
+                        padding: const EdgeInsets.only(top: 18.0),
+                        child: RaisedButton.icon(
+                            onPressed: () => _loadTxs(LoadDirection.Next),
+                            icon: Icon(Icons.navigate_next),
+                            label: Text('Next'))
+                    )),
+
+              ],
+            ),
             Visibility(
-              visible: !_loading && _more,
-              child: Container(
-                padding: const EdgeInsets.only(top: 18.0),
-                child: RaisedButton.icon(
-                    onPressed: () {
-                      _loadTxs();
-                    },
-                    icon: Icon(Icons.navigate_next),
-                    label: Text('More'))
-                )),
-              Visibility(
-                  visible: _loading,
-                  child: CircularProgressIndicator(),
-              ),
-            ],
-          ),
-        )
+                visible: _loading,
+                child: CircularProgressIndicator(),
+            ),
+          ],
+        ),
+      )
     );
   }
 }
