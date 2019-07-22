@@ -131,26 +131,6 @@ class _ZapHomePageState extends State<ZapHomePage> {
     );
   }
 
-  Future<void> _alert(BuildContext context, String title, String msg) {
-    return showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(title),
-          content: Text(msg),
-          actions: <Widget>[
-            FlatButton(
-              child: Text("Ok"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   void _noMnemonic() async {
     var libzap = LibZap();
     while (true) {
@@ -173,13 +153,13 @@ class _ZapHomePageState extends State<ZapHomePage> {
           mnemonic = mnemonic.toLowerCase();
           if (!libzap.mnemonicCheck(mnemonic)) {
             mnemonic = null;
-            await _alert(context, "Mnemonic not valid", "The mnemonic you entered is not valid");
+            await alert(context, "Mnemonic not valid", "The mnemonic you entered is not valid");
           }
           break;
       }
       if (mnemonic != null) {
         await PrefsSecure.MnemonicSet(mnemonic);
-        await _alert(context, "Mnemonic saved", ":)");
+        await alert(context, "Mnemonic saved", ":)");
         break;        
       }
     }

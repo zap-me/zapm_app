@@ -1,10 +1,14 @@
+import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flushbar/flushbar.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'libzap.dart';
+import 'utils.dart';
 
 class TransactionsScreen extends StatefulWidget {
   String _address;
@@ -20,6 +24,17 @@ enum LoadDirection {
   Next, Previous, Initial
 }
 
+class Choice {
+  const Choice({this.title, this.icon});
+
+  final String title;
+  final IconData icon;
+}
+
+const List<Choice> choices = const <Choice>[
+  const Choice(title: "Export JSON", icon: Icons.save),
+];
+
 class _TransactionsState extends State<TransactionsScreen> {
   bool _loading = true;
   List<Tx> _txs = List<Tx>();
@@ -34,6 +49,20 @@ class _TransactionsState extends State<TransactionsScreen> {
   void initState() {
     _loadTxs(LoadDirection.Initial);
     super.initState();
+  }
+
+  Future<int> _downloadMoreTxs() async {
+    var txs = await LibZap.addressTransactions(widget._address, _count, _after);
+    if (txs != null && txs.length > 0) {
+      _txs = _txs + txs;
+      var lastTx = _txs[_txs.length - 1];
+      _after = lastTx.id;
+      if (txs.length < _count)
+        _foundEnd = true;
+    }
+    if (txs == null)
+      return -1;
+    return txs.length;
   }
 
   void _loadTxs(LoadDirection dir) async {
@@ -54,16 +83,11 @@ class _TransactionsState extends State<TransactionsScreen> {
         _loading = true;
       });
       // load new txs
-      var txs = await LibZap.addressTransactions(widget._address, _count, _after);
+      var res = await _downloadMoreTxs();
       setState(() {
-        if (txs != null && txs.length > 0) {
-          _txs = _txs + txs;
-          var lastTx = _txs[_txs.length-1];
-          _after = lastTx.id;
-          _more = txs.length == _count;
+        if (res != -1) {
+          _more = res == _count;
           _less = newOffset > 0;
-          if (txs.length < _count)
-            _foundEnd = true;
           _offset = newOffset;
         }
         else {
@@ -166,11 +190,59 @@ class _TransactionsState extends State<TransactionsScreen> {
       );
   }
 
+  void _select(Choice choice) async {
+    switch (choice.title) {
+      case "Export JSON":
+        setState(() {
+          _loading = true;
+        });
+        while (true) {
+          var txs = await _downloadMoreTxs();
+          if (txs == null) {
+            Flushbar(title: "Failed to load transactions", message: "try again? :(", duration: Duration(seconds: 2),)
+              ..show(context);
+            setState(() {
+              _loading = false;
+            });
+            return;
+          }
+          else if (_foundEnd) {
+            var json = jsonEncode(_txs);
+            var filename = "zap_txs.json";
+            if (Platform.isAndroid || Platform.isIOS) {
+              var dir = await getExternalStorageDirectory();
+              filename = dir.path + "/" + filename;
+            }
+            await File(filename).writeAsString(json);
+            alert(context, "Wrote JSON", filename);
+            setState(() {
+              _loading = false;
+            });
+            break;
+          }
+        }
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text("Transactions"),
+        actions: <Widget>[
+          PopupMenuButton<Choice>(
+            onSelected: _select,
+            itemBuilder: (BuildContext context) {
+              return choices.map((Choice choice) {
+                return PopupMenuItem<Choice>(
+                  value: choice,
+                  child: Text(choice.title),
+                );
+              }).toList();
+            },
+          ),
+        ],
       ),
       body: Center(
         child: Column(
@@ -180,8 +252,7 @@ class _TransactionsState extends State<TransactionsScreen> {
             Visibility(
               visible: !_loading,
               child:Expanded(
-                child: new ListView.builder
-                (
+                child: new ListView.builder(
                   itemCount: _txs.length,
                   itemBuilder: (BuildContext context, int index) => _buildTxList(context, index),
                 ))),

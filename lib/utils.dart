@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
 import 'package:tuple/tuple.dart';
 
@@ -57,4 +58,24 @@ String parseRecipientOrUri(bool testnet, String data) {
   if (result.item5 == NO_ERROR)
     return result.item1;        // return address part of waves uri, user should call parseUri directly for extra details
   return null;                  // return null, data is not usable/valid
+}
+
+Future<void> alert(BuildContext context, String title, String msg) {
+  return showDialog<void>(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text(title),
+        content: Text(msg),
+        actions: <Widget>[
+          FlatButton(
+            child: Text("Ok"),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
+      );
+    },
+  );
 }

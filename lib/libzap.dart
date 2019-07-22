@@ -116,6 +116,20 @@ class Tx {
   static Pointer<CBuffer> allocate({int count=1}) {
     return Pointer.allocate(count: totalSize * count);
   }
+
+  Map<String, dynamic> toJson() =>
+      {
+        'type': type,
+        'id': id,
+        'sender': sender,
+        'recipient': recipient,
+        'assetId': assetId,
+        'feeAsset': feeAsset,
+        'attachment': attachment,
+        'amount': amount,
+        'fee': fee,
+        'timestamp': timestamp
+      };
 }
 
 class SpendTx {
