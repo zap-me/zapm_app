@@ -1,17 +1,13 @@
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:ini/ini.dart';
 
 import 'libzap.dart';
 
-enum PrefType {
-  Main, Secure,
-}
 class PrefHelper {
-  PrefType _type;
+  static final _section = "main";
 
-  PrefHelper(this._type);
+  PrefHelper();
 
   static Future<Config> fromFile() async {
     var config = Config();
@@ -20,9 +16,8 @@ class PrefHelper {
       var data = await File("zap.ini").readAsLines();
       config = Config.fromStrings(data);
     }
-    for (var type in PrefType.values)
-      if (!config.hasSection(type.toString()))
-        config.addSection(type.toString());
+    if (!config.hasSection(_section))
+      config.addSection(_section);
     return config;
   }
 
@@ -32,102 +27,92 @@ class PrefHelper {
 
   Future<void> setBool(String key, bool value) async {
     if (Platform.isAndroid || Platform.isIOS) {
-      if (_type == PrefType.Main) {
-        final prefs = await SharedPreferences.getInstance();
-        prefs.setBool(key, value);
-      }
-      else {
-        final storage = new FlutterSecureStorage();
-        await storage.write(key: key, value: value.toString());
-      }
+      final prefs = await SharedPreferences.getInstance();
+      prefs.setBool(key, value);
     }
     else {
       var config = await fromFile();
-      config.set(_type.toString(), key, value.toString());
+      config.set(_section, key, value.toString());
       await toFile(config);
     }
   }
 
   Future<bool> getBool(String key, bool default_) async {
     if (Platform.isAndroid || Platform.isIOS) {
-      if (_type == PrefType.Main) {
-        final prefs = await SharedPreferences.getInstance();
-        return prefs.getBool(key) ?? default_;
-      }
-      else {
-        final storage = new FlutterSecureStorage();
-        var value = await storage.read(key: key) ?? default_.toString();
-        return value.toLowerCase() == 'true';
-      }
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool(key) ?? default_;
     }
     else {
       var config = await fromFile();
-      var value = config.get(_type.toString(), key) ?? default_.toString();
+      var value = config.get(_section, key) ?? default_.toString();
       return value.toLowerCase() == 'true';
     }  
   }
 
   Future<void> setString(String key, String value) async {
     if (Platform.isAndroid || Platform.isIOS) {
-      if (_type == PrefType.Main) {
-        final prefs = await SharedPreferences.getInstance();
-        prefs.setString(key, value);
-      }
-      else {
-        final storage = new FlutterSecureStorage();
-        await storage.write(key: key, value: value);
-      }
+      final prefs = await SharedPreferences.getInstance();
+      prefs.setString(key, value);
     }
     else {
       var config = await fromFile();
-      config.set(_type.toString(), key, value);
+      config.set(_section, key, value);
       await toFile(config);
     }
   }
 
   Future<String> getString(String key, String default_) async {
     if (Platform.isAndroid || Platform.isIOS) {
-      if (_type == PrefType.Main) {
-        final prefs = await SharedPreferences.getInstance();
-        return prefs.getBool(key) ?? default_;
-      }
-      else {
-        final storage = new FlutterSecureStorage();
-        return await storage.read(key: key) ?? default_;
-      }
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString(key) ?? default_;
     }
     else {
       var config = await fromFile();
-      return config.get(_type.toString(), key) ?? default_;
+      return config.get(_section, key) ?? default_;
     }  
   }
 }
 
 class Prefs {
-  static Future<bool> TestnetGet() async {
-    final prefs = PrefHelper(PrefType.Main);
+  static Future<bool> testnetGet() async {
+    final prefs = PrefHelper();
     return await prefs.getBool("testnet", true);
   }
 
-  static void TestnetSet(bool value) async {
-    final prefs = PrefHelper(PrefType.Main);
+  static void testnetSet(bool value) async {
+    final prefs = PrefHelper();
     await prefs.setBool("testnet", value);
 
     // set libzap
     LibZap().testnetSet(value);
   }
-}
 
-class PrefsSecure {
-  static Future<String> MnemonicGet() async {
-    final prefs = PrefHelper(PrefType.Secure);
+  static Future<String> mnemonicGet() async {
+    final prefs = PrefHelper();
     var mnemonic = await prefs.getString("mnemonic", null);
     return mnemonic;
   }
 
-  static Future<bool> MnemonicSet(String value) async {
-    final prefs = PrefHelper(PrefType.Secure);
+  static Future<bool> mnemonicSet(String value) async {
+    final prefs = PrefHelper();
     await prefs.setString("mnemonic", value);
+    return true;
+  }
+
+  static Future<bool> mnemonicPasswordProtectedGet() async {
+    var iv = await cryptoIVGet();
+    return iv != null;
+  }
+
+  static Future<String> cryptoIVGet() async {
+    final prefs = PrefHelper();
+    var mnemonic = await prefs.getString("IV", null);
+    return mnemonic;
+  }
+
+  static Future<bool> cryptoIVSet(String value) async {
+    final prefs = PrefHelper();
+    await prefs.setString("IV", value);
     return true;
   }
 }

@@ -1,6 +1,9 @@
-import 'package:flutter/material.dart';
+import 'dart:typed_data';
+import 'dart:math';
+import 'package:flutter/material.dart' hide Key;
 import 'package:decimal/decimal.dart';
 import 'package:tuple/tuple.dart';
+import 'package:encrypt/encrypt.dart';
 
 import 'libzap.dart';
 
@@ -78,4 +81,174 @@ Future<void> alert(BuildContext context, String title, String msg) {
       );
     },
   );
+}
+
+Future<String> askSetMnemonicPassword(BuildContext context) async {
+  final formKey = GlobalKey<FormState>();
+  final pwController = new TextEditingController();
+  final pw2Controller = new TextEditingController();
+
+  void submit() {
+    if (formKey.currentState.validate()) {
+      Navigator.pop(context, pwController.text);
+    }
+  }
+
+  Widget buildForm(BuildContext context) {
+    return Form(
+      key: formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          TextFormField(
+            controller: pwController,
+            obscureText: true,
+            keyboardType: TextInputType.text,
+            decoration: new InputDecoration(labelText: 'Password'),
+            validator: (value) {
+              if (value.isEmpty) {
+                return 'Please enter a value';
+              }
+              return null;
+            },
+          ),
+          TextFormField(
+            controller: pw2Controller,
+            obscureText: true,
+            keyboardType: TextInputType.text,
+            decoration: new InputDecoration(labelText: 'Password Again'),
+            validator: (value) {
+              if (value.isEmpty) {
+                return 'Please enter a value';
+              }
+              if (value != pwController.text) {
+                return 'Passwords must match';
+              }
+              return null;
+            },
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              RaisedButton.icon(
+                  onPressed: () { Navigator.pop(context); },
+                  icon: Icon(Icons.cancel),
+                  label: Text('Cancel')),
+              RaisedButton.icon(
+                  onPressed: submit,
+                  icon: Icon(Icons.lock),
+                  label: Text('Submit')),
+            ]
+          ),
+        ],
+      ),
+    );
+  }
+
+  return showDialog<String>(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text("Create password to protect your mnemonic"),
+        content: buildForm(context),
+      );
+    },
+  );
+}
+
+Future<String> askMnemonicPassword(BuildContext context) async {
+  final formKey = GlobalKey<FormState>();
+  final pwController = new TextEditingController();
+
+  void submit() {
+    if (formKey.currentState.validate()) {
+      Navigator.pop(context, pwController.text);
+    }
+  }
+
+  Widget buildForm(BuildContext context) {
+    return Form(
+      key: formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          TextFormField(
+            controller: pwController,
+            obscureText: true,
+            keyboardType: TextInputType.text,
+            decoration: new InputDecoration(labelText: 'Password'),
+            validator: (value) {
+              if (value.isEmpty) {
+                return 'Please enter a value';
+              }
+              return null;
+            },
+          ),
+          Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                RaisedButton.icon(
+                    onPressed: () { Navigator.pop(context); },
+                    icon: Icon(Icons.cancel),
+                    label: Text('Cancel')),
+                RaisedButton.icon(
+                    onPressed: submit,
+                    icon: Icon(Icons.lock),
+                    label: Text('Submit')),
+              ]
+          ),
+        ],
+      ),
+    );
+  }
+
+  return showDialog<String>(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text("Enter password to decrypt your mnemonic"),
+        content: buildForm(context),
+      );
+    },
+  );
+}
+
+class EncryptedMnemonic {
+  String encryptedMnemonic;
+  String iv;
+  EncryptedMnemonic(this.encryptedMnemonic, this.iv);
+}
+
+Key padKey256(Key key) {
+  var bytes = List<int>();
+  for (var byte in key.bytes)
+    bytes.add(byte);
+  while (bytes.length < 256/8)
+    bytes.add(0);
+  return Key(Uint8List.fromList(bytes));
+}
+
+EncryptedMnemonic encryptMnemonic(String mnemonic, String password) {
+  final key = padKey256(Key.fromUtf8(password));
+  final random = Random.secure();
+  final ivData = Uint8List.fromList(List<int>.generate(16, (i) => random.nextInt(256)));
+  final iv = IV(ivData);
+
+  final encrypter = Encrypter(AES(key));
+  final encrypted = encrypter.encrypt(mnemonic, iv: iv);
+
+  return EncryptedMnemonic(encrypted.base64, iv.base64);
+}
+
+String decryptMnemonic(String encryptedMnemonicBase64, String ivBase64, String password) {
+  final key = padKey256(Key.fromUtf8(password));
+  final iv = IV.fromBase64(ivBase64);
+
+  final encrypter = Encrypter(AES(key));
+  try {
+    return encrypter.decrypt64(encryptedMnemonicBase64, iv: iv);
+  }
+  catch (ex) {
+    return "";
+  }
 }

@@ -4,19 +4,21 @@ import 'package:package_info/package_info.dart';
 
 import 'libzap.dart';
 import 'prefs.dart';
+import 'utils.dart';
 
 class SettingsScreen extends StatefulWidget {
-  String _mnemonic = null;
+  String _mnemonic;
+  bool _mnemonicPasswordProtected;
 
-  SettingsScreen(this._mnemonic) : super();
+  SettingsScreen(this._mnemonic, this._mnemonicPasswordProtected) : super();
 
   @override
   _SettingsState createState() => new _SettingsState();
 }
 
 class _SettingsState extends State<SettingsScreen> {
-  String _appVersion = null;
-  String _buildNumber = null;
+  String _appVersion;
+  String _buildNumber;
   int _libzapVersion = -1;
   bool _testnet = false;
 
@@ -46,17 +48,29 @@ class _SettingsState extends State<SettingsScreen> {
   }
 
   void _initTestnet() async {
-    var testnet = await Prefs.TestnetGet();
+    var testnet = await Prefs.testnetGet();
     setState(() {
       _testnet = testnet;
     });
   }
 
   void _toggleTestnet() async {
-    await Prefs.TestnetSet(!_testnet);
+    await Prefs.testnetSet(!_testnet);
     setState(() {
       _testnet = !_testnet;
     });
+  }
+
+  void _addPasswordProtection() async {
+    var password = await askSetMnemonicPassword(context);
+    if (password != null) {
+      var res = encryptMnemonic(widget._mnemonic, password);
+      await Prefs.cryptoIVSet(res.iv);
+      await Prefs.mnemonicSet(res.encryptedMnemonic);
+      setState(() {
+        widget._mnemonicPasswordProtected = true;
+      });
+    }
   }
 
   @override
@@ -88,7 +102,15 @@ class _SettingsState extends State<SettingsScreen> {
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),
-              child: ListTile(title: Text("Mnemonic"), subtitle: Text(widget._mnemonic)),
+              child: ListTile(title: Text("Mnemonic"), subtitle: Text(widget._mnemonic), trailing: widget._mnemonicPasswordProtected ? Icon(Icons.lock) : Icon(Icons.lock_open),),
+            ),
+            Visibility(
+              visible: !widget._mnemonicPasswordProtected,
+              child: Container(
+                child: ListTile(
+                  title: RaisedButton.icon(label: Text("Password Protect Mnemonic"), icon: Icon(Icons.lock), onPressed: () { _addPasswordProtection(); }),
+                ),
+              ),
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),

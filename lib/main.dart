@@ -64,6 +64,8 @@ enum NoMnemonicAction { CreateNew, Recover }
 class _ZapHomePageState extends State<ZapHomePage> {
   bool _testnet = true;
   String _mnemonic = "";
+  bool _mnemonicPasswordProtected = false;
+  bool _mnemonicDecrypted = false;
   String _address = "";
   Decimal _fee = Decimal.parse("0.01");
   Decimal _balance = Decimal.fromInt(-1);
@@ -158,7 +160,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
           break;
       }
       if (mnemonic != null) {
-        await PrefsSecure.MnemonicSet(mnemonic);
+        await Prefs.mnemonicSet(mnemonic);
         await alert(context, "Mnemonic saved", ":)");
         break;        
       }
@@ -171,17 +173,39 @@ class _ZapHomePageState extends State<ZapHomePage> {
     });
     var libzap = LibZap();
     // get testnet value
-    _testnet = await Prefs.TestnetGet();
+    _testnet = await Prefs.testnetGet();
     // check mnemonic
-    var mnemonic = await PrefsSecure.MnemonicGet();
-    if (mnemonic == null || mnemonic == "") {
-      return false;
+    if (_mnemonic == null || _mnemonic == "") {
+      var mnemonic = await Prefs.mnemonicGet();
+      if (mnemonic == null || mnemonic == "") {
+        return false;
+      }
+      _mnemonicPasswordProtected = await Prefs
+          .mnemonicPasswordProtectedGet();
+      if (_mnemonicPasswordProtected && !_mnemonicDecrypted) {
+        while (true) {
+          var password = await askMnemonicPassword(context);
+          if (password == null || password == "") {
+            continue;
+          }
+          var iv = await Prefs.cryptoIVGet();
+          var decryptedMnemonic = decryptMnemonic(mnemonic, iv, password);
+          if (!libzap.mnemonicCheck(decryptedMnemonic)) {
+            await alert(context, "Decrypted mnemonic invalid", "probably wrong password :(");
+          }
+          else {
+            mnemonic = decryptedMnemonic;
+            _mnemonicDecrypted = true;
+            break;
+          }
+        }
+      }
+      _mnemonic = mnemonic;
     }
     // create address
-    var address = libzap.seedAddress(mnemonic);
+    var address = libzap.seedAddress(_mnemonic);
     // update state
     setState(() {
-      _mnemonic = mnemonic;
       _address = address;
     });
     // get fee
@@ -253,14 +277,14 @@ class _ZapHomePageState extends State<ZapHomePage> {
   void _showSettings() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => SettingsScreen(_mnemonic)),
+      MaterialPageRoute(builder: (context) => SettingsScreen(_mnemonic, _mnemonicPasswordProtected)),
     );
     _setWalletDetails();
   }
 
   @override
   void initState() {
-    Prefs.TestnetGet().then((testnet) {
+    Prefs.testnetGet().then((testnet) {
       // set libzap testnet
       LibZap().testnetSet(testnet);
       // init wallet details
