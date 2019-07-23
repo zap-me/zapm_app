@@ -1,5 +1,6 @@
 name: zap_app
 description: zap.me test app
+version: 1.0.2+2
 
 dependencies:
   flutter:
@@ -26,6 +27,7 @@ dependencies:
   tuple: 1.0.2
   encrypt: ^3.2.0
   base58check: ^1.0.1
+  yaml: ^2.1.16
 
 dev_dependencies:
   flutter_test:
@@ -59,6 +61,10 @@ flutter:
           weight: 700
         - asset: fonts/Roboto/Roboto-Black.ttf
           weight: 900
+
+  # add pubspec so we can read the version on desktop
+  assets:
+    - pubspec.yaml
 
   # To add assets to your application, add an assets section, like this:
   # assets:

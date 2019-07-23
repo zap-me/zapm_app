@@ -1,6 +1,8 @@
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:package_info/package_info.dart';
+import 'package:yaml/yaml.dart';
 
 import 'libzap.dart';
 import 'prefs.dart';
@@ -28,18 +30,23 @@ class _SettingsState extends State<SettingsScreen> {
     _initTestnet();
   }
 
-  void _initAppVersion() {
+  void _initAppVersion() async {
     if (!Platform.isAndroid && !Platform.isIOS) {
-      _appVersion = "Unknown ('package_info' not supported on ${Platform.operatingSystem})";
-      _buildNumber = "N/A";
-      return;
+      var pubspec = await rootBundle.loadString('pubspec.yaml');
+      var doc = loadYaml(pubspec);
+      var version = doc["version"].toString().split("+");
+      setState(() {
+        _appVersion = version[0];
+        _buildNumber = version[1];
+      });
     }
-    PackageInfo.fromPlatform().then((PackageInfo packageInfo) {
+    else {
+      var packageInfo = await PackageInfo.fromPlatform();
       setState(() {
         _appVersion = packageInfo.version;
         _buildNumber = packageInfo.buildNumber;
       });
-    });
+    }
   }
 
   int _getLibZapVersion() {

@@ -9,6 +9,7 @@
 
 build/
 android/.idea
+native-libraries/
 
 .flutter-plugins
 .gradle
