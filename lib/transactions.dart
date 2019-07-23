@@ -51,13 +51,13 @@ class _TransactionsState extends State<TransactionsScreen> {
     super.initState();
   }
 
-  Future<int> _downloadMoreTxs() async {
-    var txs = await LibZap.addressTransactions(widget._address, _count, _after);
+  Future<int> _downloadMoreTxs(int count) async {
+    var txs = await LibZap.addressTransactions(widget._address, count, _after);
     if (txs != null && txs.length > 0) {
       _txs = _txs + txs;
       var lastTx = _txs[_txs.length - 1];
       _after = lastTx.id;
-      if (txs.length < _count)
+      if (txs.length < count)
         _foundEnd = true;
     }
     if (txs == null)
@@ -83,7 +83,7 @@ class _TransactionsState extends State<TransactionsScreen> {
         _loading = true;
       });
       // load new txs
-      var res = await _downloadMoreTxs();
+      var res = await _downloadMoreTxs(_count);
       setState(() {
         if (res != -1) {
           _more = res == _count;
@@ -111,10 +111,15 @@ class _TransactionsState extends State<TransactionsScreen> {
     if (offsetIndex >= _offset + _count || offsetIndex >= _txs.length)
       return null;
     var tx = _txs[offsetIndex];
+    var zapAssetId = widget._testnet ? LibZap.TESTNET_ASSET_ID : LibZap.MAINNET_ASSET_ID;
+    if (tx.assetId != zapAssetId)
+      return SizedBox.shrink();
     var outgoing = tx.sender == widget._address;
     var icon = outgoing ? Icons.remove_circle : Icons.add_circle;
     var amount = Decimal.fromInt(tx.amount) / Decimal.fromInt(100);
     var amountText = amount.toStringAsFixed(2);
+    var fee = Decimal.fromInt(tx.fee) / Decimal.fromInt(100);
+    var feeText = fee.toStringAsFixed(2);
     amountText = outgoing ? "-$amountText" : "+$amountText";
     var color = outgoing ? Colors.red : Colors.green;
     var date = new DateTime.fromMillisecondsSinceEpoch(tx.timestamp);
@@ -123,6 +128,9 @@ class _TransactionsState extends State<TransactionsScreen> {
     var tofrom = outgoing ? "Recipient: ${tx.recipient}" : "Sender: ${tx.sender}";
     var subtitle = "$dateStr: $tofrom";
     var link = widget._testnet ? "https://wavesexplorer.com/testnet/tx/${tx.id}" : "https://wavesexplorer.com/tx/${tx.id}";
+    var attachment = tx.attachment;
+    if (tx.attachment != null && tx.attachment != "")
+      attachment = base58decode(tx.attachment);
     return Card(
       child: ListTile(
         leading: Icon(icon, color: color,),
@@ -150,25 +158,15 @@ class _TransactionsState extends State<TransactionsScreen> {
                                 ),
 
                           ),
-                          Container(
-                            padding: const EdgeInsets.only(top: 5.0),
-                            child: ListTile(title: Text("Date"), subtitle: Text(dateStrLong)),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.only(top: 5.0),
-                            child: ListTile(title: Text("Sender"), subtitle: Text(tx.sender)),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.only(top: 5.0),
-                            child: ListTile(title: Text("Recipient"), subtitle: Text(tx.recipient)),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.only(top: 5.0),
-                            child: ListTile(title: Text("Amount"), subtitle: Text("$amountText ZAP", style: TextStyle(color: color),)),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.only(top: 5.0),
-                            child: ListTile(title: Text("Attachment"), subtitle: Text(tx.attachment)),
+                          ListTile(title: Text("Date"), subtitle: Text(dateStrLong)),
+                          ListTile(title: Text("Sender"), subtitle: Text(tx.sender)),
+                          ListTile(title: Text("Recipient"), subtitle: Text(tx.recipient)),
+                          ListTile(title: Text("Amount"), subtitle: Text("$amountText ZAP", style: TextStyle(color: color),)),
+                          ListTile(title: Text("Fee"), subtitle: Text("$feeText ZAP",)),
+                          Visibility(
+                            visible: attachment != null && attachment != "",
+                            child:
+                              ListTile(title: Text("Attachment"), subtitle: Text(attachment)),
                           ),
                           Container(
                             padding: const EdgeInsets.only(top: 5.0),
@@ -197,8 +195,8 @@ class _TransactionsState extends State<TransactionsScreen> {
           _loading = true;
         });
         while (true) {
-          var txs = await _downloadMoreTxs();
-          if (txs == null) {
+          var txs = await _downloadMoreTxs(100);
+          if (txs == -1) {
             Flushbar(title: "Failed to load transactions", message: "try again? :(", duration: Duration(seconds: 2),)
               ..show(context);
             setState(() {
@@ -220,6 +218,8 @@ class _TransactionsState extends State<TransactionsScreen> {
             });
             break;
           }
+          Flushbar(title: "Loaded ${_txs.length} transactions", message: "...", duration: Duration(seconds: 2),)
+            ..show(context);
         }
         break;
     }

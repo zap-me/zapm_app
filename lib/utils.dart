@@ -4,6 +4,7 @@ import 'package:flutter/material.dart' hide Key;
 import 'package:decimal/decimal.dart';
 import 'package:tuple/tuple.dart';
 import 'package:encrypt/encrypt.dart';
+import 'package:base58check/base58.dart';
 
 import 'libzap.dart';
 
@@ -251,4 +252,12 @@ String decryptMnemonic(String encryptedMnemonicBase64, String ivBase64, String p
   catch (ex) {
     return "";
   }
+}
+
+const String _bitcoinAlphabet =
+    "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+String base58decode(String input) {
+  Base58Codec codec = const Base58Codec(_bitcoinAlphabet);
+  var decoded = codec.decode(input);
+  return String.fromCharCodes(decoded);
 }
