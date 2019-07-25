@@ -53,14 +53,14 @@ class _TransactionsState extends State<TransactionsScreen> {
 
   Future<int> _downloadMoreTxs(int count) async {
     var txs = await LibZap.addressTransactions(widget._address, count, _after);
-    if (txs != null && txs.length > 0) {
+    if (txs != null) {
       _txs = _txs + txs;
-      var lastTx = _txs[_txs.length - 1];
-      _after = lastTx.id;
+      if (_txs.length > 0)
+        _after = _txs[_txs.length - 1].id;
       if (txs.length < count)
         _foundEnd = true;
     }
-    if (txs == null)
+    else
       return -1;
     return txs.length;
   }
@@ -233,6 +233,7 @@ class _TransactionsState extends State<TransactionsScreen> {
         actions: <Widget>[
           PopupMenuButton<Choice>(
             onSelected: _select,
+            enabled: !_loading,
             itemBuilder: (BuildContext context) {
               return choices.map((Choice choice) {
                 return PopupMenuItem<Choice>(
@@ -250,8 +251,11 @@ class _TransactionsState extends State<TransactionsScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
             Visibility(
+                visible: !_loading && _txs.length == 0,
+                child: Text("Nothing here..")),
+            Visibility(
               visible: !_loading,
-              child:Expanded(
+              child: Expanded(
                 child: new ListView.builder(
                   itemCount: _txs.length,
                   itemBuilder: (BuildContext context, int index) => _buildTxList(context, index),

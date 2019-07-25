@@ -103,7 +103,7 @@ class _SettingsState extends State<SettingsScreen> {
                 value: _testnet,
                 title: Text("Testnet"),
                 onChanged: (value) async {
-                  await _toggleTestnet();
+                  _toggleTestnet();
                 },
               ),
             ),

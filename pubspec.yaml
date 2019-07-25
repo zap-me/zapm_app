@@ -1,6 +1,6 @@
 name: zap_app
 description: zap.me test app
-version: 1.0.2+2
+version: 1.0.3+3
 
 dependencies:
   flutter:
@@ -65,6 +65,7 @@ flutter:
   # add pubspec so we can read the version on desktop
   assets:
     - pubspec.yaml
+    - native-libraries/windows/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

@@ -180,8 +180,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
       if (mnemonic == null || mnemonic == "") {
         return false;
       }
-      _mnemonicPasswordProtected = await Prefs
-          .mnemonicPasswordProtectedGet();
+      _mnemonicPasswordProtected = await Prefs.mnemonicPasswordProtectedGet();
       if (_mnemonicPasswordProtected && !_mnemonicDecrypted) {
         while (true) {
           var password = await askMnemonicPassword(context);
@@ -190,14 +189,17 @@ class _ZapHomePageState extends State<ZapHomePage> {
           }
           var iv = await Prefs.cryptoIVGet();
           var decryptedMnemonic = decryptMnemonic(mnemonic, iv, password);
+          if (decryptedMnemonic == null) {
+            await alert(context, "Could not decrypt mnemonic", "probably wrong password :(");
+            continue;
+          }
           if (!libzap.mnemonicCheck(decryptedMnemonic)) {
-            await alert(context, "Decrypted mnemonic invalid", "probably wrong password :(");
+            await alert(context, "Decrypted mnemonic invalid", "not sure what happened :(");
+            continue;
           }
-          else {
-            mnemonic = decryptedMnemonic;
-            _mnemonicDecrypted = true;
-            break;
-          }
+          mnemonic = decryptedMnemonic;
+          _mnemonicDecrypted = true;
+          break;
         }
       }
       _mnemonic = mnemonic;

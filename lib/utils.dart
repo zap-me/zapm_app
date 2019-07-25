@@ -250,7 +250,7 @@ String decryptMnemonic(String encryptedMnemonicBase64, String ivBase64, String p
     return encrypter.decrypt64(encryptedMnemonicBase64, iv: iv);
   }
   catch (ex) {
-    return "";
+    return null;
   }
 }
 
