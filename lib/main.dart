@@ -225,8 +225,6 @@ class _ZapHomePageState extends State<ZapHomePage> {
       if (balanceResult.success) {
         _balance = Decimal.fromInt(balanceResult.value) / Decimal.fromInt(100);
         _balanceText = "Balance: $_balance ZAP";
-        if (_testnet)
-          _balanceText += " TESTNET";
       }
       else {
         _balance = Decimal.fromInt(-1);
@@ -328,7 +326,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
   Widget build(BuildContext context) {
     return new Scaffold(
       appBar: new AppBar(
-        title: new Text(widget.title),
+        title: new Text(_testnet ? widget.title + " TESTNET" : widget.title),
         actions: <Widget>[
           IconButton(icon: Icon(Icons.settings), onPressed: _showSettings),
         ],
@@ -352,14 +350,21 @@ class _ZapHomePageState extends State<ZapHomePage> {
               visible: _updatingBalance,
               child: Container(
                 padding: const EdgeInsets.only(top: 18.0),
-                child: SizedBox(child: CircularProgressIndicator(), height: 16.0, width: 16.0,),
+                child: SizedBox(child: CircularProgressIndicator(), height: 48.0, width: 48.0,),
               ),
             ),
             Visibility(
               visible: !_updatingBalance,
               child: Container(
                 padding: const EdgeInsets.only(top: 18.0),
-                child: Text(_balanceText),
+                child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(_balanceText),
+                      Text(_testnet ? " TESTNET" : "", style: TextStyle(color: Colors.redAccent),),
+                      IconButton(onPressed: _setWalletDetails, icon: Icon(Icons.refresh)),
+                    ]
+                ),
               ),
             ),
             Container(
