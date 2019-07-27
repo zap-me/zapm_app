@@ -1,6 +1,6 @@
 name: zap_app
 description: zap.me test app
-version: 1.0.4+4
+version: 1.0.5+5
 
 dependencies:
   flutter:
