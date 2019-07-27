@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 class QrWidget extends StatefulWidget {
-  QrWidget(this.data) : super();
+  QrWidget(this.data, {this.size = 200}) : super();
 
   final String data;
+  final double size;
 
   @override
   _QrWidgetState createState() => new _QrWidgetState();
@@ -19,7 +20,7 @@ class _QrWidgetState extends State<QrWidget> {
       return Text(_inputErrorText);
     return new QrImage(
         data: widget.data,
-        size: 200.0,
+        size: widget.size,
         version: 10,
         errorCorrectionLevel: QrErrorCorrectLevel.H,
         onError: (ex) {

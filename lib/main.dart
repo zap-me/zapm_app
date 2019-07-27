@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:qr_reader/qr_reader.dart';
 import 'package:decimal/decimal.dart';
 import 'package:flushbar/flushbar.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:clipboard_manager/clipboard_manager.dart';
 
 import 'qrwidget.dart';
 import 'send_receive.dart';
@@ -136,7 +138,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
   void _noMnemonic() async {
     var libzap = LibZap();
     while (true) {
-      String mnemonic = null;
+      String mnemonic;
       var action = await _noMnemonicDialog(context);
       switch (action) {
         case NoMnemonicAction.CreateNew:
@@ -162,6 +164,8 @@ class _ZapHomePageState extends State<ZapHomePage> {
       if (mnemonic != null) {
         await Prefs.mnemonicSet(mnemonic);
         await alert(context, "Mnemonic saved", ":)");
+        // update wallet details now we have a mnemonic
+        _setWalletDetails();
         break;        
       }
     }
@@ -231,6 +235,25 @@ class _ZapHomePageState extends State<ZapHomePage> {
       _updatingBalance = false;
     });
     return true;
+  }
+
+  void _showQrCode() {
+    showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: InkWell(child: Container(width: 300, child: QrWidget(_address, size: 300)),
+            onTap: () => Navigator.pop(context)),
+        );
+      },
+    );
+  }
+
+  void _copyAddress() {
+    ClipboardManager.copyToClipBoard(_address).then((result) {
+      Flushbar(title: "Copied address to clipboard", message: _address, duration: Duration(seconds: 2),)
+        ..show(context);
+    });
   }
 
   void _scanQrCode() async {
@@ -312,14 +335,18 @@ class _ZapHomePageState extends State<ZapHomePage> {
       ),
       body: new Center(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
             Container(
               padding: const EdgeInsets.only(top: 18.0),
-              child: QrWidget(_address),
-            ),
-            Container(
-              padding: const EdgeInsets.only(top: 0.0),
-              child: Text(_address),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(icon: Icon(FontAwesomeIcons.qrcode), onPressed: _showQrCode),
+                  Text(_address),
+                  IconButton(onPressed: _copyAddress, icon: Icon(Icons.content_copy)),
+                ]
+              )
             ),
             Visibility(
               visible: _updatingBalance,
@@ -337,20 +364,13 @@ class _ZapHomePageState extends State<ZapHomePage> {
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),
-              child: RaisedButton.icon(
-                onPressed: _scanQrCode, icon: Icon(Icons.center_focus_weak), label:  Text("Scan")
-                ),
-            ),
-            Container(
-              padding: const EdgeInsets.only(top: 18.0),
-              child: RaisedButton.icon(
-                  onPressed: _send, icon: Icon(Icons.arrow_drop_up), label:  Text("Send")
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.only(top: 18.0),
-              child: RaisedButton.icon(
-                  onPressed: _receive, icon: Icon(Icons.arrow_drop_down), label:  Text("Recieve")
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  RaisedButton.icon(onPressed: _send, icon: Icon(Icons.send), label: Text("Send")),
+                  RaisedButton.icon(onPressed: _scanQrCode, icon: Icon(Icons.center_focus_weak), label: Text("Scan")),
+                  RaisedButton.icon(onPressed: _receive, icon: Icon(Icons.account_balance_wallet), label: Text("Recieve")),
+                ]
               ),
             ),
             Container(
