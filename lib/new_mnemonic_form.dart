@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class NewMnemonicForm extends StatefulWidget {
-  String _mnemonic;
+  final String _mnemonic;
 
   NewMnemonicForm(this._mnemonic) : super();
 

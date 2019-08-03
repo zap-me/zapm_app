@@ -40,7 +40,12 @@ class Utf8 extends Struct<Utf8> {
     final str = addressOf;
     if (str == nullptr) return null;
     int len = 0;
-    while (str.elementAt(++len).load<Utf8>().char != 0);
+    while (true) {
+      if (str.elementAt(len).load<Utf8>().char != 0)
+        len += 1;
+      else
+        break;
+    }
     List<int> units = List(len);
     for (int i = 0; i < len; ++i) units[i] = str.elementAt(i).load<Utf8>().char;
     return Utf8Decoder().convert(units);

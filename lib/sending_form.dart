@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'libzap.dart';
 
 class SendingForm extends StatefulWidget {
-  SpendTx _spendTx;
+  final SpendTx _spendTx;
 
   SendingForm(this._spendTx) : super();
 
@@ -15,7 +15,7 @@ class SendingForm extends StatefulWidget {
 
 class SendingFormState extends State<SendingForm> {
   bool _sending = true;
-  Tx _tx = null;
+  Tx _tx;
 
   void send() async {
     var tx = await LibZap.transactionBroadcast(widget._spendTx);

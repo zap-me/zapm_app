@@ -39,8 +39,8 @@ class RethrownError {
   dynamic original;
   StackTrace originalStackTrace;
   RethrownError(this.original, this.originalStackTrace);
-  toString() => """RethrownError(${original})
-${originalStackTrace}""";
+  toString() => """RethrownError($original)
+$originalStackTrace""";
 }
 
 /// Runs the [body] in an [Arena] freeing all memory which is [scoped] during

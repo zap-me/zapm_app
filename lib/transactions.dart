@@ -11,8 +11,8 @@ import 'libzap.dart';
 import 'utils.dart';
 
 class TransactionsScreen extends StatefulWidget {
-  String _address;
-  bool _testnet = true;
+  final String _address;
+  final bool _testnet;
 
   TransactionsScreen(this._address, this._testnet) : super();
 

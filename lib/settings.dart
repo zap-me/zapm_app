@@ -9,22 +9,23 @@ import 'prefs.dart';
 import 'utils.dart';
 
 class SettingsScreen extends StatefulWidget {
-  String _mnemonic;
-  bool _mnemonicPasswordProtected;
+  final String _mnemonic;
+  final bool _mnemonicPasswordProtectedInitial;
 
-  SettingsScreen(this._mnemonic, this._mnemonicPasswordProtected) : super();
+  SettingsScreen(this._mnemonic, this._mnemonicPasswordProtectedInitial) : super();
 
   @override
-  _SettingsState createState() => new _SettingsState();
+  _SettingsState createState() => new _SettingsState(_mnemonicPasswordProtectedInitial);
 }
 
 class _SettingsState extends State<SettingsScreen> {
+  bool _mnemonicPasswordProtected;
   String _appVersion;
   String _buildNumber;
   int _libzapVersion = -1;
   bool _testnet = false;
 
-  _SettingsState() {
+  _SettingsState(this._mnemonicPasswordProtected) {
     _initAppVersion();
     _libzapVersion = _getLibZapVersion();
     _initTestnet();
@@ -62,7 +63,7 @@ class _SettingsState extends State<SettingsScreen> {
   }
 
   void _toggleTestnet() async {
-    await Prefs.testnetSet(!_testnet);
+    Prefs.testnetSet(!_testnet);
     setState(() {
       _testnet = !_testnet;
     });
@@ -75,7 +76,7 @@ class _SettingsState extends State<SettingsScreen> {
       await Prefs.cryptoIVSet(res.iv);
       await Prefs.mnemonicSet(res.encryptedMnemonic);
       setState(() {
-        widget._mnemonicPasswordProtected = true;
+        _mnemonicPasswordProtected = true;
       });
     }
   }
@@ -109,10 +110,10 @@ class _SettingsState extends State<SettingsScreen> {
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),
-              child: ListTile(title: Text("Mnemonic"), subtitle: Text(widget._mnemonic), trailing: widget._mnemonicPasswordProtected ? Icon(Icons.lock) : Icon(Icons.lock_open),),
+              child: ListTile(title: Text("Mnemonic"), subtitle: Text(widget._mnemonic), trailing: _mnemonicPasswordProtected ? Icon(Icons.lock) : Icon(Icons.lock_open),),
             ),
             Visibility(
-              visible: !widget._mnemonicPasswordProtected,
+              visible: !_mnemonicPasswordProtected,
               child: Container(
                 child: ListTile(
                   title: RaisedButton.icon(label: Text("Password Protect Mnemonic"), icon: Icon(Icons.lock), onPressed: () { _addPasswordProtection(); }),

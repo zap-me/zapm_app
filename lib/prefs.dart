@@ -37,14 +37,14 @@ class PrefHelper {
     }
   }
 
-  Future<bool> getBool(String key, bool default_) async {
+  Future<bool> getBool(String key, bool defaultValue) async {
     if (Platform.isAndroid || Platform.isIOS) {
       final prefs = await SharedPreferences.getInstance();
-      return prefs.getBool(key) ?? default_;
+      return prefs.getBool(key) ?? defaultValue;
     }
     else {
       var config = await fromFile();
-      var value = config.get(_section, key) ?? default_.toString();
+      var value = config.get(_section, key) ?? defaultValue.toString();
       return value.toLowerCase() == 'true';
     }  
   }
@@ -61,14 +61,14 @@ class PrefHelper {
     }
   }
 
-  Future<String> getString(String key, String default_) async {
+  Future<String> getString(String key, String defaultValue) async {
     if (Platform.isAndroid || Platform.isIOS) {
       final prefs = await SharedPreferences.getInstance();
-      return prefs.getString(key) ?? default_;
+      return prefs.getString(key) ?? defaultValue;
     }
     else {
       var config = await fromFile();
-      return config.get(_section, key) ?? default_;
+      return config.get(_section, key) ?? defaultValue;
     }  
   }
 }

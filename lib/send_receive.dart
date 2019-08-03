@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
-import 'package:flushbar/flushbar.dart';
 
 import 'send_form.dart';
 import 'receive_form.dart';
