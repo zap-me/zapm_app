@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/go-flutter-desktop/go-flutter"
     "github.com/go-flutter-desktop/plugins/url_launcher"
-    "github.com/djpnewton/plugins/clipboard_manager"
+    "github.com/djpnewton/go_flutter_clipboard_manager"
 )
 
 var options = []flutter.Option{
