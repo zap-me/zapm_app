@@ -12,6 +12,8 @@ github.com/go-flutter-desktop/go-flutter v0.27.0 h1:XYhKiRjwX/Z73Hpe+TJDBbutFL1m
 github.com/go-flutter-desktop/go-flutter v0.27.0/go.mod h1:GZYxHYp7lRnt3imJV1d8EWleMv5q9J4S2ONNEqpPOfo=
 github.com/go-flutter-desktop/go-flutter v0.27.1 h1:dPMO0Q3SZxZoHXpQ58vScAOAeDnfWgVdt9AjghsUGCg=
 github.com/go-flutter-desktop/go-flutter v0.27.1/go.mod h1:GZYxHYp7lRnt3imJV1d8EWleMv5q9J4S2ONNEqpPOfo=
+github.com/go-flutter-desktop/go-flutter v0.27.4 h1:2S2CFKJeA7aCQXZ/wcGfIqITB1+HPu+mDzA7lLxXd9E=
+github.com/go-flutter-desktop/go-flutter v0.27.4/go.mod h1:GZYxHYp7lRnt3imJV1d8EWleMv5q9J4S2ONNEqpPOfo=
 github.com/go-flutter-desktop/plugins/url_launcher v0.1.0 h1:5inKV7DkB8dYoJ7dcUxoEymO7Gu0Xg9JmkVQMmjbCow=
 github.com/go-flutter-desktop/plugins/url_launcher v0.1.0/go.mod h1:e2bocGuN4L+sOwFppjctOaiDCPVMjA9MMtvyM7/ZuRM=
 github.com/go-gl/glfw v0.0.0-20190519095719-e6da0acd62b1 h1:noz9OnjV5PMOZWNOI+y1cS5rnxuJfpY6leIgQEEdBQw=

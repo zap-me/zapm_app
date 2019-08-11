@@ -326,7 +326,8 @@ class _ZapHomePageState extends State<ZapHomePage> {
   Widget build(BuildContext context) {
     return new Scaffold(
       appBar: new AppBar(
-        title: new Text(_testnet ? widget.title + " TESTNET" : widget.title),
+        leading: Image.asset('assets/icon.png'),
+        title: Text(_testnet ? widget.title + " TESTNET" : widget.title),
         actions: <Widget>[
           IconButton(icon: Icon(Icons.settings), onPressed: _showSettings),
         ],
