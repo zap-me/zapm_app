@@ -28,18 +28,19 @@ class SendFormState extends State<SendForm> {
   final _amountController = new TextEditingController();
   final _attachmentController = new TextEditingController();
 
-  void setRecipientOrUri(String recipientOrUri) {
+  bool setRecipientOrUri(String recipientOrUri) {
     var result = parseRecipientOrUri(widget._testnet, recipientOrUri);
-    if (result == recipientOrUri)
+    if (result == recipientOrUri) {
       _addressController.text = recipientOrUri;
+      return true;
+    }
     else if (result != null) {
       var parts = parseUri(widget._testnet, recipientOrUri);
       _addressController.text = parts.item1;
       _amountController.text = parts.item3.toString();
+      return true;
     }
-    else
-      Flushbar(title: "Invalid QR Code", message: "Unable to decipher QR code data", duration: Duration(seconds: 2),)
-        ..show(context);
+    return false;
   }
 
   void send() async {
@@ -123,7 +124,9 @@ class SendFormState extends State<SendForm> {
                   var qrCode = new QRCodeReader().scan();
                   qrCode.then((value) {
                     if (value != null)
-                      setRecipientOrUri(value);
+                    if (!setRecipientOrUri(value))
+                      Flushbar(title: "Invalid QR Code", message: "Unable to decipher QR code data", duration: Duration(seconds: 2),)
+                        ..show(context);
                   });
                 },
                 child: new Icon(Icons.center_focus_weak))
