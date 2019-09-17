@@ -61,7 +61,7 @@ class ZapHomePage extends StatefulWidget {
   _ZapHomePageState createState() => new _ZapHomePageState();
 }
 
-enum NoMnemonicAction { CreateNew, Recover }
+enum NoMnemonicAction { CreateNew, Recover, RecoverRaw }
 
 class _ZapHomePageState extends State<ZapHomePage> {
   bool _testnet = true;
@@ -95,6 +95,12 @@ class _ZapHomePageState extends State<ZapHomePage> {
                   Navigator.pop(context, NoMnemonicAction.Recover);
                 },
                 child: const Text("Recover using your mnemonic"),
+              ),
+              SimpleDialogOption(
+                onPressed: () {
+                  Navigator.pop(context, NoMnemonicAction.RecoverRaw);
+                },
+                child: const Text("Recover using your raw seed string (advanced use only)"),
               ),
             ],
           );
@@ -135,6 +141,40 @@ class _ZapHomePageState extends State<ZapHomePage> {
     );
   }
 
+  Future<String> _recoverSeed(BuildContext context) async {
+    String seed = "";
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false, // dialog is dismissible with a tap on the barrier
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Enter your raw seed string to recover your account"),
+          content: new Row(
+            children: <Widget>[
+              new Expanded(
+                  child: new TextField(
+                    autofocus: true,
+                    decoration: new InputDecoration(
+                        labelText: "Seed",),
+                    onChanged: (value) {
+                      seed = value;
+                    },
+                  ))
+            ],
+          ),
+          actions: <Widget>[
+            FlatButton(
+              child: Text("Ok"),
+              onPressed: () {
+                Navigator.of(context).pop(seed);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _noMnemonic() async {
     var libzap = LibZap();
     while (true) {
@@ -150,7 +190,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
           );
           break;
         case NoMnemonicAction.Recover:
-        // recover mnemonic
+          // recover mnemonic
           mnemonic = await _recoverMnemonic(context);
           mnemonic = mnemonic.trim();
           mnemonic = mnemonic.replaceAll(RegExp(r"\s+"), " ");
@@ -160,8 +200,11 @@ class _ZapHomePageState extends State<ZapHomePage> {
             await alert(context, "Mnemonic not valid", "The mnemonic you entered is not valid");
           }
           break;
+        case NoMnemonicAction.RecoverRaw:
+          // recover raw seed string
+          mnemonic = await _recoverSeed(context);
       }
-      if (mnemonic != null) {
+      if (mnemonic != null && mnemonic != "") {
         await Prefs.mnemonicSet(mnemonic);
         await alert(context, "Mnemonic saved", ":)");
         // update wallet details now we have a mnemonic
