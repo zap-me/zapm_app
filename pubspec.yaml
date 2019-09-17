@@ -1,6 +1,6 @@
 name: FlutterZap
 description: zap.me test app
-version: 1.0.8+9
+version: 1.0.8+10
 
 dependencies:
   flutter:
