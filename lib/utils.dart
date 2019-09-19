@@ -214,6 +214,30 @@ Future<String> askMnemonicPassword(BuildContext context) async {
   );
 }
 
+Future<bool> askInvalidMnemonicOk(BuildContext context) async {
+  return showDialog<bool>(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text("Mnemonic is not valid, is this ok?"),
+        content: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              RaisedButton.icon(
+                  onPressed: () { Navigator.pop(context, false); },
+                  icon: Icon(Icons.cancel),
+                  label: Text('No')),
+              RaisedButton.icon(
+                  onPressed: () { Navigator.pop(context, true); },
+                  icon: Icon(Icons.check),
+                  label: Text('Yes')),
+            ]
+          ),
+      );
+    },
+  );
+}
+
 class EncryptedMnemonic {
   String encryptedMnemonic;
   String iv;
