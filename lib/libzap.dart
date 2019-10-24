@@ -3,10 +3,26 @@ import 'dart:typed_data';
 import "dart:convert";
 import 'package:flutter/foundation.dart';
 import 'package:decimal/decimal.dart';
+import 'package:ffi/ffi.dart';
 
 import 'dylib_utils.dart';
-import 'utf8.dart';
-import 'bytes.dart';
+
+/// Copy a list of ints into the C memory
+void copyInto(Pointer<Uint8> buf, int offset, Iterable<int> data) {
+  assert(buf != nullptr);
+  var n = 0;
+  for (var byte in data)
+    buf.elementAt(offset + n++).value = byte;
+}
+
+  /// Read the buffer from C memory into Dart.
+  List<int> toIntList(Pointer<Uint8> buf, int len) {
+    if (buf == nullptr) return null;
+    List<int> data = List(len);
+    for (int i = 0; i < len; ++i)
+      data[i] = buf.elementAt(i).value;
+    return data;
+  }
 
 class IntResult {
   bool success;
@@ -32,51 +48,52 @@ class Tx {
 
   Tx(this.type, this.id, this.sender, this.recipient, this.assetId, this.feeAsset, this.attachment, this.amount, this.fee, this.timestamp);
 
-  Pointer<CBuffer> toBuffer() {
-    var buf = CBuffer.allocate(totalSize);
+  Pointer<Uint8> toBuffer() {
+    var buf = allocate<Uint8>(count: totalSize);
     var offset = 0;
-
-    // type field
     var intList = new Uint8List(int64FieldSize);
     var intByteData = new ByteData.view(intList.buffer);
+
+    // type field
     intByteData.setInt64(offset, type);
+    copyInto(buf, offset, intList);
     offset += int64FieldSize;
     // id field
-    buf.load().copyInto(offset, utf8.encode(id));
+    copyInto(buf, offset, utf8.encode(id));
     offset += textFieldSize;
     // sender field
-    buf.load().copyInto(offset, utf8.encode(sender));
+    copyInto(buf, offset, utf8.encode(sender));
     offset += textFieldSize;
     // recipient field
-    buf.load().copyInto(offset, utf8.encode(recipient));
+    copyInto(buf, offset, utf8.encode(recipient));
     offset += textFieldSize;
     // assetId field
-    buf.load().copyInto(offset, utf8.encode(assetId));
+    copyInto(buf, offset, utf8.encode(assetId));
     offset += textFieldSize;
     // feeAsset field
-    buf.load().copyInto(offset, utf8.encode(feeAsset));
+    copyInto(buf, offset, utf8.encode(feeAsset));
     offset += textFieldSize;
     // attachment field
-    buf.load().copyInto(offset, utf8.encode(attachment));
+    copyInto(buf, offset, utf8.encode(attachment));
     offset += textFieldSize;
     // amount field
     intByteData.setInt64(0, amount);
-    buf.load().copyInto(offset, intList);
+    copyInto(buf, offset, intList);
     offset += int64FieldSize;
     // amount field
     intByteData.setInt64(0, fee);
-    buf.load().copyInto(offset, intList);
+    copyInto(buf, offset, intList);
     offset += int64FieldSize;
     // amount field
     intByteData.setInt64(0, timestamp);
-    buf.load().copyInto(offset, intList);
+    copyInto(buf, offset, intList);
     offset += int64FieldSize;
 
     return buf;
   }
 
-  static Tx fromCBuffer(CBuffer buf) {
-    var ints = buf.toIntList(totalSize);
+  static Tx fromBuffer(Pointer<Uint8> buf) {
+    var ints = toIntList(buf, totalSize);
     int offset = 0;
 
     var type = Int8List.fromList(ints).buffer.asByteData().getInt64(offset, Endian.little);
@@ -103,18 +120,18 @@ class Tx {
     return Tx(type, id, sender, recipient, assetId, feeAsset, attachment, amount, fee, timestamp);
   }
 
-  static Iterable<Tx> fromCBufferMulti(Pointer<CBuffer> buf, int count) {
+  static Iterable<Tx> fromBufferMulti(Pointer<Uint8> buf, int count) {
     var res = List<Tx>();
     for (int i=0; i < count; i++) {
       var offset = i * totalSize;
-      var tx = fromCBuffer(buf.elementAt(offset).load<CBuffer>());
+      var tx = fromBuffer(buf.elementAt(offset));
       res.add(tx);
     }
     return res;
   }
 
-  static Pointer<CBuffer> allocate({int count=1}) {
-    return Pointer.allocate(count: totalSize * count);
+  static Pointer<Uint8> allocateMem({int count=1}) {
+    return allocate<Uint8>(count: totalSize * count);
   }
 
   Map<String, dynamic> toJson() =>
@@ -144,27 +161,27 @@ class SpendTx {
 
   SpendTx(this.success, this.data, this.signature);
 
-  Pointer<CBuffer> toBuffer() {
-    var buf = CBuffer.allocate(totalSize);
+  Pointer<Uint8> toBuffer() {
+    var buf = allocate<Uint8>(count: totalSize);
 
     // success field
     var int32List = new Uint8List(int32FieldSize);
     var int32ByteData = new ByteData.view(int32List.buffer);
     int32ByteData.setInt32(0, 1);
-    buf.load().copyInto(0, int32List);
+    copyInto(buf, 0, int32List);
     // data field
-    buf.load().copyInto(int32FieldSize, data);
+    copyInto(buf, int32FieldSize, data);
     // data_size field
     int32ByteData.setInt32(0, data.length);
-    buf.load().copyInto(int32FieldSize + dataFieldSize, int32List);
+    copyInto(buf, int32FieldSize + dataFieldSize, int32List);
     // signature field
-    buf.load().copyInto(int32FieldSize + dataFieldSize + int32FieldSize, signature);
+    copyInto(buf, int32FieldSize + dataFieldSize + int32FieldSize, signature);
 
     return buf;
   }
 
-  static SpendTx fromCBuffer(CBuffer buf) {
-    var ints = buf.toIntList(totalSize);
+  static SpendTx fromBuffer(Pointer<Uint8> buf) {
+    var ints = toIntList(buf, totalSize);
 
     var success = Int8List.fromList(ints).buffer.asByteData().getInt32(0, Endian.little);
     var dataSize = Int8List.fromList(ints).buffer.asByteData().getInt32(int32FieldSize + dataFieldSize, Endian.little);
@@ -175,8 +192,8 @@ class SpendTx {
     return SpendTx(success != 0, data, sig);
   }
 
-  static Pointer<CBuffer> allocate() {
-    return Pointer.allocate(count: totalSize);
+  static Pointer<Uint8> allocateMem() {
+    return allocate<Uint8>(count: totalSize);
   }
 }
 
@@ -184,15 +201,15 @@ class SpendTx {
 // native libzap definitions
 //
 
-class IntResultNative extends Struct<IntResultNative> {
+class IntResultNative extends Struct {
   @Int32()
   int success;
 
   @Int64()
   int value;
 
-  factory IntResultNative.allocate(bool success, int value) {
-    return Pointer<IntResultNative>.allocate().load<IntResultNative>()
+  factory IntResultNative(bool success, int value) {
+    return allocate<IntResultNative>().ref
       ..success = (success ? 1 : 0)
       ..value = value;
   }
@@ -208,7 +225,7 @@ struct waves_payment_request_t
   uint64_t amount;
 };
 */
-class WavesPaymentRequest extends Struct<WavesPaymentRequest> {
+class WavesPaymentRequest extends Struct {
   //TODO
 }
 
@@ -240,19 +257,19 @@ typedef lzap_address_balance_ns_native_t = Int8 Function(Pointer<Utf8> address, 
 typedef lzap_address_balance_ns_t = int Function(Pointer<Utf8> address, Pointer<Int64> balanceOut);
 
 //TODO: ns version of transaction list
-typedef lzap_address_transactions2_ns_native_t = Int8 Function(Pointer<Utf8> address, Pointer<CBuffer> txs, Int32 count, Pointer<Utf8> after, Pointer<Int64> countOut);
-typedef lzap_address_transactions2_ns_t = int Function(Pointer<Utf8> address, Pointer<CBuffer> txs, int count, Pointer<Utf8> after, Pointer<Int64> countOut);
+typedef lzap_address_transactions2_ns_native_t = Int8 Function(Pointer<Utf8> address, Pointer<Uint8> txs, Int32 count, Pointer<Utf8> after, Pointer<Int64> countOut);
+typedef lzap_address_transactions2_ns_t = int Function(Pointer<Utf8> address, Pointer<Uint8> txs, int count, Pointer<Utf8> after, Pointer<Int64> countOut);
 
 typedef lzap_transaction_fee_ns_native_t = Int8 Function(Pointer<Int64> feeOut);
 typedef lzap_transaction_Fee_ns_t = int Function(Pointer<Int64> feeOut);
 
 //TODO: this function does not actually return anything, but dart:ffi does not seem to handle void functions yet
-typedef lzap_transaction_create_ns_native_t = Int32 Function(Pointer<Utf8> seed, Pointer<Utf8> recipient, Int64 amount, Int64 fee, Pointer<Utf8> attachment, Pointer<CBuffer> spendTxOut);
-typedef lzap_transaction_create_ns_t = int Function(Pointer<Utf8> seed, Pointer<Utf8> recipient, int amount, int fee, Pointer<Utf8> attachment, Pointer<CBuffer> spendTxOut);
+typedef lzap_transaction_create_ns_native_t = Int32 Function(Pointer<Utf8> seed, Pointer<Utf8> recipient, Int64 amount, Int64 fee, Pointer<Utf8> attachment, Pointer<Uint8> spendTxOut);
+typedef lzap_transaction_create_ns_t = int Function(Pointer<Utf8> seed, Pointer<Utf8> recipient, int amount, int fee, Pointer<Utf8> attachment, Pointer<Uint8> spendTxOut);
 
 //TODO: ns version of transaction broadcast!!!
-typedef lzap_transaction_broadcast_ns_native_t = Int32 Function(Pointer<CBuffer> spendTx, Pointer<CBuffer> broadcastTxOut);
-typedef lzap_transaction_broadcast_ns_t = int Function(Pointer<CBuffer> spendTx, Pointer<CBuffer> broadcastTxOut);
+typedef lzap_transaction_broadcast_ns_native_t = Int32 Function(Pointer<Uint8> spendTx, Pointer<Uint8> broadcastTxOut);
+typedef lzap_transaction_broadcast_ns_t = int Function(Pointer<Uint8> spendTx, Pointer<Uint8> broadcastTxOut);
 
 //
 // helper functions
@@ -271,12 +288,12 @@ IntResult addressBalanceFromIsolate(String address) {
   // to get the function pointer as closures can not be passed to isolates
   var libzap = LibZap();
 
-  var addrC = Utf8.allocate(address);
-  var balanceP = Pointer<Int64>.allocate();
+  var addrC = Utf8.toUtf8(address);
+  var balanceP = allocate<Int64>();
   var res = libzap.lzapAddressBalance(addrC, balanceP) != 0;
-  int balance = balanceP.load();
-  balanceP.free();
-  addrC.free();
+  int balance = balanceP.value;
+  free(balanceP);
+  free(addrC);
   return IntResult(res, balance);
 }
 
@@ -291,22 +308,22 @@ Iterable<Tx> addressTransactionsFromIsolate(AddrTxsRequest req) {
   // to get the function pointer as closures can not be passed to isolates
   var libzap = LibZap();
 
-  var addrC = Utf8.allocate(req.address);
-  var txsC = Tx.allocate(count: req.count);
+  var addrC = Utf8.toUtf8(req.address);
+  var txsC = Tx.allocateMem(count: req.count);
   Pointer afterC = nullptr;
   if (req.after != null)
-    afterC = Utf8.allocate(req.after);
-  var countOutP = Pointer<Int64>.allocate();
+    afterC = Utf8.toUtf8(req.after);
+  var countOutP = allocate<Int64>();
   var res = libzap.lzapAddressTransactions(addrC, txsC, req.count, afterC.cast<Utf8>(), countOutP) != 0;
   Iterable<Tx> txs;
   if (res) {
-    int count = countOutP.load();
-    txs = Tx.fromCBufferMulti(txsC, count);
+    int count = countOutP.value;
+    txs = Tx.fromBufferMulti(txsC, count);
   }
-  countOutP.free();
-  afterC.free();
-  txsC.free();
-  addrC.free();
+  free(countOutP);
+  free(afterC);
+  free(txsC);
+  free(addrC);
   return txs;
 }
 
@@ -315,10 +332,10 @@ IntResult transactionFeeFromIsolate(int _dummy) {
   // to get the function pointer as closures can not be passed to isolates
   var libzap = LibZap();
 
-  var feeP = Pointer<Int64>.allocate();
+  var feeP = allocate<Int64>();
   var res = libzap.lzapTransactionFee(feeP) != 0;
-  int fee = feeP.load();
-  feeP.free();
+  int fee = feeP.value;
+  free(feeP);
   return IntResult(res, fee);
 }
 
@@ -328,13 +345,13 @@ Tx transactionBroadcastFromIsolate(SpendTx spendTx) {
   var libzap = LibZap();
 
   var spendTxC = spendTx.toBuffer();
-  var txC = Tx.allocate();
+  var txC = Tx.allocateMem();
   var result = libzap.lzapTransactionBroadcast(spendTxC, txC);
   Tx tx;
   if (result != 0)
-    tx = Tx.fromCBuffer(txC.load());
-  txC.free();
-  spendTxC.free();
+    tx = Tx.fromBuffer(txC);
+  free(txC);
+  free(spendTxC);
   return tx;
 }
 
@@ -447,37 +464,37 @@ class LibZap {
 
   String mnemonicCreate() {
     var mem = "0" * 1024;
-    var outputC = Utf8.allocate(mem);
+    var outputC = Utf8.toUtf8(mem);
     var res = lzapMnemonicCreate(outputC, 1024);
-    var mnemonic = outputC.load().toString();
-    outputC.free();
+    var mnemonic = Utf8.fromUtf8(outputC);
+    free(outputC);
     if (res != 0)
       return mnemonic;
     return null;
   }
 
   bool mnemonicCheck(String mnemonic) {
-    var mnemonicC = Utf8.allocate(mnemonic);
+    var mnemonicC = Utf8.toUtf8(mnemonic);
     var res = lzapMnemonicCheck(mnemonicC) != 0;
-    mnemonicC.free();
+    free(mnemonicC);
     return res;
   }
 
   String seedAddress(String seed) {
-    var seedC = Utf8.allocate(seed);
+    var seedC = Utf8.toUtf8(seed);
     var mem = "0" * 1024;
-    var outputC = Utf8.allocate(mem);
+    var outputC = Utf8.toUtf8(mem);
     lzapSeedAddress(seedC, outputC);
-    var address = outputC.load().toString();
-    outputC.free();
-    seedC.free();
+    var address = Utf8.fromUtf8(outputC);
+    free(outputC);
+    free(seedC);
     return address;
   }
 
   bool addressCheck(String address) {
-    var addrC = Utf8.allocate(address);
+    var addrC = Utf8.toUtf8(address);
     var res = lzapAddressCheck(addrC) != 0;
-    addrC.free();
+    free(addrC);
     return res;
   }
 
@@ -494,18 +511,18 @@ class LibZap {
   }
 
   SpendTx transactionCreate(String seed, String recipient, int amount, int fee, String attachment) {
-    var seedC = Utf8.allocate(seed);
-    var recipientC = Utf8.allocate(recipient);
-    Pointer<Utf8> attachmentC = Utf8.allocate("");
-    if (attachment != null)
-      attachmentC = Utf8.allocate(attachment);
-    var outputC = SpendTx.allocate();
+    var seedC = Utf8.toUtf8(seed);
+    var recipientC = Utf8.toUtf8(recipient);
+    if (attachment == null)
+      attachment = "";
+    var attachmentC = Utf8.toUtf8(attachment);
+    var outputC = SpendTx.allocateMem();
     lzapTransactionCreate(seedC, recipientC, amount, fee, attachmentC, outputC);
-    var spendTx = SpendTx.fromCBuffer(outputC.load());
-    outputC.free();
-    attachmentC.free();
-    recipientC.free();
-    seedC.free();
+    var spendTx = SpendTx.fromBuffer(outputC);
+    free(outputC);
+    free(attachmentC);
+    free(recipientC);
+    free(seedC);
     return spendTx;
   }
 
