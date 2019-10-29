@@ -3,12 +3,13 @@ import 'package:decimal/decimal.dart';
 
 import 'qrwidget.dart';
 import 'libzap.dart';
+import 'bronze.dart';
 
 class ReceiveForm extends StatefulWidget {
   final VoidCallback onClosed;
   final bool _testnet;
   final String _address;
-
+  
   ReceiveForm(this.onClosed, this._testnet, this._address) : super();
 
   @override
@@ -22,21 +23,41 @@ class ReceiveFormState extends State<ReceiveForm> {
   final _amountController = new TextEditingController();
   final _uriController = new TextEditingController();
   String _uri;
+  String _amountType = "ZAP";
 
-  void makeUri() {
+  Future makeUri() async {
     var amount = Decimal.fromInt(0);
     try {
       amount = Decimal.parse(_amountController.text);
     }
     catch (e) {}
-    _uri = LibZap.paymentUriDec(widget._testnet, widget._address, amount);
-    _uriController.text = _uri;
+    if (_amountType == "NZD") {
+      amount = await equivalentZapForNzd(amount, Side.sell);
+    }
+    return LibZap.paymentUriDec(widget._testnet, widget._address, amount);
+  }
+
+  Future updateUriUi() async {
+    setState(() {
+      _uri = "...";
+      _uriController.text = _uri;
+    });
+    String uri;
+    try {
+      uri = await makeUri();
+    }
+    catch (e) {
+      uri = e.toString();
+    }
+    setState(()
+    {
+      _uri = uri;
+      _uriController.text = _uri;
+    });
   }
 
   void onAmountChanged() {
-    setState(() {
-      makeUri();
-    });
+    updateUriUi();
   }
 
   ReceiveFormState() : super() {
@@ -47,7 +68,7 @@ class ReceiveFormState extends State<ReceiveForm> {
   @mustCallSuper
   void initState() {
     super.initState();
-    makeUri();
+    updateUriUi();
   }
 
   @override
@@ -66,21 +87,34 @@ class ReceiveFormState extends State<ReceiveForm> {
             decoration: new InputDecoration(labelText: 'Receive URI'),
             maxLines: 5,
           ),
-          TextFormField(
-            controller: _amountController,
-            keyboardType: TextInputType.number,
-            decoration: new InputDecoration(labelText: 'Amount'),
-            validator: (value) {
-              if (value.isEmpty) {
-                return 'Please enter a value';
-              }
-              final dv = Decimal.parse(value);
-              if (dv <= Decimal.fromInt(0)) {
-                return 'Please enter a value greater then zero';
-              }
-              return null;
-            },
-          ),
+          new Stack(alignment: const Alignment(1.0, 1.0), children: <Widget>[
+            new TextFormField(
+              controller: _amountController,
+              keyboardType: TextInputType.number,
+              decoration: new InputDecoration(labelText: 'Amount'),
+              validator: (value) {
+                if (value.isEmpty) {
+                  return 'Please enter a value';
+                }
+                final dv = Decimal.parse(value);
+                if (dv <= Decimal.fromInt(0)) {
+                  return 'Please enter a value greater then zero';
+                }
+                return null;
+              },
+            ),
+            new FlatButton(
+                onPressed: () {
+                  setState(() {
+                    if (_amountType == "ZAP")
+                      _amountType = "NZD";
+                    else
+                      _amountType = "ZAP";                
+                  });
+                  updateUriUi();
+                },
+                child: new Text(_amountType))
+          ]),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16.0),
             child: RaisedButton.icon(
