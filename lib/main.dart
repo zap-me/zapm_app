@@ -10,6 +10,7 @@ import 'package:clipboard_manager/clipboard_manager.dart';
 
 import 'qrwidget.dart';
 import 'send_receive.dart';
+import 'reward.dart';
 import 'settings.dart';
 import 'utils.dart';
 import 'libzap.dart';
@@ -349,6 +350,15 @@ class _ZapHomePageState extends State<ZapHomePage> {
     _setWalletDetails();
   }
 
+  void _zapReward() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+          builder: (context) => RewardScreen(_testnet, _mnemonic, _fee, _balance)),
+    );
+    _setWalletDetails();
+  }
+
   @override
   void initState() {
     Prefs.testnetGet().then((testnet) {
@@ -428,6 +438,10 @@ class _ZapHomePageState extends State<ZapHomePage> {
               child: RaisedButton.icon(
                   onPressed: _transactions, icon: Icon(Icons.list), label:  Text("Transactions")
               ),
+            ),
+            Container(
+              padding: const EdgeInsets.only(top: 18.0),
+              child: RaisedButton.icon(onPressed: _zapReward, icon: Icon(Icons.send), label: Text("Zap Reward")),
             ),
           ],
         ),
