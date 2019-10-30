@@ -56,3 +56,13 @@ Future<String> merchantCheck(ClaimCode claimCode) async {
   }
   return null;
 }
+
+Future<bool> merchantClaim(ClaimCode claimCode, String address) async {
+  var url = baseUrl + "claim";
+  var body = convert.jsonEncode({"token": claimCode.token, "secret": claimCode.secret, "address": address});
+  var response = await http.post(url, headers: {"Content-Type": "application/json"}, body: body);
+  if (response.statusCode == 200) {
+    return true;
+  }
+  return false;
+}

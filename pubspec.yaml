@@ -25,7 +25,6 @@ dependencies:
   qr_flutter: 2.1.0+55
   flushbar: 1.7.1+1
   decimal: 0.3.3
-  tuple: 1.0.2
   encrypt: ^3.2.0
   base58check: ^1.0.1
   yaml: ^2.1.16

@@ -29,15 +29,15 @@ class SendFormState extends State<SendForm> {
   final _attachmentController = new TextEditingController();
 
   bool setRecipientOrUri(String recipientOrUri) {
-    var result = parseRecipientOrUri(widget._testnet, recipientOrUri);
+    var result = parseRecipientOrWavesUri(widget._testnet, recipientOrUri);
     if (result == recipientOrUri) {
       _addressController.text = recipientOrUri;
       return true;
     }
     else if (result != null) {
-      var parts = parseUri(widget._testnet, recipientOrUri);
-      _addressController.text = parts.item1;
-      _amountController.text = parts.item3.toString();
+      var parts = parseWavesUri(widget._testnet, recipientOrUri);
+      _addressController.text = parts.address;
+      _amountController.text = parts.amount.toString();
       return true;
     }
     return false;

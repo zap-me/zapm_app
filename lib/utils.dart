@@ -2,11 +2,11 @@ import 'dart:typed_data';
 import 'dart:math';
 import 'package:flutter/material.dart' hide Key;
 import 'package:decimal/decimal.dart';
-import 'package:tuple/tuple.dart';
 import 'package:encrypt/encrypt.dart';
 import 'package:base58check/base58.dart';
 
 import 'libzap.dart';
+import 'merchant.dart';
 
 //
 // We do our own uri parsing until dart has better struct/fixed-size-array support in ffi
@@ -15,6 +15,7 @@ import 'libzap.dart';
 const NO_ERROR = 0;
 const INVALID_WAVES_URI = 1;
 const INVALID_ASSET_ID = 2;
+const INVALID_CLAIMCODE_URI = 3;
 
 String parseUriParameter(String input, String token) {
   token = token + '=';
@@ -23,7 +24,17 @@ String parseUriParameter(String input, String token) {
   return null;
 }
 
-Tuple5<String, String, Decimal, String, int> parseUri(bool testnet, String uri) {
+class WavesRequest {
+  final String address;
+  final String assetId;
+  final Decimal amount;
+  final String attachment;
+  final int error;
+
+  WavesRequest(this.address, this.assetId, this.amount, this.attachment, this.error);
+}
+
+WavesRequest parseWavesUri(bool testnet, String uri) {
   var address = '';
   var assetId = '';
   var amount = Decimal.fromInt(0);
@@ -51,16 +62,46 @@ Tuple5<String, String, Decimal, String, int> parseUri(bool testnet, String uri) 
   }
   else
     error = INVALID_WAVES_URI;
-  return Tuple5<String, String, Decimal, String, int>(address, assetId, amount, attachment, error);
+  return WavesRequest(address, assetId, amount, attachment, error);
 }
 
-String parseRecipientOrUri(bool testnet, String data) {
+class ClaimCodeResult {
+  final ClaimCode code;
+  final int error;
+
+  ClaimCodeResult(this.code, this.error);
+}
+
+ClaimCodeResult parseClaimCodeUri(String uri) {
+  var token = '';
+  var secret = '';
+  var amount = Decimal.fromInt(0);
+  int error = NO_ERROR;
+  if (uri.length > 10 && uri.substring(0, 10).toLowerCase() == 'claimcode:') {
+    var parts = uri.substring(10).split('?');
+    if (parts.length == 2) {
+      token = parts[0];
+      parts = parts[1].split('&');
+      for (var part in parts) {
+        var res = parseUriParameter(part, 'secret');
+        if (res != null) secret = res;
+        res = parseUriParameter(part, 'amount');
+        if (res != null) amount = Decimal.parse(res) / Decimal.fromInt(100);
+      }
+    }
+  }
+  else
+    error = INVALID_CLAIMCODE_URI;
+  return ClaimCodeResult(ClaimCode(amount: amount, token: token, secret: secret), error);
+}
+
+String parseRecipientOrWavesUri(bool testnet, String data) {
   var libzap = LibZap();
   if (libzap.addressCheck(data))
     return data;                // return input, user can use this data as an address
-  var result = parseUri(testnet, data);
-  if (result.item5 == NO_ERROR)
-    return result.item1;        // return address part of waves uri, user should call parseUri directly for extra details
+  var result = parseWavesUri(testnet, data);
+  if (result.error == NO_ERROR)
+    return result.address;      // return address part of waves uri, user should call parseWavesUri directly for extra details
   return null;                  // return null, data is not usable/valid
 }
 

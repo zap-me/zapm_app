@@ -17,6 +17,7 @@ import 'libzap.dart';
 import 'prefs.dart';
 import 'new_mnemonic_form.dart';
 import 'transactions.dart';
+import 'merchant.dart';
 
 void main() {
   // See https://github.com/flutter/flutter/wiki/Desktop-shells#target-platform-override
@@ -302,7 +303,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
   void _scanQrCode() async {
     var value = await new QRCodeReader().scan();
     if (value != null) {
-      var result = parseRecipientOrUri(_testnet, value);
+      var result = parseRecipientOrWavesUri(_testnet, value);
       if (result != null) {
         await Navigator.push(
           context,
@@ -311,9 +312,20 @@ class _ZapHomePageState extends State<ZapHomePage> {
         );
         _setWalletDetails();
       }
-      else
-        Flushbar(title: "Invalid QR Code", message: "Unable to decipher QR code data", duration: Duration(seconds: 2),)
-          ..show(context);
+      else {
+        var result = parseClaimCodeUri(value);
+        if (result.error == NO_ERROR) {
+          if (await merchantClaim(result.code, _address))
+            Flushbar(title: "Claim succeded", message: "Claimed reward to $_address", duration: Duration(seconds: 2),)
+              ..show(context);
+          else 
+            Flushbar(title: "Claim failed", message: "Unable to claim reward to $_address", duration: Duration(seconds: 2),)
+              ..show(context);
+        }
+        else
+          Flushbar(title: "Invalid QR Code", message: "Unable to decipher QR code data", duration: Duration(seconds: 2),)
+            ..show(context);
+      }
     }
   }
 
