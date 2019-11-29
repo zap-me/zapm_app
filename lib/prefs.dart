@@ -115,4 +115,28 @@ class Prefs {
     await prefs.setString("IV", value);
     return true;
   }
+
+  static Future<String> apikeyGet() async {
+    final prefs = PrefHelper();
+    var apikey = await prefs.getString("apikey", null);
+    return apikey;
+  }
+
+  static Future<bool> apikeySet(String value) async {
+    final prefs = PrefHelper();
+    await prefs.setString("apikey", value);
+    return true;
+  }
+
+  static Future<String> apisecretGet() async {
+    final prefs = PrefHelper();
+    var apikey = await prefs.getString("apisecret", null);
+    return apikey;
+  }
+
+  static Future<bool> apisecretSet(String value) async {
+    final prefs = PrefHelper();
+    await prefs.setString("apisecret", value);
+    return true;
+  }
 }

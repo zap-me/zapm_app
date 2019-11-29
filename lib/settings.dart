@@ -24,11 +24,14 @@ class _SettingsState extends State<SettingsScreen> {
   String _buildNumber;
   int _libzapVersion = -1;
   bool _testnet = false;
+  String _apikey;
+  String _apisecret;
 
   _SettingsState(this._mnemonicPasswordProtected) {
     _initAppVersion();
     _libzapVersion = _getLibZapVersion();
     _initTestnet();
+    _initApikey();
   }
 
   void _initAppVersion() async {
@@ -62,6 +65,15 @@ class _SettingsState extends State<SettingsScreen> {
     });
   }
 
+  void _initApikey() async {
+    var apikey = await Prefs.apikeyGet();
+    var apisecret = await Prefs.apisecretGet();
+    setState(() {
+      _apikey = apikey;
+      _apisecret = apisecret;
+    });
+  }
+
   void _toggleTestnet() async {
     Prefs.testnetSet(!_testnet);
     setState(() {
@@ -77,6 +89,26 @@ class _SettingsState extends State<SettingsScreen> {
       await Prefs.mnemonicSet(res.encryptedMnemonic);
       setState(() {
         _mnemonicPasswordProtected = true;
+      });
+    }
+  }
+
+  void _editApikey() async {
+    var apikey = await askString(context, "Set Api Key", _apikey);
+    if (apikey != null) {
+      await Prefs.apikeySet(apikey);
+      setState(() {
+        _apikey = apikey;
+      });
+    }
+  }
+
+  void _editApisecret() async {
+    var apisecret = await askString(context, "Set Api Secret", _apisecret);
+    if (apisecret != null) {
+      await Prefs.apisecretSet(apisecret);
+      setState(() {
+        _apisecret = apisecret;
       });
     }
   }
@@ -119,6 +151,14 @@ class _SettingsState extends State<SettingsScreen> {
                   title: RaisedButton.icon(label: Text("Password Protect Mnemonic"), icon: Icon(Icons.lock), onPressed: () { _addPasswordProtection(); }),
                 ),
               ),
+            ),
+            Container(
+              padding: const EdgeInsets.only(top: 18.0),
+              child: ListTile(title: Text("Api Key"), subtitle: Text("$_apikey"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: () { _editApikey(); }),),
+            ),
+            Container(
+              padding: const EdgeInsets.only(top: 18.0),
+              child: ListTile(title: Text("Api Secret"), subtitle: Text("$_apisecret"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: () { _editApisecret(); }),),
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),

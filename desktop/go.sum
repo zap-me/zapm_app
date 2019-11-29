@@ -16,6 +16,10 @@ github.com/go-flutter-desktop/go-flutter v0.27.4 h1:2S2CFKJeA7aCQXZ/wcGfIqITB1+H
 github.com/go-flutter-desktop/go-flutter v0.27.4/go.mod h1:GZYxHYp7lRnt3imJV1d8EWleMv5q9J4S2ONNEqpPOfo=
 github.com/go-flutter-desktop/go-flutter v0.29.2 h1:kzxZRkFb5Q0WOD+aAWVdKTWfM7iSbu7P9JTnOn6wccA=
 github.com/go-flutter-desktop/go-flutter v0.29.2/go.mod h1:NCryd/AqiRbYSd8pMzQldYkgH1tZIFGt2ToUghZcWGA=
+github.com/go-flutter-desktop/go-flutter v0.30.0 h1:tKQSB7rUOR0o9Bq5P7VpTm0KAOHxvRwC1xDlJGlWNY4=
+github.com/go-flutter-desktop/go-flutter v0.30.0/go.mod h1:NCryd/AqiRbYSd8pMzQldYkgH1tZIFGt2ToUghZcWGA=
+github.com/go-flutter-desktop/go-flutter v0.33.0 h1:+0R9hn+oOKj5A9p95H7jcgPoWrjdxmHFu1NODf0uOKk=
+github.com/go-flutter-desktop/go-flutter v0.33.0/go.mod h1:NCryd/AqiRbYSd8pMzQldYkgH1tZIFGt2ToUghZcWGA=
 github.com/go-flutter-desktop/plugins/url_launcher v0.1.0 h1:5inKV7DkB8dYoJ7dcUxoEymO7Gu0Xg9JmkVQMmjbCow=
 github.com/go-flutter-desktop/plugins/url_launcher v0.1.0/go.mod h1:e2bocGuN4L+sOwFppjctOaiDCPVMjA9MMtvyM7/ZuRM=
 github.com/go-gl/gl v0.0.0-20190320180904-bf2b1f2f34d7 h1:SCYMcCJ89LjRGwEa0tRluNRiMjZHalQZrVrvTbPh+qw=
@@ -23,6 +27,8 @@ github.com/go-gl/gl v0.0.0-20190320180904-bf2b1f2f34d7/go.mod h1:482civXOzJJCPzJ
 github.com/go-gl/glfw v0.0.0-20190409004039-e6da0acd62b1/go.mod h1:vR7hzQXu2zJy9AVAgeJqvqgH9Q5CA+iKCZ2gyEVpxRU=
 github.com/go-gl/glfw v0.0.0-20190519095719-e6da0acd62b1 h1:noz9OnjV5PMOZWNOI+y1cS5rnxuJfpY6leIgQEEdBQw=
 github.com/go-gl/glfw v0.0.0-20190519095719-e6da0acd62b1/go.mod h1:vR7hzQXu2zJy9AVAgeJqvqgH9Q5CA+iKCZ2gyEVpxRU=
+github.com/go-gl/glfw v0.0.0-20191125211704-12ad95a8df72 h1:LgLYrxDRSVv3kStk6louYTP1ekZ6t7HZY/X05KUyaeM=
+github.com/go-gl/glfw v0.0.0-20191125211704-12ad95a8df72/go.mod h1:vR7hzQXu2zJy9AVAgeJqvqgH9Q5CA+iKCZ2gyEVpxRU=
 github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
@@ -35,3 +41,5 @@ github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81P
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/yaml.v2 v2.2.2/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
+gopkg.in/yaml.v2 v2.2.4/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
+gopkg.in/yaml.v2 v2.2.7/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=

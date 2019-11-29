@@ -125,6 +125,62 @@ Future<void> alert(BuildContext context, String title, String msg) {
   );
 }
 
+Future<String> askString(BuildContext context, String title, String value) {
+  final formKey = GlobalKey<FormState>();
+  final txtController = new TextEditingController();
+  txtController.text = value;
+
+  void submit() {
+    if (formKey.currentState.validate()) {
+      Navigator.pop(context, txtController.text);
+    }
+  }
+
+  Widget buildForm(BuildContext context) {
+    return Form(
+      key: formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          TextFormField(
+            controller: txtController,
+            keyboardType: TextInputType.text,
+            validator: (value) {
+              if (value.isEmpty) {
+                return 'Please enter a value';
+              }
+              return null;
+            },
+          ),
+          Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                RaisedButton.icon(
+                    onPressed: () { Navigator.pop(context); },
+                    icon: Icon(Icons.cancel),
+                    label: Text('Cancel')),
+                RaisedButton.icon(
+                    onPressed: submit,
+                    icon: Icon(Icons.send),
+                    label: Text('Submit')),
+              ]
+          ),
+        ],
+      ),
+    );
+  }
+
+  return showDialog<String>(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text(title),
+        content: buildForm(context),
+      );
+    },
+  );
+}
+
 Future<String> askSetMnemonicPassword(BuildContext context) async {
   final formKey = GlobalKey<FormState>();
   final pwController = new TextEditingController();
