@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
 import 'package:flushbar/flushbar.dart';
 
-import 'utils.dart';
-import 'libzap.dart';
 import 'claiming_form.dart';
 
 class RewardForm extends StatefulWidget {

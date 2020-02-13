@@ -102,7 +102,8 @@ Future<bool> merchantWatch(String address) async {
   return false;
 }
 
-Future<Socket> merchantSocket() async {
+typedef TxNotificationCallback = void Function(String, String, double);
+Future<Socket> merchantSocket(TxNotificationCallback txNotificationCallback) async {
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
@@ -129,8 +130,10 @@ Future<Socket> merchantSocket() async {
   socket.on('info', (data) {
     print(data);
   });
-  socket.on('claimed', (data) {
+  socket.on('tx', (data) {
     print(data);
+    var json = jsonDecode(data);
+    txNotificationCallback(json["id"], json["recipient"], json["amount"].toDouble());
   });
   socket.on('disconnect', (_) {
     print('ws disconnect');

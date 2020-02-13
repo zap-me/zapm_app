@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:FlutterZap/merchant.dart';
 import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
+import 'package:flushbar/flushbar.dart';
 
 import 'qrwidget.dart';
 import 'libzap.dart';
@@ -65,11 +66,17 @@ class ReceiveFormState extends State<ReceiveForm> {
   }
 
   void scanPayment() async {
-    //TODO: connect socketio for payment alerts
-    //TODO: watch wallet address
-
-    var socket = await merchantSocket();
-
+    if (!await merchantWatch(widget._address))
+    {
+      Flushbar(title: "Failed to register address", message: widget._address, duration: Duration(seconds: 2),)
+        ..show(context);
+      return;
+    }
+    var socket = await merchantSocket((txid, recipient, amount) => {
+      Flushbar(title: "Received $amount ZAP", message: "TXID: $txid", duration: Duration(seconds: 2),)
+        ..show(context)
+    });
+    
     Navigator.of(context).push(
       // We will now use PageRouteBuilder
       PageRouteBuilder(
