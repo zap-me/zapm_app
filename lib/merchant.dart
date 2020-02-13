@@ -1,8 +1,10 @@
 import 'dart:math';
-import 'package:decimal/decimal.dart';
 import 'dart:convert';
+import 'package:FlutterZap/bronze.dart';
+import 'package:decimal/decimal.dart';
 import 'package:http/http.dart' as http;
 import 'package:crypto/crypto.dart';
+import 'package:socket_io_client/socket_io_client.dart';
 
 import 'prefs.dart';
 
@@ -84,4 +86,55 @@ Future<bool> merchantClaim(ClaimCode claimCode, String address) async {
     return true;
   }
   return false;
+}
+
+Future<bool> merchantWatch(String address) async {
+  var url = baseUrl + "watch";
+  var apikey = await Prefs.apikeyGet();
+  var apisecret = await Prefs.apisecretGet();
+  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
+  var body = jsonEncode({"api_key": apikey, "nonce": nonce, "address": address});
+  var sig = createHmacSig(apisecret, body);
+  var response = await http.post(url, headers: {"X-Signature": sig, "Content-Type": "application/json"}, body: body);
+  if (response.statusCode == 200) {
+    return true;
+  }
+  return false;
+}
+
+Future<Socket> merchantSocket() async {
+  var apikey = await Prefs.apikeyGet();
+  var apisecret = await Prefs.apisecretGet();
+  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
+
+  var socket = io(baseUrl, <String, dynamic>{
+    'secure': true,
+    'transports': ['websocket'],
+  });
+  socket.on('connect', (_) {
+    print('ws connect');
+    var sig = createHmacSig(apisecret, nonce.toString());
+    var auth = {"signature": sig, "api_key": apikey, "nonce": nonce};
+    socket.emit('auth', auth);
+  });
+  socket.on('connecting', (_) {
+    print('ws connecting');
+  });
+  socket.on('connect_error', (err) {
+    print('ws connect error ($err)');
+  });
+  socket.on('connect_timeout', (_) {
+    print('ws connect timeout');
+  });
+  socket.on('info', (data) {
+    print(data);
+  });
+  socket.on('claimed', (data) {
+    print(data);
+  });
+  socket.on('disconnect', (_) {
+    print('ws disconnect');
+  });
+
+  return socket;
 }

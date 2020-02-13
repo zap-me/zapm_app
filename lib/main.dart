@@ -408,7 +408,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   IconButton(icon: Icon(FontAwesomeIcons.qrcode), onPressed: _showQrCode),
-                  Text(_address),
+                  Text(_address, style: TextStyle(fontSize: 12),),
                   IconButton(onPressed: _copyAddress, icon: Icon(Icons.content_copy)),
                 ]
               )

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:FlutterZap/merchant.dart';
 import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
 
@@ -63,10 +64,53 @@ class ReceiveFormState extends State<ReceiveForm> {
     updateUriUi();
   }
 
+  void scanPayment() async {
+    //TODO: connect socketio for payment alerts
+    //TODO: watch wallet address
+
+    var socket = await merchantSocket();
+
+    Navigator.of(context).push(
+      // We will now use PageRouteBuilder
+      PageRouteBuilder(
+          opaque: false,
+          pageBuilder: (BuildContext context, __, ___) {
+            return new Scaffold(
+              backgroundColor: Colors.black45,
+              body: Container(
+                color: Colors.white,
+                child: Column(
+                  children: <Widget>[
+                    Container(
+                      padding: const EdgeInsets.only(top: 5.0),
+                      child: ListTile(title: Text("Scanning for payment"), subtitle: Text("${_amountController.text} $_amountType to ${widget._address}")),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.only(top: 18.0),
+                      child: SizedBox(child: CircularProgressIndicator(), height: 48.0, width: 48.0,),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.only(top: 5.0),
+                      child: RaisedButton.icon(
+                          onPressed: () {
+                            socket.close();
+                            Navigator.pop(context);
+                          },
+                          icon: Icon(Icons.close),
+                          label: Text('Close'))
+                    ),
+                  ],
+                ),
+              )
+            ); // Scaffold
+          })
+      );
+  }
+
   Future<bool> canLeave() {
     _uriSub?.cancel();
     return Future<bool>.value(true); 
-}
+  }
 
   ReceiveFormState() : super() {
     _amountController.addListener(onAmountChanged);
@@ -124,6 +168,13 @@ class ReceiveFormState extends State<ReceiveForm> {
                   },
                   child: new Text(_amountType))
             ]),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16.0),
+              child: RaisedButton.icon(
+                  onPressed: scanPayment,
+                  icon: Icon(Icons.all_out),
+                  label: Text('Scan network for payment')),
+            ),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 16.0),
               child: RaisedButton.icon(
