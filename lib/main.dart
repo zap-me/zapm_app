@@ -7,6 +7,7 @@ import 'package:decimal/decimal.dart';
 import 'package:flushbar/flushbar.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:clipboard_manager/clipboard_manager.dart';
+import 'package:socket_io_client/socket_io_client.dart';
 
 import 'qrwidget.dart';
 import 'send_receive.dart';
@@ -52,6 +53,7 @@ class MyApp extends StatelessWidget {
       home: new ZapHomePage(title: 'Zap'),
     );
   }
+
 }
 
 class ZapHomePage extends StatefulWidget {
@@ -66,6 +68,8 @@ class ZapHomePage extends StatefulWidget {
 enum NoMnemonicAction { CreateNew, Recover, RecoverRaw }
 
 class _ZapHomePageState extends State<ZapHomePage> {
+  Socket socket;
+
   bool _testnet = true;
   String _mnemonic = "";
   bool _mnemonicPasswordProtected = false;
@@ -77,6 +81,40 @@ class _ZapHomePageState extends State<ZapHomePage> {
   bool _updatingBalance = true;
 
   _ZapHomePageState();
+
+  @override
+  void dispose() {
+    // close socket
+    if (socket != null) 
+      socket.close();
+    super.dispose();
+  }
+
+  void _watchAddress() async {
+    // do nothing if the address, apikey or apisecret is not set
+    if (_address == null || _address == "")
+      return;
+    var apikey = await Prefs.apikeyGet();
+    if (apikey == null || apikey == "")
+      return;
+    var apisecret = await Prefs.apisecretGet();
+    if (apisecret == null || apisecret == "")
+      return;
+    // register to watch our address
+    if (!await merchantWatch(_address))
+    {
+      Flushbar(title: "Failed to register address", message: _address, duration: Duration(seconds: 2),)
+        ..show(context);
+      return;
+    }
+    // create socket to receive tx alerts
+    if (socket != null) 
+      socket.close();
+    socket = await merchantSocket((txid, recipient, amount) => {
+    Flushbar(title: "Received $amount ZAP", message: "TXID: $txid", duration: Duration(seconds: 2),)
+      ..show(context)
+    });
+  }
 
   Future<NoMnemonicAction> _noMnemonicDialog(BuildContext context) async {
     return await showDialog<NoMnemonicAction>(
@@ -278,6 +316,8 @@ class _ZapHomePageState extends State<ZapHomePage> {
       }
       _updatingBalance = false;
     });
+    // watch wallet address
+    _watchAddress();
     return true;
   }
 
