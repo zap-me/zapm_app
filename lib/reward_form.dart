@@ -51,7 +51,7 @@ class RewardFormState extends State<RewardForm> {
             );
           }
       )) {
-        var claimCode = await merchantRegister(amountDec);
+        var claimCode = await merchantRegister(amountDec, amount);
         if (claimCode != null) {
           await Navigator.push(
             context,

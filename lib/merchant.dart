@@ -49,13 +49,13 @@ String createHmacSig(String secret, String message) {
   return base64.encode(digest.bytes);
 }
 
-Future<ClaimCode> merchantRegister(Decimal amount) async {
+Future<ClaimCode> merchantRegister(Decimal amount, int amountInt) async {
   var claimCode = ClaimCode.generate(amount);
   var url = baseUrl + "register";
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
-  var body = jsonEncode({"api_key": apikey, "nonce": nonce, "token": claimCode.token});
+  var body = jsonEncode({"api_key": apikey, "nonce": nonce, "token": claimCode.token, "amount": amountInt});
   var sig = createHmacSig(apisecret, body);
   var response = await http.post(url, headers: {"X-Signature": sig, "Content-Type": "application/json"}, body: body);
   if (response.statusCode == 200) {
