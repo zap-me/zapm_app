@@ -1,4 +1,3 @@
-import 'package:FlutterZap/merchant.dart';
 import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
 import 'package:flushbar/flushbar.dart';
@@ -51,16 +50,10 @@ class RewardFormState extends State<RewardForm> {
             );
           }
       )) {
-        var claimCode = await merchantRegister(amountDec, amount);
-        if (claimCode != null) {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => ClaimingForm(claimCode, widget._seed, amount, fee, attachment)),
-          );
-        }
-        else
-          Flushbar(title: "Failed to create claim code", message: ":(", duration: Duration(seconds: 2),)
-            ..show(context);
+        await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ClaimingForm(amountDec, widget._seed, amount, fee, attachment)),
+        );
       }
     }
     else

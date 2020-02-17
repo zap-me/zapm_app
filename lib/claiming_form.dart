@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flushbar/flushbar.dart';
+import 'package:decimal/decimal.dart';
 
 import 'libzap.dart';
 import 'qrwidget.dart';
@@ -8,13 +9,13 @@ import 'merchant.dart';
 import 'sending_form.dart';
 
 class ClaimingForm extends StatefulWidget {
-  final ClaimCode _claimCode;
+  final Decimal _amountDec;
   final String _seed;
   final int _amount;
   final int _fee;
   final String _attachment;
 
-  ClaimingForm(this._claimCode, this._seed, this._amount, this._fee, this._attachment) : super();
+  ClaimingForm(this._amountDec, this._seed, this._amount, this._fee, this._attachment) : super();
 
   @override
   ClaimingFormState createState() {
@@ -23,26 +24,27 @@ class ClaimingForm extends StatefulWidget {
 }
 
 class ClaimingFormState extends State<ClaimingForm> {
+  bool _init = false;
   bool _checking = true;
   String _uri;
   Timer _timer;
-  SpendTx _spendTx;
+  ClaimCode _claimCode = ClaimCode(amount: Decimal.fromInt(0), token: "", secret: "");
 
   Future check(Timer timer) async {
-    if (!_checking)
+    if (!_checking || !_init)
       return;
-    var addr = await merchantCheck(widget._claimCode);
+    var addr = await merchantCheck(_claimCode);
     if (addr != null) {
       _timer.cancel();
       setState(() {
        _checking = false; 
       });
       var libzap = LibZap();
-      _spendTx = libzap.transactionCreate(widget._seed, addr, widget._amount, widget._fee, widget._attachment);
-      if (_spendTx.success) {
+      var spendTx = libzap.transactionCreate(widget._seed, addr, widget._amount, widget._fee, widget._attachment);
+      if (spendTx.success) {
         await Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => SendingForm(_spendTx)),
+          MaterialPageRoute(builder: (context) => SendingForm(spendTx)),
         );
       }
       else
@@ -54,11 +56,25 @@ class ClaimingFormState extends State<ClaimingForm> {
   @override
   void initState() {
     super.initState();
-    var uri = claimCodeUri(widget._claimCode);
-    setState(() {
-      _uri = uri;
+    // create claim code
+    merchantRegister(widget._amountDec, widget._amount).then((value) {
+      _claimCode = value;
+      if (_claimCode == null) {
+        setState(() {
+          _checking = false;
+        });
+        Flushbar(title: "Failed to create claim code", message: ":(", duration: Duration(seconds: 2),)
+          ..show(context);
+        return;
+      }
+      // create uri
+      var uri = claimCodeUri(_claimCode);
+      setState(() {
+        _uri = uri;
+        _init = true;
+      });
+      _timer = Timer.periodic(Duration(seconds: 1), check);
     });
-    _timer = Timer.periodic(Duration(seconds: 1), check);
   }
 
   @override
@@ -77,21 +93,17 @@ class ClaimingFormState extends State<ClaimingForm> {
               ),
               Visibility(visible: _checking, child: Container(padding: const EdgeInsets.only(top: 20.0))),
               Visibility(
-                visible: _checking,
-                child: Text(widget._claimCode.token),
+                visible: _init,
+                child: Text(_claimCode.token),
               ),
               Visibility(
-                visible: _checking,
+                visible: _init,
                 child: QrWidget(_uri),
               ),
               Visibility(visible: _checking, child: Container(padding: const EdgeInsets.only(top: 20.0))),
               Visibility(
-                visible: _checking,
+                visible: _checking && _init,
                 child: Text("Waiting for customer confirmation..."),
-              ),
-              Visibility(
-                visible: !_checking && _spendTx != null,
-                child: Text("Send failed :("),
               ),
               Visibility(visible: !_checking, child: Container(padding: const EdgeInsets.only(top: 20.0))),
               Visibility(
