@@ -88,7 +88,7 @@ class ReceiveFormState extends State<ReceiveForm> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Center(
-              child: QrWidget(_uri)
+              child: QrWidget(_uri, size: 260, version: 8)
             ),
             new TextFormField(
               controller: _uriController,

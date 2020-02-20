@@ -98,7 +98,7 @@ class ClaimingFormState extends State<ClaimingForm> {
               ),
               Visibility(
                 visible: _init,
-                child: QrWidget(_uri),
+                child: QrWidget(_uri, size: 260, version: 6),
               ),
               Visibility(visible: _checking, child: Container(padding: const EdgeInsets.only(top: 20.0))),
               Visibility(
