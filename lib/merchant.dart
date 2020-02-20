@@ -1,6 +1,6 @@
 import 'dart:math';
 import 'dart:convert';
-import 'package:FlutterZap/bronze.dart';
+import "package:hex/hex.dart";
 import 'package:decimal/decimal.dart';
 import 'package:http/http.dart' as http;
 import 'package:crypto/crypto.dart';
@@ -26,8 +26,8 @@ class ClaimCode {
   factory ClaimCode.generate(Decimal _amount) {
     return ClaimCode(
       amount: _amount,
-      token: base64Url.encode(secureRandom(count: 8)),
-      secret: base64Url.encode(secureRandom())
+      token: HEX.encode(secureRandom(count: 8)),
+      secret: HEX.encode(secureRandom(count: 16))
     );
   }
 }
