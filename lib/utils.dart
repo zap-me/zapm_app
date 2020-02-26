@@ -105,6 +105,22 @@ String parseRecipientOrWavesUri(bool testnet, String data) {
   return null;                  // return null, data is not usable/valid
 }
 
+void showAlertDialog(BuildContext context, String msg) {
+  var alert= AlertDialog(
+    content: new Row(
+        children: [
+            CircularProgressIndicator(),
+            Container(margin: EdgeInsets.only(left: 10), child: Text(msg)),
+        ],),
+  );
+  showDialog(barrierDismissible: false,
+    context:context,
+    builder:(BuildContext context){
+      return alert;
+    },
+  );
+}
+
 Future<void> alert(BuildContext context, String title, String msg) {
   return showDialog<void>(
     context: context,

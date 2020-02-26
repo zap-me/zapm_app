@@ -32,6 +32,25 @@ class ClaimCode {
   }
 }
 
+class Rates {
+  final Decimal merchantRate;
+  final Decimal customerRate;
+  final String settlementAddress;
+
+  Rates({this.merchantRate, this.customerRate, this.settlementAddress});
+}
+
+class Settlement {
+  final String token;
+  final Decimal amount;
+  final Decimal amountReceive;
+  final String bankAccount;
+  final String txid;
+  final String status;
+
+  Settlement({this.token, this.amount, this.amountReceive, this.bankAccount, this.txid, this.status});
+}
+
 String claimCodeUri(ClaimCode claimCode) {
   return "claimcode:${claimCode.token}?secret=${claimCode.secret}";
 }
@@ -100,6 +119,53 @@ Future<bool> merchantWatch(String address) async {
     return true;
   }
   return false;
+}
+
+Future<Rates> merchantRates() async {
+  var url = baseUrl + "rates";
+  var apikey = await Prefs.apikeyGet();
+  var apisecret = await Prefs.apisecretGet();
+  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
+  var body = jsonEncode({"api_key": apikey, "nonce": nonce});
+  var sig = createHmacSig(apisecret, body);
+  var response = await http.post(url, headers: {"X-Signature": sig, "Content-Type": "application/json"}, body: body);
+  if (response.statusCode == 200) {
+    var jsnObj = json.decode(response.body);
+    return Rates(customerRate: Decimal.parse(jsnObj["customer"]), merchantRate: Decimal.parse(jsnObj["merchant"]), settlementAddress: jsnObj["settlement_address"]);
+  }
+  return null;
+}
+
+Future<Settlement> merchantSettlement(Decimal amount, String bankAccount) async {
+  var url = baseUrl + "settlement";
+  var apikey = await Prefs.apikeyGet();
+  var apisecret = await Prefs.apisecretGet();
+  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
+  var d100 = Decimal.fromInt(100);
+  var body = jsonEncode({"api_key": apikey, "nonce": nonce, "bank_account": bankAccount, "amount": (amount * d100).toInt()});
+  var sig = createHmacSig(apisecret, body);
+  var response = await http.post(url, headers: {"X-Signature": sig, "Content-Type": "application/json"}, body: body);
+  if (response.statusCode == 200) {
+    var jsnObj = json.decode(response.body);
+    return Settlement(token: jsnObj["token"], amount: Decimal.fromInt(jsnObj["amount"]) / d100, amountReceive: Decimal.fromInt(jsnObj["amount_receive"]) / d100, bankAccount: jsnObj["bankAccount"], txid: jsnObj["txid"], status: jsnObj["status"]);
+  }
+  return null;
+}
+
+Future<Settlement> merchantSettlementUpdate(String token, String txid) async {
+  var url = baseUrl + "settlement_set_txid";
+  var apikey = await Prefs.apikeyGet();
+  var apisecret = await Prefs.apisecretGet();
+  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
+  var body = jsonEncode({"api_key": apikey, "nonce": nonce, "token": token, "txid": txid});
+  var sig = createHmacSig(apisecret, body);
+  var response = await http.post(url, headers: {"X-Signature": sig, "Content-Type": "application/json"}, body: body);
+  if (response.statusCode == 200) {
+    var jsnObj = json.decode(response.body);
+    var d100 = Decimal.fromInt(100);
+    return Settlement(token: jsnObj["token"], amount: Decimal.fromInt(jsnObj["amount"]) / d100, amountReceive: Decimal.fromInt(jsnObj["amount_receive"]) / d100, bankAccount: jsnObj["bankAccount"], txid: jsnObj["txid"], status: jsnObj["status"]);
+  }
+  return null;
 }
 
 typedef TxNotificationCallback = void Function(String, String, double);

@@ -12,6 +12,7 @@ import 'package:socket_io_client/socket_io_client.dart';
 import 'qrwidget.dart';
 import 'send_receive.dart';
 import 'reward.dart';
+import 'settlement.dart';
 import 'settings.dart';
 import 'utils.dart';
 import 'libzap.dart';
@@ -411,6 +412,15 @@ class _ZapHomePageState extends State<ZapHomePage> {
     _setWalletDetails();
   }
 
+  void _settlement() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+          builder: (context) => SettlementScreen(_testnet, _mnemonic, _fee, _balance)),
+    );
+    _setWalletDetails();
+  }
+
   @override
   void initState() {
     Prefs.testnetGet().then((testnet) {
@@ -494,6 +504,10 @@ class _ZapHomePageState extends State<ZapHomePage> {
             Container(
               padding: const EdgeInsets.only(top: 18.0),
               child: RaisedButton.icon(onPressed: _zapReward, icon: Icon(Icons.send), label: Text("Zap Reward")),
+            ),
+            Container(
+              padding: const EdgeInsets.only(top: 18.0),
+              child: RaisedButton.icon(onPressed: _settlement, icon: Icon(Icons.monetization_on), label: Text("Make settlement")),
             ),
           ],
         ),
