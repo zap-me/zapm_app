@@ -4,7 +4,7 @@ import 'package:decimal/decimal.dart';
 
 import 'qrwidget.dart';
 import 'libzap.dart';
-import 'bronze.dart';
+import 'merchant.dart';
 
 class ReceiveForm extends StatefulWidget {
   final VoidCallback onClosed;
@@ -35,7 +35,7 @@ class ReceiveFormState extends State<ReceiveForm> {
     catch (e) {}
     if (_amountType == "NZD") {
       try {
-        amount = await equivalentZapForNzd(amount, Side.sell);
+        amount = await equivalentCustomerZapForNzd(amount);
       }
       catch (e) {
         return e.toString();

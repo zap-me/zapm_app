@@ -207,3 +207,11 @@ Future<Socket> merchantSocket(TxNotificationCallback txNotificationCallback) asy
 
   return socket;
 }
+
+Future<Decimal> equivalentCustomerZapForNzd(Decimal nzdReqOrProvided) async {
+  var rates = await merchantRates();
+  if (rates == null) {
+    throw new Exception("could not get rates");
+  }
+  return nzdReqOrProvided * (Decimal.fromInt(1) + rates.customerRate);
+}
