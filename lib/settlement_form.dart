@@ -80,7 +80,7 @@ class SettlementFormState extends State<SettlementForm> {
         }
         // send funds
         var libzap = LibZap();
-        var spendTx = libzap.transactionCreate(widget._seed, rates.settlementAddress, amount, fee, "settlement");
+        var spendTx = libzap.transactionCreate(widget._seed, rates.settlementAddress, amount, fee, settlement.token);
         if (!spendTx.success) {
           Flushbar(title: "Failed to create Tx", message: ":(", duration: Duration(seconds: 2),)
             ..show(context);
