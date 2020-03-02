@@ -23,7 +23,9 @@ class SettlementForm extends StatefulWidget {
 class SettlementFormState extends State<SettlementForm> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = new TextEditingController();
-  final _bankAccountController = new TextEditingController();
+  Rates _rates;
+  List<Bank> _banks;
+  String _bankAccount;
 
   void send() async {
     if (_formKey.currentState.validate()) {
@@ -32,24 +34,14 @@ class SettlementFormState extends State<SettlementForm> {
       var amountDec = Decimal.parse(amountText);
       var amount = (amountDec * Decimal.fromInt(100)).toInt();
       var fee = (widget._fee * Decimal.fromInt(100)).toInt();
-      var bankAccount = _bankAccountController.text;
-      // get rates
-      showAlertDialog(context, "Getting rates..");
-      var rates = await merchantRates();
-      Navigator.pop(context);
-      if (rates == null) {
-        Flushbar(title: "Unable to create settlement", message: "Could not get rates", duration: Duration(seconds: 2),)
-        ..show(context);
-        return;
-      }
       var lz = LibZap();
-      if (!lz.addressCheck(rates.settlementAddress)) {
+      if (!lz.addressCheck(_rates.settlementAddress)) {
         Flushbar(title: "Unable to create settlement", message: "Settlement address is invalid", duration: Duration(seconds: 2),)
         ..show(context);
         return;
       }
       // get amount to receive
-      var amountReceive = amountDec * (Decimal.fromInt(1) - rates.merchantRate);
+      var amountReceive = amountDec * (Decimal.fromInt(1) - _rates.merchantRate);
       // double check with user
       if (await showDialog<bool>(
           context: context,
@@ -71,7 +63,13 @@ class SettlementFormState extends State<SettlementForm> {
       )) {
         // create settlement
         showAlertDialog(context, "Creating settlement..");
-        var settlement = await merchantSettlement(amountDec, bankAccount);
+        var bankToken = "";
+        for (var bank in _banks) {
+          if (bank.accountNumber == _bankAccount) {
+            bankToken = bank.token;
+          }
+        }
+        var settlement = await merchantSettlement(amountDec, bankToken);
         Navigator.pop(context);
         if (settlement == null) {
           Flushbar(title: "Failed to create settlement", message: ":(", duration: Duration(seconds: 2),)
@@ -80,7 +78,7 @@ class SettlementFormState extends State<SettlementForm> {
         }
         // send funds
         var libzap = LibZap();
-        var spendTx = libzap.transactionCreate(widget._seed, rates.settlementAddress, amount, fee, settlement.token);
+        var spendTx = libzap.transactionCreate(widget._seed, _rates.settlementAddress, amount, fee, settlement.token);
         if (!spendTx.success) {
           Flushbar(title: "Failed to create Tx", message: ":(", duration: Duration(seconds: 2),)
             ..show(context);
@@ -117,6 +115,42 @@ class SettlementFormState extends State<SettlementForm> {
   @mustCallSuper
   void initState() {
     super.initState();
+    () async {
+      await Future.delayed(Duration.zero);
+      // get rates
+      showAlertDialog(context, "Getting rates..");
+      var rates = await merchantRates();
+      Navigator.pop(context);
+      if (rates == null) {
+        Flushbar(title: "Unable to get rates", message: "Could not get rates", duration: Duration(seconds: 2),)
+        ..show(context);
+        return;
+      }
+      // get banks
+      showAlertDialog(context, "Getting banks..");
+      var banks = await merchantBanks();
+      Navigator.pop(context);
+      if (banks == null) {
+        Flushbar(title: "Unable to get bank accounts", message: "Could not get bank accounts", duration: Duration(seconds: 2),)
+        ..show(context);
+        return;
+      }
+      if (banks.length > 0) {
+        setState(() {
+          _rates = rates;
+          _banks = banks;
+          for (var bank in banks) {
+            if (_bankAccount == null || bank.defaultAccount) {
+              _bankAccount = bank.accountNumber;
+            }
+          }
+        });
+      } else {
+        Flushbar(title: "User has no bank accounts", message: "Set up a bank account in the web interface", duration: Duration(seconds: 2),)
+        ..show(context);
+        return;
+      } 
+    }();
   }
 
   @override
@@ -144,22 +178,20 @@ class SettlementFormState extends State<SettlementForm> {
               return null;
             },
           ),
-          TextFormField(
-            controller: _bankAccountController,
-            keyboardType: TextInputType.text,
-            decoration: new InputDecoration(labelText: 'Bank Account'),
-            validator: (value) {
-              if (value.isEmpty) {
-                return 'Please enter a value';
-              }
-              //TODO: validate bank account more!!
-              return null;
+          DropdownButton<String>(
+            hint: Text('Bank Account'),
+            value: _bankAccount,
+            items: _banks == null ? null : _banks.map((e) => DropdownMenuItem(child: Text(e.accountNumber), value: e.accountNumber,)).toList(),
+            onChanged: (e) {
+              setState(() {
+                _bankAccount = e;
+              });
             },
           ),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16.0),
             child: RaisedButton.icon(
-                onPressed: send,
+                onPressed: _bankAccount == null ? null : send,   
                 icon: Icon(Icons.send),
                 label: Text('Submit')),
           ),

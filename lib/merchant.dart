@@ -40,6 +40,14 @@ class Rates {
   Rates({this.merchantRate, this.customerRate, this.settlementAddress});
 }
 
+class Bank {
+  final String token;
+  final String accountNumber;
+  final bool defaultAccount;
+
+  Bank({this.token, this.accountNumber, this.defaultAccount});
+}
+
 class Settlement {
   final String token;
   final Decimal amount;
@@ -136,13 +144,33 @@ Future<Rates> merchantRates() async {
   return null;
 }
 
-Future<Settlement> merchantSettlement(Decimal amount, String bankAccount) async {
+Future<List<Bank>> merchantBanks() async {
+  var url = baseUrl + "banks";
+  var apikey = await Prefs.apikeyGet();
+  var apisecret = await Prefs.apisecretGet();
+  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
+  var body = jsonEncode({"api_key": apikey, "nonce": nonce});
+  var sig = createHmacSig(apisecret, body);
+  var response = await http.post(url, headers: {"X-Signature": sig, "Content-Type": "application/json"}, body: body);
+  if (response.statusCode == 200) {
+    var jsnObj = json.decode(response.body);
+    var banks = List<Bank>();
+    for (var jsnObjBank in jsnObj) {
+      var bank = Bank(token: jsnObjBank["token"], accountNumber: jsnObjBank["account_number"], defaultAccount: jsnObjBank["default_account"]);
+      banks.add(bank);
+    }
+    return banks;  
+  }
+  return null;
+}
+
+Future<Settlement> merchantSettlement(Decimal amount, String bankToken) async {
   var url = baseUrl + "settlement";
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var d100 = Decimal.fromInt(100);
-  var body = jsonEncode({"api_key": apikey, "nonce": nonce, "bank_account": bankAccount, "amount": (amount * d100).toInt()});
+  var body = jsonEncode({"api_key": apikey, "nonce": nonce, "bank": bankToken, "amount": (amount * d100).toInt()});
   var sig = createHmacSig(apisecret, body);
   var response = await http.post(url, headers: {"X-Signature": sig, "Content-Type": "application/json"}, body: body);
   if (response.statusCode == 200) {
