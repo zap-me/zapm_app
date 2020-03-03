@@ -61,6 +61,10 @@ class SettlementFormState extends State<SettlementForm> {
             );
           }
       )) {
+        // check pin
+        if (!await pinCheck(context)) {
+          return;
+        }
         // create settlement
         showAlertDialog(context, "Creating settlement..");
         var bankToken = "";

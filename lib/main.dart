@@ -20,6 +20,7 @@ import 'prefs.dart';
 import 'new_mnemonic_form.dart';
 import 'transactions.dart';
 import 'merchant.dart';
+import 'pinentry.dart';
 
 void main() {
   // See https://github.com/flutter/flutter/wiki/Desktop-shells#target-platform-override
@@ -396,10 +397,13 @@ class _ZapHomePageState extends State<ZapHomePage> {
   }
 
   void _showSettings() async {
-    var pin = await Prefs.pinGet();
+    var _pinExists = await pinExists();
+    if (!await pinCheck(context)) {
+      return;
+    }
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => SettingsScreen(pin != null && pin != '', _mnemonic, _mnemonicPasswordProtected)),
+      MaterialPageRoute(builder: (context) => SettingsScreen(_pinExists, _mnemonic, _mnemonicPasswordProtected)),
     );
     _setWalletDetails();
   }

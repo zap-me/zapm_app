@@ -3,6 +3,7 @@ import 'package:decimal/decimal.dart';
 import 'package:flushbar/flushbar.dart';
 
 import 'claiming_form.dart';
+import 'utils.dart';
 
 class RewardForm extends StatefulWidget {
   final bool _testnet;
@@ -50,6 +51,11 @@ class RewardFormState extends State<RewardForm> {
             );
           }
       )) {
+        // check pin
+        if (!await pinCheck(context)) {
+          return;
+        }
+        // start claim process
         await Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => ClaimingForm(amountDec, widget._seed, amount, fee, attachment)),

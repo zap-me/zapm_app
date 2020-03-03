@@ -70,6 +70,11 @@ class SendFormState extends State<SendForm> {
             );
           }
       )) {
+        // check pin
+        if (!await pinCheck(context)) {
+          return;
+        }
+        // create tx
         var libzap = LibZap();
         var spendTx = libzap.transactionCreate(widget._seed, recipient, amount, fee, attachment);
         if (spendTx.success) {

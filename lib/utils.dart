@@ -7,6 +7,8 @@ import 'package:base58check/base58.dart';
 
 import 'libzap.dart';
 import 'merchant.dart';
+import 'pinentry.dart';
+import 'prefs.dart';
 
 //
 // We do our own uri parsing until dart has better struct/fixed-size-array support in ffi
@@ -426,4 +428,22 @@ String base58decode(String input) {
   Base58Codec codec = const Base58Codec(_bitcoinAlphabet);
   var decoded = codec.decode(input);
   return String.fromCharCodes(decoded);
+}
+
+Future<bool> pinExists() async {
+  var pin = await Prefs.pinGet();
+  return pin != null && pin != '';
+}
+
+Future<bool> pinCheck(BuildContext context) async {
+  if (await pinExists()) {
+    var pin = await Prefs.pinGet();
+    var pin2 = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PinEntryScreen(pin, 'Enter Pin')),
+    );
+    return pin == pin2;
+  }
+  return true;
 }

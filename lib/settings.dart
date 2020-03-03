@@ -114,7 +114,7 @@ class _SettingsState extends State<SettingsScreen> {
     var pin2 = await Navigator.push<String>(
       context,
       MaterialPageRoute(
-          builder: (context) => PinEntryScreen(pin, 'Enter current Pin')),
+          builder: (context) => PinEntryScreen(pin, 'Enter Current Pin')),
     );
     if (pin == pin2) {
       _addPin();
@@ -126,7 +126,7 @@ class _SettingsState extends State<SettingsScreen> {
     var pin2 = await Navigator.push<String>(
       context,
       MaterialPageRoute(
-          builder: (context) => PinEntryScreen(pin, 'Enter current Pin')),
+          builder: (context) => PinEntryScreen(pin, 'Enter Current Pin')),
     );
     if (pin == pin2) {
       await Prefs.pinSet('');
