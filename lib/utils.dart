@@ -16,6 +16,7 @@ const NO_ERROR = 0;
 const INVALID_WAVES_URI = 1;
 const INVALID_ASSET_ID = 2;
 const INVALID_CLAIMCODE_URI = 3;
+const INVALID_APIKEY_URI = 4;
 
 String parseUriParameter(String input, String token) {
   token = token + '=';
@@ -93,6 +94,34 @@ ClaimCodeResult parseClaimCodeUri(String uri) {
   else
     error = INVALID_CLAIMCODE_URI;
   return ClaimCodeResult(ClaimCode(amount: amount, token: token, secret: secret), error);
+}
+
+class ApiKeyResult {
+  final String apikey;
+  final String apisecret;
+  final int error;
+
+  ApiKeyResult(this.apikey, this.apisecret, this.error);
+}
+
+ApiKeyResult parseApiKeyUri(String uri) {
+  var apikey = '';
+  var secret = '';
+  int error = NO_ERROR;
+  if (uri.length > 12 && uri.substring(0, 12).toLowerCase() == 'zapm_apikey:') {
+    var parts = uri.substring(12).split('?');
+    if (parts.length == 2) {
+      apikey = parts[0];
+      parts = parts[1].split('&');
+      for (var part in parts) {
+        var res = parseUriParameter(part, 'secret');
+        if (res != null) secret = res;
+      }
+    }
+  }
+  else
+    error = INVALID_APIKEY_URI;
+  return ApiKeyResult(apikey, secret, error);
 }
 
 String parseRecipientOrWavesUri(bool testnet, String data) {

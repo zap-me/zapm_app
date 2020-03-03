@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:package_info/package_info.dart';
 import 'package:yaml/yaml.dart';
+import 'package:qr_reader/qr_reader.dart';
+import 'package:flushbar/flushbar.dart';
 
 import 'libzap.dart';
 import 'prefs.dart';
@@ -93,6 +95,26 @@ class _SettingsState extends State<SettingsScreen> {
     }
   }
 
+  void _scanApikey() async {
+    var value = await new QRCodeReader().scan();
+    if (value != null) {
+      var result = parseApiKeyUri(value);
+      if (result.error == NO_ERROR) {
+        await Prefs.apikeySet(result.apikey);
+        await Prefs.apisecretSet(result.apisecret);
+        setState(() {
+          _apikey = result.apikey;
+          _apisecret = result.apisecret;
+        });
+        Flushbar(title: "Api Key set", message: "${result.apikey}", duration: Duration(seconds: 2),)
+          ..show(context);
+      }
+      else
+        Flushbar(title: "Invalid QR Code", message: "Unable to decipher QR code data", duration: Duration(seconds: 2),)
+          ..show(context);
+    }
+  }
+
   void _editApikey() async {
     var apikey = await askString(context, "Set Api Key", _apikey);
     if (apikey != null) {
@@ -122,14 +144,8 @@ class _SettingsState extends State<SettingsScreen> {
       body: Center(
         child: Column(
           children: <Widget>[
-            Container(
-              padding: const EdgeInsets.only(top: 18.0),
-              child: ListTile(title: Text("Version: $_appVersion"), subtitle: Text("Build: $_buildNumber")),
-            ),
-            Container(
-              padding: const EdgeInsets.only(top: 18.0),
-              child: ListTile(title: Text("Libzap Version: $_libzapVersion")),
-            ),
+            ListTile(title: Text("Version: $_appVersion"), subtitle: Text("Build: $_buildNumber")),
+            ListTile(title: Text("Libzap Version: $_libzapVersion")),
             Container(
               padding: const EdgeInsets.only(top: 18.0),
               child: SwitchListTile(
@@ -154,12 +170,12 @@ class _SettingsState extends State<SettingsScreen> {
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),
-              child: ListTile(title: Text("Api Key"), subtitle: Text("$_apikey"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: () { _editApikey(); }),),
+              child: ListTile(
+                title: RaisedButton.icon(label: Text("Scan Api Key"), icon: Icon(Icons.center_focus_weak), onPressed: () { _scanApikey(); }),
+              ),
             ),
-            Container(
-              padding: const EdgeInsets.only(top: 18.0),
-              child: ListTile(title: Text("Api Secret"), subtitle: Text("$_apisecret"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: () { _editApisecret(); }),),
-            ),
+            ListTile(title: Text("Api Key"), subtitle: Text("$_apikey"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: () { _editApikey(); }),),
+            ListTile(title: Text("Api Secret"), subtitle: Text("$_apisecret"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: () { _editApisecret(); }),),
             Container(
               padding: const EdgeInsets.only(top: 18.0),
               child: RaisedButton.icon(
