@@ -396,9 +396,10 @@ class _ZapHomePageState extends State<ZapHomePage> {
   }
 
   void _showSettings() async {
+    var pin = await Prefs.pinGet();
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => SettingsScreen(_mnemonic, _mnemonicPasswordProtected)),
+      MaterialPageRoute(builder: (context) => SettingsScreen(pin != null && pin != '', _mnemonic, _mnemonicPasswordProtected)),
     );
     _setWalletDetails();
   }

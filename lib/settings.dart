@@ -9,18 +9,21 @@ import 'package:flushbar/flushbar.dart';
 import 'libzap.dart';
 import 'prefs.dart';
 import 'utils.dart';
+import 'pinentry.dart';
 
 class SettingsScreen extends StatefulWidget {
+  final bool _pinProtectedInitial;
   final String _mnemonic;
   final bool _mnemonicPasswordProtectedInitial;
 
-  SettingsScreen(this._mnemonic, this._mnemonicPasswordProtectedInitial) : super();
+  SettingsScreen(this._pinProtectedInitial, this._mnemonic, this._mnemonicPasswordProtectedInitial) : super();
 
   @override
-  _SettingsState createState() => new _SettingsState(_mnemonicPasswordProtectedInitial);
+  _SettingsState createState() => new _SettingsState(_pinProtectedInitial, _mnemonicPasswordProtectedInitial);
 }
 
 class _SettingsState extends State<SettingsScreen> {
+  bool _pinProtected;
   bool _mnemonicPasswordProtected;
   String _appVersion;
   String _buildNumber;
@@ -29,7 +32,7 @@ class _SettingsState extends State<SettingsScreen> {
   String _apikey;
   String _apisecret;
 
-  _SettingsState(this._mnemonicPasswordProtected) {
+  _SettingsState(this._pinProtected, this._mnemonicPasswordProtected) {
     _initAppVersion();
     _libzapVersion = _getLibZapVersion();
     _initTestnet();
@@ -81,6 +84,58 @@ class _SettingsState extends State<SettingsScreen> {
     setState(() {
       _testnet = !_testnet;
     });
+  }
+
+  void _addPin() async {
+    var pin = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+          builder: (context) => PinEntryScreen(null, 'Enter New Pin')),
+    );
+    if (pin != null) {
+      var pin2 = await Navigator.push<String>(
+        context,
+        MaterialPageRoute(
+            builder: (context) => PinEntryScreen(pin, 'Repeat New Pin')),
+      );
+      if (pin2 != null && pin == pin2) {
+        await Prefs.pinSet(pin);
+        Flushbar(title: 'Pin set', message: ':)', duration: Duration(seconds: 2),)
+          ..show(context);
+        setState(() {
+          _pinProtected = true;
+        });
+      }
+    }
+  }
+
+  void _changePin() async {
+    var pin = await Prefs.pinGet();
+    var pin2 = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+          builder: (context) => PinEntryScreen(pin, 'Enter current Pin')),
+    );
+    if (pin == pin2) {
+      _addPin();
+    }
+  }
+
+  void _removePin() async {
+    var pin = await Prefs.pinGet();
+    var pin2 = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+          builder: (context) => PinEntryScreen(pin, 'Enter current Pin')),
+    );
+    if (pin == pin2) {
+      await Prefs.pinSet('');
+      Flushbar(title: 'Pin removed', message: ':)', duration: Duration(seconds: 2),)
+        ..show(context);
+      setState(() {
+        _pinProtected = false;
+      });
+    }
   }
 
   void _addPasswordProtection() async {
@@ -142,7 +197,7 @@ class _SettingsState extends State<SettingsScreen> {
         title: Text("Settings"),
       ),
       body: Center(
-        child: Column(
+        child: ListView( 
           children: <Widget>[
             ListTile(title: Text("Version: $_appVersion"), subtitle: Text("Build: $_buildNumber")),
             ListTile(title: Text("Libzap Version: $_libzapVersion")),
@@ -158,33 +213,52 @@ class _SettingsState extends State<SettingsScreen> {
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),
+              child: ListTile(title: Text("Pin Protect Spending"), trailing: _pinProtected ? Icon(Icons.lock) : Icon(Icons.lock_open),),
+            ),
+            Visibility(
+              visible: !_pinProtected,
+              child: Container(
+                child: ListTile(
+                  title: RaisedButton.icon(label: Text("Create Pin"), icon: Icon(Icons.lock), onPressed: _addPin),
+                ),
+              ),
+            ),
+            Visibility(
+              visible: _pinProtected,
+              child: Container(
+                child: ListTile(
+                  title: RaisedButton.icon(label: Text("Change Pin"), icon: Icon(Icons.lock), onPressed: _changePin),
+                ),
+              ),
+            ),
+            Visibility(
+              visible: _pinProtected,
+              child: Container(
+                child: ListTile(
+                  title: RaisedButton.icon(label: Text("Remove Pin"), icon: Icon(Icons.lock), onPressed: _removePin),
+                ),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.only(top: 18.0),
               child: ListTile(title: Text("Mnemonic"), subtitle: Text(widget._mnemonic), trailing: _mnemonicPasswordProtected ? Icon(Icons.lock) : Icon(Icons.lock_open),),
             ),
             Visibility(
               visible: !_mnemonicPasswordProtected,
               child: Container(
                 child: ListTile(
-                  title: RaisedButton.icon(label: Text("Password Protect Mnemonic"), icon: Icon(Icons.lock), onPressed: () { _addPasswordProtection(); }),
+                  title: RaisedButton.icon(label: Text("Password Protect Mnemonic"), icon: Icon(Icons.lock), onPressed: _addPasswordProtection),
                 ),
               ),
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),
               child: ListTile(
-                title: RaisedButton.icon(label: Text("Scan Api Key"), icon: Icon(Icons.center_focus_weak), onPressed: () { _scanApikey(); }),
+                title: RaisedButton.icon(label: Text("Scan Api Key"), icon: Icon(Icons.center_focus_weak), onPressed: _scanApikey),
               ),
             ),
-            ListTile(title: Text("Api Key"), subtitle: Text("$_apikey"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: () { _editApikey(); }),),
-            ListTile(title: Text("Api Secret"), subtitle: Text("$_apisecret"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: () { _editApisecret(); }),),
-            Container(
-              padding: const EdgeInsets.only(top: 18.0),
-              child: RaisedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  icon: Icon(Icons.close),
-                  label: Text('Close'))
-              ),
+            ListTile(title: Text("Api Key"), subtitle: Text("$_apikey"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: _editApikey),),
+            ListTile(title: Text("Api Secret"), subtitle: Text("$_apisecret"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: _editApisecret),),
             ],
           ),
         )

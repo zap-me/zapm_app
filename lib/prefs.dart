@@ -87,10 +87,20 @@ class Prefs {
     LibZap().testnetSet(value);
   }
 
+  static Future<String> pinGet() async {
+    final prefs = PrefHelper();
+    return await prefs.getString("pin", null);
+  }
+
+  static Future<bool> pinSet(String value) async {
+    final prefs = PrefHelper();
+    await prefs.setString("pin", value);
+    return true;
+  }
+
   static Future<String> mnemonicGet() async {
     final prefs = PrefHelper();
-    var mnemonic = await prefs.getString("mnemonic", null);
-    return mnemonic;
+    return await prefs.getString("mnemonic", null);
   }
 
   static Future<bool> mnemonicSet(String value) async {
@@ -106,8 +116,7 @@ class Prefs {
 
   static Future<String> cryptoIVGet() async {
     final prefs = PrefHelper();
-    var mnemonic = await prefs.getString("IV", null);
-    return mnemonic;
+    return await prefs.getString("IV", null);
   }
 
   static Future<bool> cryptoIVSet(String value) async {
@@ -118,8 +127,7 @@ class Prefs {
 
   static Future<String> apikeyGet() async {
     final prefs = PrefHelper();
-    var apikey = await prefs.getString("apikey", null);
-    return apikey;
+    return await prefs.getString("apikey", null);
   }
 
   static Future<bool> apikeySet(String value) async {
@@ -130,8 +138,7 @@ class Prefs {
 
   static Future<String> apisecretGet() async {
     final prefs = PrefHelper();
-    var apikey = await prefs.getString("apisecret", null);
-    return apikey;
+    return await prefs.getString("apisecret", null);
   }
 
   static Future<bool> apisecretSet(String value) async {
