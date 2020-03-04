@@ -2,11 +2,11 @@ import 'package:flutter/foundation.dart'
     show debugDefaultTargetPlatformOverride;
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:qr_reader/qr_reader.dart';
 import 'package:decimal/decimal.dart';
 import 'package:flushbar/flushbar.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:clipboard_manager/clipboard_manager.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 
 import 'qrwidget.dart';
@@ -20,7 +20,6 @@ import 'prefs.dart';
 import 'new_mnemonic_form.dart';
 import 'transactions.dart';
 import 'merchant.dart';
-import 'pinentry.dart';
 
 void main() {
   // See https://github.com/flutter/flutter/wiki/Desktop-shells#target-platform-override
@@ -336,7 +335,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
   }
 
   void _copyAddress() {
-    ClipboardManager.copyToClipBoard(_address).then((result) {
+    Clipboard.setData(ClipboardData(text: _address)).then((value) {
       Flushbar(title: "Copied address to clipboard", message: _address, duration: Duration(seconds: 2),)
         ..show(context);
     });
