@@ -12,6 +12,7 @@ android/.idea
 native-libraries/
 
 .flutter-plugins
+.flutter-plugins-dependencies
 .gradle
 .vscode
 
