@@ -41,7 +41,7 @@ class SettlementFormState extends State<SettlementForm> {
         return;
       }
       // get amount to receive
-      var amountReceive = amountDec * (Decimal.fromInt(1) - _rates.merchantRate);
+      var amountReceive = amountDec / (Decimal.fromInt(1) + _rates.merchantRate);
       // double check with user
       if (await showDialog<bool>(
           context: context,
