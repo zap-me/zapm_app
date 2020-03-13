@@ -129,6 +129,20 @@ Future<bool> merchantWatch(String address) async {
   return false;
 }
 
+Future<bool> merchantWalletAddress(String address) async {
+  var url = baseUrl + "wallet_address";
+  var apikey = await Prefs.apikeyGet();
+  var apisecret = await Prefs.apisecretGet();
+  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
+  var body = jsonEncode({"api_key": apikey, "nonce": nonce, "address": address});
+  var sig = createHmacSig(apisecret, body);
+  var response = await http.post(url, headers: {"X-Signature": sig, "Content-Type": "application/json"}, body: body);
+  if (response.statusCode == 200) {
+    return true;
+  }
+  return false;
+}
+
 Future<Rates> merchantRates() async {
   var url = baseUrl + "rates";
   var apikey = await Prefs.apikeyGet();

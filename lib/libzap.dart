@@ -418,20 +418,22 @@ class LibZap {
   lzap_transaction_create_ns_t lzapTransactionCreate;
   lzap_transaction_broadcast_ns_t lzapTransactionBroadcast;
 
-  static String paymentUri(bool testnet, String address, int amount) {
+  static String paymentUri(bool testnet, String address, int amount, String deviceName) {
     var uri = "waves://$address?asset=${testnet ? TESTNET_ASSET_ID : MAINNET_ASSET_ID}";
     if (amount != null)
       uri += "&amount=$amount";
+    if (deviceName != null && deviceName.isNotEmpty)
+      uri += '&attachment={"device_name":"$deviceName"}';
     return uri;
   }
 
-  static String paymentUriDec(bool testnet, String address, Decimal amount) {
+  static String paymentUriDec(bool testnet, String address, Decimal amount, String deviceName) {
     if (amount != null && amount > Decimal.fromInt(0)) {
       amount = amount * Decimal.fromInt(100);
       var amountInt = amount.toInt();
-      return paymentUri(testnet, address, amountInt);
+      return paymentUri(testnet, address, amountInt, deviceName);
     }
-    return paymentUri(testnet, address, null);
+    return paymentUri(testnet, address, null, deviceName);
   }
 
   //

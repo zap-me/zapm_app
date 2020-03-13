@@ -125,6 +125,17 @@ class Prefs {
     return true;
   }
 
+  static Future<String> deviceNameGet() async {
+    final prefs = PrefHelper();
+    return await prefs.getString("deviceName", null);
+  }
+
+  static Future<bool> deviceNameSet(String value) async {
+    final prefs = PrefHelper();
+    await prefs.setString("deviceName", value);
+    return true;
+  }
+
   static Future<String> apikeyGet() async {
     final prefs = PrefHelper();
     return await prefs.getString("apikey", null);

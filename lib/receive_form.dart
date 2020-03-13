@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:FlutterZap/prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
 
@@ -41,7 +42,8 @@ class ReceiveFormState extends State<ReceiveForm> {
         return e.toString();
       }
     }
-    return LibZap.paymentUriDec(widget._testnet, widget._address, amount);
+    var deviceName = await Prefs.deviceNameGet();
+    return LibZap.paymentUriDec(widget._testnet, widget._address, amount, deviceName);
   }
 
   void updateUriUi() {

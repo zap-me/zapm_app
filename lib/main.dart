@@ -282,8 +282,8 @@ class _ZapHomePageState extends State<ZapHomePage> {
             continue;
           }
           if (!libzap.mnemonicCheck(decryptedMnemonic)) {
-            var ok = await askInvalidMnemonicOk(context);
-            if (!ok)
+            var yes = await askYesNo(context, 'Mnemonic is not valid, is this ok?');
+            if (!yes)
               continue;
           }
           mnemonic = decryptedMnemonic;

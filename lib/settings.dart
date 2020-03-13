@@ -1,4 +1,5 @@
 import 'dart:io' show Platform;
+import 'package:FlutterZap/merchant.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:package_info/package_info.dart';
@@ -29,6 +30,7 @@ class _SettingsState extends State<SettingsScreen> {
   String _buildNumber;
   int _libzapVersion = -1;
   bool _testnet = false;
+  String _deviceName;
   String _apikey;
   String _apisecret;
 
@@ -63,6 +65,11 @@ class _SettingsState extends State<SettingsScreen> {
     return libzap.version();
   }
 
+  String _getWalletAddress(String _mnemonic) {
+    var libzap = LibZap();
+    return libzap.seedAddress(_mnemonic);
+  }
+
   void _initTestnet() async {
     var testnet = await Prefs.testnetGet();
     setState(() {
@@ -71,9 +78,11 @@ class _SettingsState extends State<SettingsScreen> {
   }
 
   void _initApikey() async {
+    var deviceName = await Prefs.deviceNameGet();
     var apikey = await Prefs.apikeyGet();
     var apisecret = await Prefs.apisecretGet();
     setState(() {
+      _deviceName = deviceName;
       _apikey = apikey;
       _apisecret = apisecret;
     });
@@ -155,18 +164,44 @@ class _SettingsState extends State<SettingsScreen> {
     if (value != null) {
       var result = parseApiKeyUri(value);
       if (result.error == NO_ERROR) {
+        await Prefs.deviceNameSet(result.deviceName);
         await Prefs.apikeySet(result.apikey);
         await Prefs.apisecretSet(result.apisecret);
         setState(() {
+          _deviceName = result.deviceName;
           _apikey = result.apikey;
           _apisecret = result.apisecret;
         });
         Flushbar(title: "Api Key set", message: "${result.apikey}", duration: Duration(seconds: 2),)
           ..show(context);
+        if (result.accountAdmin && result.walletAddress.isEmpty) {
+          var address = _getWalletAddress(widget._mnemonic);
+          var yes = await askYesNo(context, "Do you want to set the account wallet address ($address)?");
+          if (yes) {
+            var res = await merchantWalletAddress(address);
+            if (res) {
+              Flushbar(title: "Account Wallet Address Set", message: address, duration: Duration(seconds: 2),)
+                ..show(context);
+            } else {
+              Flushbar(title: "Failed to Set Account Wallet Address", message: address, duration: Duration(seconds: 2),)
+                ..show(context);
+            }
+          }
+        }
       }
       else
         Flushbar(title: "Invalid QR Code", message: "Unable to decipher QR code data", duration: Duration(seconds: 2),)
           ..show(context);
+    }
+  }
+
+  void _editDeviceName() async {
+    var deviceName = await askString(context, "Set Device Name", _deviceName);
+    if (deviceName != null) {
+      await Prefs.deviceNameSet(deviceName);
+      setState(() {
+        _deviceName = deviceName;
+      });
     }
   }
 
@@ -213,7 +248,7 @@ class _SettingsState extends State<SettingsScreen> {
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),
-              child: ListTile(title: Text("Pin Protect Spending"), trailing: _pinProtected ? Icon(Icons.lock) : Icon(Icons.lock_open),),
+              child: ListTile(title: Text("Pin Protect Settings and Spending"), trailing: _pinProtected ? Icon(Icons.lock) : Icon(Icons.lock_open),),
             ),
             Visibility(
               visible: !_pinProtected,
@@ -257,6 +292,7 @@ class _SettingsState extends State<SettingsScreen> {
                 title: RaisedButton.icon(label: Text("Scan Api Key"), icon: Icon(Icons.center_focus_weak), onPressed: _scanApikey),
               ),
             ),
+            ListTile(title: Text("Device Name"), subtitle: Text("$_deviceName"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: _editDeviceName),),
             ListTile(title: Text("Api Key"), subtitle: Text("$_apikey"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: _editApikey),),
             ListTile(title: Text("Api Secret"), subtitle: Text("$_apisecret"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: _editApisecret),),
             ],

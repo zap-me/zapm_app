@@ -38,6 +38,7 @@ class SendFormState extends State<SendForm> {
       var parts = parseWavesUri(widget._testnet, recipientOrUri);
       _addressController.text = parts.address;
       _amountController.text = parts.amount.toString();
+      _attachmentController.text = parts.attachment;
       return true;
     }
     return false;

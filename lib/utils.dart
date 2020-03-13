@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:math';
 import 'package:flutter/material.dart' hide Key;
@@ -53,7 +54,7 @@ WavesRequest parseWavesUri(bool testnet, String uri) {
         if (res != null) assetId = res;
         res = parseUriParameter(part, 'amount');
         if (res != null) amount = Decimal.parse(res) / Decimal.fromInt(100);
-        res = parseUriParameter(part, attachment);
+        res = parseUriParameter(part, 'attachment');
         if (res != null) attachment = res;
       }
     }
@@ -99,16 +100,22 @@ ClaimCodeResult parseClaimCodeUri(String uri) {
 }
 
 class ApiKeyResult {
+  final String deviceName;
   final String apikey;
   final String apisecret;
+  final String walletAddress;
+  final bool accountAdmin;
   final int error;
 
-  ApiKeyResult(this.apikey, this.apisecret, this.error);
+  ApiKeyResult(this.deviceName, this.apikey, this.apisecret, this.walletAddress, this.accountAdmin, this.error);
 }
 
 ApiKeyResult parseApiKeyUri(String uri) {
+  var deviceName = '';
   var apikey = '';
   var secret = '';
+  var address = '';
+  var admin = false;
   int error = NO_ERROR;
   if (uri.length > 12 && uri.substring(0, 12).toLowerCase() == 'zapm_apikey:') {
     var parts = uri.substring(12).split('?');
@@ -118,12 +125,18 @@ ApiKeyResult parseApiKeyUri(String uri) {
       for (var part in parts) {
         var res = parseUriParameter(part, 'secret');
         if (res != null) secret = res;
+        res = parseUriParameter(part, 'name');
+        if (res != null) deviceName = res;
+        res = parseUriParameter(part, 'address');
+        if (res != null) address = res;
+        res = parseUriParameter(part, 'admin');
+        if (res != null) admin = res.toLowerCase() == 'true';
       }
     }
   }
   else
     error = INVALID_APIKEY_URI;
-  return ApiKeyResult(apikey, secret, error);
+  return ApiKeyResult(deviceName, apikey, secret, address, admin, error);
 }
 
 String parseRecipientOrWavesUri(bool testnet, String data) {
@@ -358,12 +371,12 @@ Future<String> askMnemonicPassword(BuildContext context) async {
   );
 }
 
-Future<bool> askInvalidMnemonicOk(BuildContext context) async {
+Future<bool> askYesNo(BuildContext context, String question) async {
   return showDialog<bool>(
     context: context,
     builder: (BuildContext context) {
       return AlertDialog(
-        title: Text("Mnemonic is not valid, is this ok?"),
+        title: Text(question),
         content: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
