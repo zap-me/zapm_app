@@ -15,12 +15,11 @@ import 'pinentry.dart';
 class SettingsScreen extends StatefulWidget {
   final bool _pinProtectedInitial;
   final String _mnemonic;
-  final bool _mnemonicPasswordProtectedInitial;
 
-  SettingsScreen(this._pinProtectedInitial, this._mnemonic, this._mnemonicPasswordProtectedInitial) : super();
+  SettingsScreen(this._pinProtectedInitial, this._mnemonic) : super();
 
   @override
-  _SettingsState createState() => new _SettingsState(_pinProtectedInitial, _mnemonicPasswordProtectedInitial);
+  _SettingsState createState() => new _SettingsState(_pinProtectedInitial);
 }
 
 class _SettingsState extends State<SettingsScreen> {
@@ -34,14 +33,13 @@ class _SettingsState extends State<SettingsScreen> {
   String _apikey;
   String _apisecret;
 
-  _SettingsState(this._pinProtected, this._mnemonicPasswordProtected) {
-    _initAppVersion();
+  _SettingsState(this._pinProtected) {
+    _initSettings();
     _libzapVersion = _getLibZapVersion();
-    _initTestnet();
-    _initApikey();
   }
 
-  void _initAppVersion() async {
+  void _initSettings() async {
+    // app version
     if (!Platform.isAndroid && !Platform.isIOS) {
       var pubspec = await rootBundle.loadString('pubspec.yaml');
       var doc = loadYaml(pubspec);
@@ -58,6 +56,25 @@ class _SettingsState extends State<SettingsScreen> {
         _buildNumber = packageInfo.buildNumber;
       });
     }
+    // wallet
+    var mnemonicPasswordProtected = await Prefs.mnemonicPasswordProtectedGet();
+    setState(() {
+      _mnemonicPasswordProtected = mnemonicPasswordProtected;
+    });
+    // testnet
+    var testnet = await Prefs.testnetGet();
+    setState(() {
+      _testnet = testnet;
+    });
+    // api key
+    var deviceName = await Prefs.deviceNameGet();
+    var apikey = await Prefs.apikeyGet();
+    var apisecret = await Prefs.apisecretGet();
+    setState(() {
+      _deviceName = deviceName;
+      _apikey = apikey;
+      _apisecret = apisecret;
+    });
   }
 
   int _getLibZapVersion() {
@@ -68,24 +85,6 @@ class _SettingsState extends State<SettingsScreen> {
   String _getWalletAddress(String _mnemonic) {
     var libzap = LibZap();
     return libzap.seedAddress(_mnemonic);
-  }
-
-  void _initTestnet() async {
-    var testnet = await Prefs.testnetGet();
-    setState(() {
-      _testnet = testnet;
-    });
-  }
-
-  void _initApikey() async {
-    var deviceName = await Prefs.deviceNameGet();
-    var apikey = await Prefs.apikeyGet();
-    var apisecret = await Prefs.apisecretGet();
-    setState(() {
-      _deviceName = deviceName;
-      _apikey = apikey;
-      _apisecret = apisecret;
-    });
   }
 
   void _toggleTestnet() async {

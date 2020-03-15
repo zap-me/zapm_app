@@ -72,10 +72,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
   Socket socket;
 
   bool _testnet = true;
-  String _mnemonic = "";
-  bool _mnemonicPasswordProtected = false;
-  bool _mnemonicDecrypted = false;
-  String _address = "";
+  Wallet _wallet;
   Decimal _fee = Decimal.parse("0.01");
   Decimal _balance = Decimal.fromInt(-1);
   String _balanceText = "...";
@@ -93,7 +90,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
 
   void _watchAddress() async {
     // do nothing if the address, apikey or apisecret is not set
-    if (_address == null || _address == "")
+    if (_wallet == null)
       return;
     var apikey = await Prefs.apikeyGet();
     if (apikey == null || apikey == "")
@@ -102,9 +99,9 @@ class _ZapHomePageState extends State<ZapHomePage> {
     if (apisecret == null || apisecret == "")
       return;
     // register to watch our address
-    if (!await merchantWatch(_address))
+    if (!await merchantWatch(_wallet.address))
     {
-      Flushbar(title: "Failed to register address", message: _address, duration: Duration(seconds: 2),)
+      Flushbar(title: "Failed to register address", message: _wallet.address, duration: Duration(seconds: 2),)
         ..show(context);
       return;
     }
@@ -263,13 +260,13 @@ class _ZapHomePageState extends State<ZapHomePage> {
     // get testnet value
     _testnet = await Prefs.testnetGet();
     // check mnemonic
-    if (_mnemonic == null || _mnemonic == "") {
+    if (_wallet == null) {
       var mnemonic = await Prefs.mnemonicGet();
       if (mnemonic == null || mnemonic == "") {
         return false;
       }
-      _mnemonicPasswordProtected = await Prefs.mnemonicPasswordProtectedGet();
-      if (_mnemonicPasswordProtected && !_mnemonicDecrypted) {
+      var mnemonicPasswordProtected = await Prefs.mnemonicPasswordProtectedGet();
+      if (mnemonicPasswordProtected) {
         while (true) {
           var password = await askMnemonicPassword(context);
           if (password == null || password == "") {
@@ -287,22 +284,20 @@ class _ZapHomePageState extends State<ZapHomePage> {
               continue;
           }
           mnemonic = decryptedMnemonic;
-          _mnemonicDecrypted = true;
           break;
         }
       }
-      _mnemonic = mnemonic;
-    }
-    // create address
-    var address = libzap.seedAddress(_mnemonic);
+      var address = libzap.seedAddress(mnemonic);
+      _wallet = Wallet.mnemonic(mnemonic, address);
+   }
     // update state
     setState(() {
-      _address = address;
+      _wallet = _wallet;
     });
     // get fee
     var feeResult = await LibZap.transactionFee();
     // get balance
-    var balanceResult = await LibZap.addressBalance(address);
+    var balanceResult = await LibZap.addressBalance(_wallet.address);
     // update state
     setState(() {
       if (feeResult.success)
@@ -327,7 +322,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          content: InkWell(child: Container(width: 300, child: QrWidget(_address, size: 300)),
+          content: InkWell(child: Container(width: 300, child: QrWidget(_wallet.address, size: 300)),
             onTap: () => Navigator.pop(context)),
         );
       },
@@ -335,8 +330,8 @@ class _ZapHomePageState extends State<ZapHomePage> {
   }
 
   void _copyAddress() {
-    Clipboard.setData(ClipboardData(text: _address)).then((value) {
-      Flushbar(title: "Copied address to clipboard", message: _address, duration: Duration(seconds: 2),)
+    Clipboard.setData(ClipboardData(text: _wallet.address)).then((value) {
+      Flushbar(title: "Copied address to clipboard", message: _wallet.address, duration: Duration(seconds: 2),)
         ..show(context);
     });
   }
@@ -349,18 +344,18 @@ class _ZapHomePageState extends State<ZapHomePage> {
         await Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => SendScreen(_testnet, _mnemonic, _fee, value, _balance)),
+              builder: (context) => SendScreen(_testnet, _wallet.mnemonic, _fee, value, _balance)),
         );
         _setWalletDetails();
       }
       else {
         var result = parseClaimCodeUri(value);
         if (result.error == NO_ERROR) {
-          if (await merchantClaim(result.code, _address))
-            Flushbar(title: "Claim succeded", message: "Claimed reward to $_address", duration: Duration(seconds: 2),)
+          if (await merchantClaim(result.code, _wallet.address))
+            Flushbar(title: "Claim succeded", message: "Claimed reward to ${_wallet.address}", duration: Duration(seconds: 2),)
               ..show(context);
           else 
-            Flushbar(title: "Claim failed", message: "Unable to claim reward to $_address", duration: Duration(seconds: 2),)
+            Flushbar(title: "Claim failed", message: "Unable to claim reward to ${_wallet.address}", duration: Duration(seconds: 2),)
               ..show(context);
         }
         else
@@ -374,7 +369,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
     await Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (context) => SendScreen(_testnet, _mnemonic, _fee, '', _balance)),
+          builder: (context) => SendScreen(_testnet, _wallet.mnemonic, _fee, '', _balance)),
     );
     _setWalletDetails();
   }
@@ -382,7 +377,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
   void _receive() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => ReceiveScreen(_testnet, _address)),
+      MaterialPageRoute(builder: (context) => ReceiveScreen(_testnet, _wallet.address)),
     );
     _setWalletDetails();
   }
@@ -390,7 +385,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
   void _transactions() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => TransactionsScreen(_address, _testnet)),
+      MaterialPageRoute(builder: (context) => TransactionsScreen(_wallet.address, _testnet)),
     );
     _setWalletDetails();
   }
@@ -402,7 +397,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
     }
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => SettingsScreen(_pinExists, _mnemonic, _mnemonicPasswordProtected)),
+      MaterialPageRoute(builder: (context) => SettingsScreen(_pinExists, _wallet.mnemonic)),
     );
     _setWalletDetails();
   }
@@ -411,7 +406,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
     await Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (context) => RewardScreen(_testnet, _mnemonic, _fee, _balance)),
+          builder: (context) => RewardScreen(_testnet, _wallet.mnemonic, _fee, _balance)),
     );
     _setWalletDetails();
   }
@@ -420,7 +415,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
     await Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (context) => SettlementScreen(_testnet, _mnemonic, _fee, _balance)),
+          builder: (context) => SettlementScreen(_testnet, _wallet.mnemonic, _fee, _balance)),
     );
     _setWalletDetails();
   }
@@ -462,7 +457,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   IconButton(icon: Icon(FontAwesomeIcons.qrcode), onPressed: _showQrCode),
-                  Text(_address, style: TextStyle(fontSize: 12),),
+                  Text(_wallet != null ? _wallet.address : '...', style: TextStyle(fontSize: 12),),
                   IconButton(onPressed: _copyAddress, icon: Icon(Icons.content_copy)),
                 ]
               )

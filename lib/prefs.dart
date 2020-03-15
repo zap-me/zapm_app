@@ -4,6 +4,17 @@ import 'package:ini/ini.dart';
 
 import 'libzap.dart';
 
+class Wallet {
+  final String mnemonic;
+  final String address;
+
+  Wallet.mnemonic(this.mnemonic, this.address);
+  Wallet.justAddress(this.address) : mnemonic = null;
+
+  bool get isMnemonic => mnemonic != null && mnemonic.isNotEmpty;
+  bool get isAddress => !isMnemonic && address != null && address.isNotEmpty;
+}
+
 class PrefHelper {
   static final _section = "main";
 
