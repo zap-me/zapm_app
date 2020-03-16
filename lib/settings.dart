@@ -88,6 +88,8 @@ class _SettingsState extends State<SettingsScreen> {
   }
 
   void _toggleTestnet() async {
+    if (widget._mnemonic == null)
+      return;
     Prefs.testnetSet(!_testnet);
     setState(() {
       _testnet = !_testnet;
@@ -245,45 +247,52 @@ class _SettingsState extends State<SettingsScreen> {
                 },
               ),
             ),
-            Container(
-              padding: const EdgeInsets.only(top: 18.0),
-              child: ListTile(title: Text("Pin Protect Settings and Spending"), trailing: _pinProtected ? Icon(Icons.lock) : Icon(Icons.lock_open),),
-            ),
             Visibility(
-              visible: !_pinProtected,
-              child: Container(
-                child: ListTile(
-                  title: RaisedButton.icon(label: Text("Create Pin"), icon: Icon(Icons.lock), onPressed: _addPin),
-                ),
-              ),
-            ),
-            Visibility(
-              visible: _pinProtected,
-              child: Container(
-                child: ListTile(
-                  title: RaisedButton.icon(label: Text("Change Pin"), icon: Icon(Icons.lock), onPressed: _changePin),
-                ),
-              ),
-            ),
-            Visibility(
-              visible: _pinProtected,
-              child: Container(
-                child: ListTile(
-                  title: RaisedButton.icon(label: Text("Remove Pin"), icon: Icon(Icons.lock), onPressed: _removePin),
-                ),
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.only(top: 18.0),
-              child: ListTile(title: Text("Mnemonic"), subtitle: Text(widget._mnemonic), trailing: _mnemonicPasswordProtected ? Icon(Icons.lock) : Icon(Icons.lock_open),),
-            ),
-            Visibility(
-              visible: !_mnemonicPasswordProtected,
-              child: Container(
-                child: ListTile(
-                  title: RaisedButton.icon(label: Text("Password Protect Mnemonic"), icon: Icon(Icons.lock), onPressed: _addPasswordProtection),
-                ),
-              ),
+              visible: widget._mnemonic != null,
+              child:  Column(
+                children: <Widget>[
+                  Container(
+                    padding: const EdgeInsets.only(top: 18.0),
+                    child: ListTile(title: Text("Pin Protect Settings and Spending"), trailing: _pinProtected ? Icon(Icons.lock) : Icon(Icons.lock_open),),
+                  ),
+                  Visibility(
+                    visible: !_pinProtected,
+                    child: Container(
+                      child: ListTile(
+                        title: RaisedButton.icon(label: Text("Create Pin"), icon: Icon(Icons.lock), onPressed: _addPin),
+                      ),
+                    ),
+                  ),
+                  Visibility(
+                    visible: _pinProtected,
+                    child: Container(
+                      child: ListTile(
+                        title: RaisedButton.icon(label: Text("Change Pin"), icon: Icon(Icons.lock), onPressed: _changePin),
+                      ),
+                    ),
+                  ),
+                  Visibility(
+                    visible: _pinProtected,
+                    child: Container(
+                      child: ListTile(
+                        title: RaisedButton.icon(label: Text("Remove Pin"), icon: Icon(Icons.lock), onPressed: _removePin),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.only(top: 18.0),
+                    child: ListTile(title: Text("Mnemonic"), subtitle: Text(widget._mnemonic != null ? widget._mnemonic : 'n/a'), trailing: _mnemonicPasswordProtected ? Icon(Icons.lock) : Icon(Icons.lock_open),),
+                  ),
+                  Visibility(
+                    visible: !_mnemonicPasswordProtected,
+                    child: Container(
+                      child: ListTile(
+                        title: RaisedButton.icon(label: Text("Password Protect Mnemonic"), icon: Icon(Icons.lock), onPressed: _addPasswordProtection),
+                      ),
+                    ),
+                  ),
+                ],
+              )
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),

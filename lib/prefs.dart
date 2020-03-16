@@ -109,6 +109,17 @@ class Prefs {
     return true;
   }
 
+  static Future<String> addressGet() async {
+    final prefs = PrefHelper();
+    return await prefs.getString("address", null);
+  }
+
+  static Future<bool> addressSet(String value) async {
+    final prefs = PrefHelper();
+    await prefs.setString("address", value);
+    return true;
+  }
+
   static Future<String> mnemonicGet() async {
     final prefs = PrefHelper();
     return await prefs.getString("mnemonic", null);

@@ -66,7 +66,7 @@ class ZapHomePage extends StatefulWidget {
   _ZapHomePageState createState() => new _ZapHomePageState();
 }
 
-enum NoMnemonicAction { CreateNew, Recover, RecoverRaw }
+enum NoWalletAction { CreateMnemonic, RecoverMnemonic, RecoverRaw, ScanMerchantApiKey }
 
 class _ZapHomePageState extends State<ZapHomePage> {
   Socket socket;
@@ -114,31 +114,37 @@ class _ZapHomePageState extends State<ZapHomePage> {
     });
   }
 
-  Future<NoMnemonicAction> _noMnemonicDialog(BuildContext context) async {
-    return await showDialog<NoMnemonicAction>(
+  Future<NoWalletAction> _noWalletDialog(BuildContext context) async {
+    return await showDialog<NoWalletAction>(
         context: context,
         barrierDismissible: true,
         builder: (BuildContext context) {
           return SimpleDialog(
-            title: const Text("You do not have a mnemonic saved, what would you like to do?"),
+            title: const Text("You do not have a mnemonic or address saved, what would you like to do?"),
             children: <Widget>[
               SimpleDialogOption(
                 onPressed: () {
-                  Navigator.pop(context, NoMnemonicAction.CreateNew);
+                  Navigator.pop(context, NoWalletAction.CreateMnemonic);
                 },
                 child: const Text("Create a new mnemonic"),
               ),
               SimpleDialogOption(
                 onPressed: () {
-                  Navigator.pop(context, NoMnemonicAction.Recover);
+                  Navigator.pop(context, NoWalletAction.RecoverMnemonic);
                 },
                 child: const Text("Recover using your mnemonic"),
               ),
               SimpleDialogOption(
                 onPressed: () {
-                  Navigator.pop(context, NoMnemonicAction.RecoverRaw);
+                  Navigator.pop(context, NoWalletAction.RecoverRaw);
                 },
                 child: const Text("Recover using your raw seed string (advanced use only)"),
+              ),
+              SimpleDialogOption(
+                onPressed: () {
+                  Navigator.pop(context, NoWalletAction.ScanMerchantApiKey);
+                },
+                child: const Text("Scan merchant api key"),
               ),
             ],
           );
@@ -213,13 +219,14 @@ class _ZapHomePageState extends State<ZapHomePage> {
     );
   }
 
-  void _noMnemonic() async {
+  void _noWallet() async {
     var libzap = LibZap();
     while (true) {
       String mnemonic;
-      var action = await _noMnemonicDialog(context);
+      String address;
+      var action = await _noWalletDialog(context);
       switch (action) {
-        case NoMnemonicAction.CreateNew:
+        case NoWalletAction.CreateMnemonic:
           mnemonic = libzap.mnemonicCreate();
           // show warning for new mnemonic
           await Navigator.push(
@@ -227,7 +234,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
             MaterialPageRoute(builder: (context) => NewMnemonicForm(mnemonic)),
           );
           break;
-        case NoMnemonicAction.Recover:
+        case NoWalletAction.RecoverMnemonic:
           // recover mnemonic
           mnemonic = await _recoverMnemonic(context);
           mnemonic = mnemonic.trim();
@@ -238,14 +245,45 @@ class _ZapHomePageState extends State<ZapHomePage> {
             await alert(context, "Mnemonic not valid", "The mnemonic you entered is not valid");
           }
           break;
-        case NoMnemonicAction.RecoverRaw:
+        case NoWalletAction.RecoverRaw:
           // recover raw seed string
           mnemonic = await _recoverSeed(context);
+          break;
+        case NoWalletAction.ScanMerchantApiKey:
+          var value = await new QRCodeReader().scan();
+          if (value != null) {
+            var result = parseApiKeyUri(value);
+            if (result.error == NO_ERROR) {
+              if (result.walletAddress == null || result.walletAddress.isEmpty) {
+                Flushbar(title: "Wallet address not present", message: ":(", duration: Duration(seconds: 2),)
+                  ..show(context);
+                break;
+              }
+              await Prefs.addressSet(result.walletAddress);
+              await Prefs.deviceNameSet(result.deviceName);
+              await Prefs.apikeySet(result.apikey);
+              await Prefs.apisecretSet(result.apisecret);
+              Flushbar(title: "Api Key set", message: "${result.apikey}", duration: Duration(seconds: 2),)
+                ..show(context);
+              address = result.walletAddress;
+            }
+            else
+              Flushbar(title: "Invalid QR Code", message: "Unable to decipher QR code data", duration: Duration(seconds: 2),)
+                ..show(context);
+          }
+          break;
       }
-      if (mnemonic != null && mnemonic != "") {
+      if (mnemonic != null && mnemonic.isNotEmpty) {
         await Prefs.mnemonicSet(mnemonic);
         await alert(context, "Mnemonic saved", ":)");
         // update wallet details now we have a mnemonic
+        _setWalletDetails();
+        break;        
+      }
+      if (address != null && address.isNotEmpty) {
+        await Prefs.addressSet(address);
+        await alert(context, "Address saved", ":)");
+        // update wallet details now we have an address
         _setWalletDetails();
         break;        
       }
@@ -256,40 +294,46 @@ class _ZapHomePageState extends State<ZapHomePage> {
     setState(() {
       _updatingBalance = true;
     });
-    var libzap = LibZap();
-    // get testnet value
-    _testnet = await Prefs.testnetGet();
     // check mnemonic
     if (_wallet == null) {
+      var libzap = LibZap();
       var mnemonic = await Prefs.mnemonicGet();
-      if (mnemonic == null || mnemonic == "") {
-        return false;
-      }
-      var mnemonicPasswordProtected = await Prefs.mnemonicPasswordProtectedGet();
-      if (mnemonicPasswordProtected) {
-        while (true) {
-          var password = await askMnemonicPassword(context);
-          if (password == null || password == "") {
-            continue;
-          }
-          var iv = await Prefs.cryptoIVGet();
-          var decryptedMnemonic = decryptMnemonic(mnemonic, iv, password);
-          if (decryptedMnemonic == null) {
-            await alert(context, "Could not decrypt mnemonic", "probably wrong password :(");
-            continue;
-          }
-          if (!libzap.mnemonicCheck(decryptedMnemonic)) {
-            var yes = await askYesNo(context, 'Mnemonic is not valid, is this ok?');
-            if (!yes)
+      if (mnemonic != null && mnemonic.isNotEmpty) {
+        var mnemonicPasswordProtected = await Prefs.mnemonicPasswordProtectedGet();
+        if (mnemonicPasswordProtected) {
+          while (true) {
+            var password = await askMnemonicPassword(context);
+            if (password == null || password.isEmpty) {
               continue;
+            }
+            var iv = await Prefs.cryptoIVGet();
+            var decryptedMnemonic = decryptMnemonic(mnemonic, iv, password);
+            if (decryptedMnemonic == null) {
+              await alert(context, "Could not decrypt mnemonic", "probably wrong password :(");
+              continue;
+            }
+            if (!libzap.mnemonicCheck(decryptedMnemonic)) {
+              var yes = await askYesNo(context, 'Mnemonic is not valid, is this ok?');
+              if (!yes)
+                continue;
+            }
+            mnemonic = decryptedMnemonic;
+            break;
           }
-          mnemonic = decryptedMnemonic;
-          break;
+        }
+        var address = libzap.seedAddress(mnemonic);
+        _wallet = Wallet.mnemonic(mnemonic, address);
+      } else {
+        var address = await Prefs.addressGet();
+        if (address != null && address.isNotEmpty) {
+          _wallet = Wallet.justAddress(address);
+        } else {
+          return false;
         }
       }
-      var address = libzap.seedAddress(mnemonic);
-      _wallet = Wallet.mnemonic(mnemonic, address);
-   }
+    }
+    // update testnet
+    _testnet = await _setTestnet(_wallet.address, _wallet.isMnemonic);
     // update state
     setState(() {
       _wallet = _wallet;
@@ -420,20 +464,39 @@ class _ZapHomePageState extends State<ZapHomePage> {
     _setWalletDetails();
   }
 
+  bool _haveSeed() {
+    return _wallet != null && _wallet.isMnemonic;
+  }
+
+  Future<bool> _setTestnet(String address, bool haveMnemonic) async {
+    var testnet = await Prefs.testnetGet();
+    var libzap = LibZap();
+    libzap.testnetSet(testnet);
+    if (!haveMnemonic) {
+      if (!libzap.addressCheck(address)) {
+        testnet = !testnet;
+        libzap.testnetSet(testnet);
+        await Prefs.testnetSet(testnet);
+      }
+    }
+    return testnet;
+  }
+
+  void _init() async  {
+    // set libzap to initial testnet value so we can devrive address from mnemonic
+    var testnet = await Prefs.testnetGet();
+    LibZap().testnetSet(testnet);
+    // init wallet
+    var hasWallet = await _setWalletDetails();
+    if (!hasWallet) {
+      _noWallet();
+      _setWalletDetails();
+    }
+  }
+
   @override
   void initState() {
-    Prefs.testnetGet().then((testnet) {
-      // set libzap testnet
-      LibZap().testnetSet(testnet);
-      // init wallet details
-      _setWalletDetails().then((hasMnemonic) {
-        if (!hasMnemonic) {
-          _noMnemonic();
-          _setWalletDetails();
-        }
-      });
-    });
-
+    _init();
     super.initState();
   }
 
@@ -463,14 +526,14 @@ class _ZapHomePageState extends State<ZapHomePage> {
               )
             ),
             Visibility(
-              visible: _updatingBalance,
+              visible: _updatingBalance && _haveSeed(),
               child: Container(
                 padding: const EdgeInsets.only(top: 18.0),
                 child: SizedBox(child: CircularProgressIndicator(), height: 48.0, width: 48.0,),
               ),
             ),
             Visibility(
-              visible: !_updatingBalance,
+              visible: !_updatingBalance && _haveSeed(),
               child: Container(
                 padding: const EdgeInsets.only(top: 18.0),
                 child: Row(
@@ -488,8 +551,14 @@ class _ZapHomePageState extends State<ZapHomePage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  RaisedButton.icon(onPressed: _send, icon: Icon(Icons.send), label: Text("Send")),
-                  RaisedButton.icon(onPressed: _scanQrCode, icon: Icon(Icons.center_focus_weak), label: Text("Scan")),
+                  Visibility(
+                    visible: _haveSeed(),
+                    child: RaisedButton.icon(onPressed: _send, icon: Icon(Icons.send), label: Text("Send")),
+                  ),
+                  Visibility(
+                    visible: _haveSeed(),
+                    child: RaisedButton.icon(onPressed: _scanQrCode, icon: Icon(Icons.center_focus_weak), label: Text("Scan")),
+                  ),
                   RaisedButton.icon(onPressed: _receive, icon: Icon(Icons.account_balance_wallet), label: Text("Recieve")),
                 ]
               ),
@@ -500,14 +569,19 @@ class _ZapHomePageState extends State<ZapHomePage> {
                   onPressed: _transactions, icon: Icon(Icons.list), label:  Text("Transactions")
               ),
             ),
+            /*
             Container(
               padding: const EdgeInsets.only(top: 18.0),
               child: RaisedButton.icon(onPressed: _zapReward, icon: Icon(Icons.send), label: Text("Zap Reward")),
             ),
-            Container(
-              padding: const EdgeInsets.only(top: 18.0),
-              child: RaisedButton.icon(onPressed: _settlement, icon: Icon(Icons.monetization_on), label: Text("Make settlement")),
-            ),
+            */
+            Visibility(
+              visible: _haveSeed(),
+              child: Container(
+                padding: const EdgeInsets.only(top: 18.0),
+                child: RaisedButton.icon(onPressed: _settlement, icon: Icon(Icons.monetization_on), label: Text("Make settlement")),
+              ),
+            ),              
           ],
         ),
       ),
