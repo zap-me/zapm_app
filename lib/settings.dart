@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:package_info/package_info.dart';
 import 'package:yaml/yaml.dart';
-import 'package:qr_reader/qr_reader.dart';
+import 'package:qrcode_reader/qrcode_reader.dart';
 import 'package:flushbar/flushbar.dart';
 
 import 'libzap.dart';

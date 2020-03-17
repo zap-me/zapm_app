@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart'
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:qr_reader/qr_reader.dart';
+import 'package:qrcode_reader/qrcode_reader.dart';
 import 'package:decimal/decimal.dart';
 import 'package:flushbar/flushbar.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';

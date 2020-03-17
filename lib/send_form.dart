@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
-import 'package:qr_reader/qr_reader.dart';
+import 'package:qrcode_reader/qrcode_reader.dart';
 import 'package:flushbar/flushbar.dart';
 
 import 'utils.dart';
