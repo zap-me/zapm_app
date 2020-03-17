@@ -331,6 +331,10 @@ class _ZapHomePageState extends State<ZapHomePage> {
           return false;
         }
       }
+    } else if (_wallet.isMnemonic) {
+      // reinitialize wallet address (we might have toggled testnet)
+      var address = LibZap().seedAddress(_wallet.mnemonic);
+      _wallet = Wallet.mnemonic(_wallet.mnemonic, address);
     }
     // update testnet
     _testnet = await _setTestnet(_wallet.address, _wallet.isMnemonic);
