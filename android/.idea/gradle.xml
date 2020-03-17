@@ -10,7 +10,6 @@
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="modules">
           <set>
-            <option value="$PROJECT_DIR$/../../flutter/.pub-cache/hosted/pub.dartlang.org/clipboard_manager-0.0.4/android" />
             <option value="$PROJECT_DIR$/../../flutter/.pub-cache/hosted/pub.dartlang.org/package_info-0.4.0+4/android" />
             <option value="$PROJECT_DIR$/../../flutter/.pub-cache/hosted/pub.dartlang.org/path_provider-1.6.0/android" />
             <option value="$PROJECT_DIR$/../../flutter/.pub-cache/hosted/pub.dartlang.org/qr_reader-0.1.3/android" />
