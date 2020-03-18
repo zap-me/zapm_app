@@ -9,12 +9,8 @@
 /* Begin PBXBuildFile section */
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
-		3B80C3941E831B6300D905FE /* App.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B80C3931E831B6300D905FE /* App.framework */; };
-		3B80C3951E831B6300D905FE /* App.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 3B80C3931E831B6300D905FE /* App.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		6511814A2417497000C933B7 /* libzap.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 659192DE2411C0D600D372A3 /* libzap.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		655B849F2421D9900023AE09 /* zap.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 655B849E2421D9900023AE09 /* zap.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		8B57E1F38C09913735F2F688 /* libPods-Runner.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B148BD8087452035C13A2B7A /* libPods-Runner.a */; };
-		9705A1C61CF904A100538489 /* Flutter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9740EEBA1CF902C7004384FC /* Flutter.framework */; };
-		9705A1C71CF904A300538489 /* Flutter.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 9740EEBA1CF902C7004384FC /* Flutter.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		978B8F6F1D3862AE00F588F7 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 7AFFD8EE1D35381100E5BB4D /* AppDelegate.m */; };
 		97C146F31CF9000F007C117D /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 97C146F21CF9000F007C117D /* main.m */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
@@ -29,9 +25,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				3B80C3951E831B6300D905FE /* App.framework in Embed Frameworks */,
-				9705A1C71CF904A300538489 /* Flutter.framework in Embed Frameworks */,
-				6511814A2417497000C933B7 /* libzap.dylib in Embed Frameworks */,
+				655B849F2421D9900023AE09 /* zap.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -42,16 +36,14 @@
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
-		3B80C3931E831B6300D905FE /* App.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = App.framework; path = Flutter/App.framework; sourceTree = "<group>"; };
 		3CDF0D76933308793E7DD30B /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
 		613B71C53D55FB04C970D007 /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
-		659192DE2411C0D600D372A3 /* libzap.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libzap.dylib; path = "../native-libraries/ios/libzap.dylib"; sourceTree = "<group>"; };
+		655B849E2421D9900023AE09 /* zap.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = zap.framework; path = "../native-libraries/ios/zap.framework"; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Flutter/Release.xcconfig; sourceTree = "<group>"; };
 		7AFFD8ED1D35381100E5BB4D /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		7AFFD8EE1D35381100E5BB4D /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Flutter/Debug.xcconfig; sourceTree = "<group>"; };
 		9740EEB31CF90195004384FC /* Generated.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Generated.xcconfig; path = Flutter/Generated.xcconfig; sourceTree = "<group>"; };
-		9740EEBA1CF902C7004384FC /* Flutter.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Flutter.framework; path = Flutter/Flutter.framework; sourceTree = "<group>"; };
 		97C146EE1CF9000F007C117D /* Runner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Runner.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		97C146F21CF9000F007C117D /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		97C146FB1CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -66,8 +58,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9705A1C61CF904A100538489 /* Flutter.framework in Frameworks */,
-				3B80C3941E831B6300D905FE /* App.framework in Frameworks */,
 				8B57E1F38C09913735F2F688 /* libPods-Runner.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -79,6 +69,7 @@
 			isa = PBXGroup;
 			children = (
 				B148BD8087452035C13A2B7A /* libPods-Runner.a */,
+				655B849E2421D9900023AE09 /* zap.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -95,9 +86,7 @@
 		9740EEB11CF90186004384FC /* Flutter */ = {
 			isa = PBXGroup;
 			children = (
-				3B80C3931E831B6300D905FE /* App.framework */,
 				3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */,
-				9740EEBA1CF902C7004384FC /* Flutter.framework */,
 				9740EEB21CF90195004384FC /* Debug.xcconfig */,
 				7AFA3C8E1D35360C0083082E /* Release.xcconfig */,
 				9740EEB31CF90195004384FC /* Generated.xcconfig */,
@@ -108,7 +97,6 @@
 		97C146E51CF9000F007C117D = {
 			isa = PBXGroup;
 			children = (
-				659192DE2411C0D600D372A3 /* libzap.dylib */,
 				9740EEB11CF90186004384FC /* Flutter */,
 				97C146F01CF9000F007C117D /* Runner */,
 				97C146EF1CF9000F007C117D /* Products */,

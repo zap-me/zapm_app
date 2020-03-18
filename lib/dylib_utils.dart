@@ -9,7 +9,9 @@ String _platformPath(String name, {String path}) {
   if (path == null) path = "";
   if (Platform.isLinux || Platform.isAndroid)
     return path + "lib" + name + ".so";
-  if (Platform.isMacOS || Platform.isIOS)
+  if (Platform.isIOS)
+    return path + name + ".framework/" + name;
+  if (Platform.isMacOS)
     return path + "lib" + name + ".dylib";
   if (Platform.isWindows)
     return path + "lib" + name + ".dll";
@@ -17,7 +19,10 @@ String _platformPath(String name, {String path}) {
 }
 
 ffi.DynamicLibrary dlopenPlatformSpecific(String name, {String path}) {
-  //TODO: use DynamicLibrary.process() on IOS? (https://flutter.dev/docs/development/platform-integration/c-interop#ios-and-macos)
+  // we open this process on iOS because we need to distribute as a framework (appstore does not allow dylibs)
+  // and the framework is linked into the main image
+  //if (Platform.isIOS)
+  //  return ffi.DynamicLibrary.process();
   String fullPath = _platformPath(name, path: path);
   return ffi.DynamicLibrary.open(fullPath);
 }
