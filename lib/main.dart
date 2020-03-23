@@ -20,6 +20,7 @@ import 'prefs.dart';
 import 'new_mnemonic_form.dart';
 import 'transactions.dart';
 import 'merchant.dart';
+import 'bip39widget.dart';
 
 void main() {
   // See https://github.com/flutter/flutter/wiki/Desktop-shells#target-platform-override
@@ -159,19 +160,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text("Enter your mnemonic to recover your account"),
-          content: new Row(
-            children: <Widget>[
-              new Expanded(
-                  child: new TextField(
-                    autofocus: true,
-                    decoration: new InputDecoration(
-                        labelText: "Mnemonic",),
-                    onChanged: (value) {
-                      mnemonic = value;
-                    },
-                  ))
-            ],
-          ),
+          content: Bip39Widget((words) => mnemonic = words.join(' ')),
           actions: <Widget>[
             FlatButton(
               child: Text("Ok"),
@@ -193,17 +182,20 @@ class _ZapHomePageState extends State<ZapHomePage> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text("Enter your raw seed string to recover your account"),
-          content: new Row(
+          content: Row(
             children: <Widget>[
-              new Expanded(
-                  child: new TextField(
+              Expanded(
+                child: Container(
+                  constraints: BoxConstraints(maxWidth: 300),
+                  child: TextField(
                     autofocus: true,
-                    decoration: new InputDecoration(
-                        labelText: "Seed",),
+                    decoration: InputDecoration(labelText: "Seed",),
                     onChanged: (value) {
                       seed = value;
                     },
-                  ))
+                  )
+                )
+              )
             ],
           ),
           actions: <Widget>[
@@ -237,13 +229,16 @@ class _ZapHomePageState extends State<ZapHomePage> {
         case NoWalletAction.RecoverMnemonic:
           // recover mnemonic
           mnemonic = await _recoverMnemonic(context);
-          mnemonic = mnemonic.trim();
-          mnemonic = mnemonic.replaceAll(RegExp(r"\s+"), " ");
-          mnemonic = mnemonic.toLowerCase();
-          if (!libzap.mnemonicCheck(mnemonic)) {
-            mnemonic = null;
-            await alert(context, "Mnemonic not valid", "The mnemonic you entered is not valid");
+          if (mnemonic != null) {
+            mnemonic = mnemonic.trim();
+            mnemonic = mnemonic.replaceAll(RegExp(r"\s+"), " ");
+            mnemonic = mnemonic.toLowerCase();
+            if (!libzap.mnemonicCheck(mnemonic)) {
+              mnemonic = null;
+            }
           }
+          if (mnemonic == null)
+            await alert(context, "Mnemonic not valid", "The mnemonic you entered is not valid");
           break;
         case NoWalletAction.RecoverRaw:
           // recover raw seed string

@@ -239,6 +239,7 @@ typedef lzap_network_set_t = int Function(int networkByte);
 
 typedef lzap_mnemonic_create_native_t = Int8 Function(Pointer<Utf8> output, Int32 size);
 typedef lzap_mnemonic_create_t = int Function(Pointer<Utf8> output, int size);
+typedef lzap_mnemonic_wordlist_t = Pointer<Pointer<Utf8>> Function();
 
 typedef lzap_mnemonic_check_native_t = Int8 Function(Pointer<Utf8> mnemonic);
 typedef lzap_mnemonic_check_t = int Function(Pointer<Utf8> mnemonic);
@@ -378,6 +379,10 @@ class LibZap {
     lzapMnemonicCheck = libzap
         .lookup<NativeFunction<lzap_mnemonic_check_native_t>>("lzap_mnemonic_check")
         .asFunction();
+    lzapMnemonicWordlist = libzap
+        .lookup<NativeFunction<lzap_mnemonic_wordlist_t>>("lzap_mnemonic_wordlist")
+        .asFunction();
+
     lzapSeedAddress = libzap
         .lookup<NativeFunction<lzap_seed_address_native_t>>("lzap_seed_address")
         .asFunction();
@@ -410,6 +415,7 @@ class LibZap {
   lzap_network_set_t lzapNetworkSet;
   lzap_mnemonic_create_t lzapMnemonicCreate;
   lzap_mnemonic_check_t lzapMnemonicCheck;
+  lzap_mnemonic_wordlist_t lzapMnemonicWordlist;
   lzap_seed_address_t lzapSeedAddress;
   lzap_address_check_ns_t lzapAddressCheck;
   lzap_address_balance_ns_t lzapAddressBalance;
@@ -480,6 +486,16 @@ class LibZap {
     var res = lzapMnemonicCheck(mnemonicC) != 0;
     free(mnemonicC);
     return res;
+  }
+
+  List<String> mnemonicWordlist() {
+    var wordlist = List<String>();
+    var wordC = lzapMnemonicWordlist();
+    while (wordC.value.address != 0) {
+      wordlist.add(Utf8.fromUtf8(wordC.value));
+      wordC = wordC.elementAt(1);
+    }
+    return wordlist;
   }
 
   String seedAddress(String seed) {
