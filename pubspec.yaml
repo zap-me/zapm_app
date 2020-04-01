@@ -1,5 +1,5 @@
-name: FlutterZap
-description: zap.me test app
+name: ZapMerchant
+description: zap.me merchant app
 version: 1.1.7+22
 
 dependencies:
@@ -25,10 +25,7 @@ dependencies:
 
   intl: ^0.15.8
   qr_flutter: 2.1.0+55
-  flushbar:
-    git:
-      url: https://github.com/AndreHaueisen/flushbar.git
-      ref: 13c55a8
+  flushbar: 1.10.0
   decimal: 0.3.3
   encrypt: ^3.2.0
   base58check: ^1.0.1

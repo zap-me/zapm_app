@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'package:FlutterZap/prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
 
+import 'prefs.dart';
 import 'qrwidget.dart';
 import 'libzap.dart';
 import 'merchant.dart';
