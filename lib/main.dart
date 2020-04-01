@@ -53,8 +53,8 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         brightness: Brightness.light,
         primaryColor: Colors.white,
-        accentColor: Colors.grey,
-        highlightColor: zapblue,
+        accentColor: zapblue,
+        highlightColor: Colors.blueGrey,
         textTheme: Typography.blackMountainView.copyWith(
           headline1: TextStyle(color: zapblue, fontSize: 28, fontWeight: FontWeight.w400),
           bodyText1: TextStyle(color: Colors.black54, fontSize: 16, fontWeight: FontWeight.w400),
@@ -513,21 +513,21 @@ class _ZapHomePageState extends State<ZapHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return new Scaffold(
-      appBar: new AppBar(
+    return Scaffold(
+      appBar: AppBar(
         leading: _testnet ? Icon(Icons.warning) : null,
         title: Center(child: Image.asset('assets/icon.png', height: 30)),
         actions: <Widget>[
           IconButton(icon: Icon(Icons.settings), onPressed: _showSettings),
         ],
       ),
-      body: new Center(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+      body: RefreshIndicator(
+        onRefresh: _setWalletDetails,
+        child: ListView(
           children: <Widget>[
             Container(
               padding: const EdgeInsets.only(top: 28.0),
-              child: Text('my balance:',  style: Theme.of(context).textTheme.bodyText1,),
+              child: Text('my balance:',  style: Theme.of(context).textTheme.bodyText1, textAlign: TextAlign.center,),
             ),
             Container(
               height: 100,
@@ -563,11 +563,11 @@ class _ZapHomePageState extends State<ZapHomePage> {
             ),
             Container(
               padding: const EdgeInsets.only(top: 28.0),
-              child: Text('wallet address:', style: Theme.of(context).textTheme.bodyText1),
+              child: Text('wallet address:', style: Theme.of(context).textTheme.bodyText1, textAlign: TextAlign.center),
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),
-              child: Text(_wallet != null ? _wallet.address : '...', style: Theme.of(context).textTheme.bodyText2),
+              child: Text(_wallet != null ? _wallet.address : '...', style: Theme.of(context).textTheme.bodyText2, textAlign: TextAlign.center),
             ),
             Divider(),
             Container(
@@ -585,7 +585,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
                     onPressed: _showQrCode),
                   RaisedButton(
                     child: Text('copy wallet address', style: Theme.of(context).textTheme.subtitle2), 
-                    color: Theme.of(context).highlightColor,
+                    color: Theme.of(context).accentColor,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18.0)),
                     onPressed: _copyAddress),
                 ]
@@ -623,20 +623,6 @@ class _ZapHomePageState extends State<ZapHomePage> {
                 ],
               )
             ),      
-            Visibility(
-              visible: !_updatingBalance && _haveSeed(),
-              child: Container(
-                padding: const EdgeInsets.only(top: 18.0),
-                child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(_balanceText),
-                      Text(_testnet ? " TESTNET" : "", style: TextStyle(color: Colors.redAccent),),
-                      IconButton(onPressed: _setWalletDetails, icon: Icon(Icons.refresh)),
-                    ]
-                ),
-              ),
-            ),
           ],
         ),
       ),
