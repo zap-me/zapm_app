@@ -79,7 +79,7 @@ flutter:
 
   # add pubspec so we can read the version on desktop
   assets:
-    - assets/icon.png
+    - assets/
     - pubspec.yaml
     - native-libraries/windows/
 

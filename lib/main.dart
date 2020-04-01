@@ -21,12 +21,13 @@ import 'new_mnemonic_form.dart';
 import 'transactions.dart';
 import 'merchant.dart';
 import 'bip39widget.dart';
+import 'widgets.dart';
 
 void main() {
   // See https://github.com/flutter/flutter/wiki/Desktop-shells#target-platform-override
   _setTargetPlatformForDesktop();  
 
-  runApp(new MyApp());
+  runApp(MyApp());
 }
 
 /// If the current platform is desktop, override the default platform to
@@ -47,12 +48,22 @@ void _setTargetPlatformForDesktop() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return new MaterialApp(
+    return MaterialApp(
       title: 'Zap',
-      theme: new ThemeData(
-        primarySwatch: Colors.blue,
+      theme: ThemeData(
+        brightness: Brightness.light,
+        primaryColor: Colors.white,
+        accentColor: Colors.grey,
+        highlightColor: zapblue,
+        textTheme: Typography.blackMountainView.copyWith(
+          headline1: TextStyle(color: zapblue, fontSize: 28, fontWeight: FontWeight.w400),
+          bodyText1: TextStyle(color: Colors.black54, fontSize: 16, fontWeight: FontWeight.w400),
+          bodyText2: TextStyle(color: Colors.black38, fontSize: 16, fontWeight: FontWeight.w400),
+          subtitle1: TextStyle(color: zapblue, fontSize: 14, fontWeight: FontWeight.w400),
+          subtitle2: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w400),
+        ),
       ),
-      home: new ZapHomePage(title: 'Zap'),
+      home: ZapHomePage(title: 'Zap'),
     );
   }
 
@@ -347,7 +358,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
         _fee = Decimal.fromInt(feeResult.value) / Decimal.fromInt(100);
       if (balanceResult.success) {
         _balance = Decimal.fromInt(balanceResult.value) / Decimal.fromInt(100);
-        _balanceText = "Balance: $_balance ZAP";
+        _balanceText = "$_balance";
       }
       else {
         _balance = Decimal.fromInt(-1);
@@ -364,10 +375,11 @@ class _ZapHomePageState extends State<ZapHomePage> {
     showDialog<String>(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          content: InkWell(child: Container(width: 300, child: QrWidget(_wallet.address, size: 300)),
-            onTap: () => Navigator.pop(context)),
-        );
+        return Align(alignment: Alignment.center, child: Card(
+          child: InkWell(child: Container(width: 300, height: 300,
+            child: QrWidget(_wallet.address, size: 300)),
+            onTap: () => Navigator.pop(context))
+        ));
       },
     );
   }
@@ -503,8 +515,8 @@ class _ZapHomePageState extends State<ZapHomePage> {
   Widget build(BuildContext context) {
     return new Scaffold(
       appBar: new AppBar(
-        leading: Image.asset('assets/icon.png'),
-        title: Text(_testnet ? widget.title + " TESTNET" : widget.title),
+        leading: _testnet ? Icon(Icons.warning) : null,
+        title: Center(child: Image.asset('assets/icon.png', height: 30)),
         actions: <Widget>[
           IconButton(icon: Icon(Icons.settings), onPressed: _showSettings),
         ],
@@ -514,23 +526,103 @@ class _ZapHomePageState extends State<ZapHomePage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
             Container(
+              padding: const EdgeInsets.only(top: 28.0),
+              child: Text('my balance:',  style: Theme.of(context).textTheme.bodyText1,),
+            ),
+            Container(
+              height: 100,
+              width: MediaQuery.of(context).size.width,
+              child: Card(
+                child: Align(alignment: Alignment.center, 
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Visibility(
+                        visible: _updatingBalance && _haveSeed(),
+                        child: SizedBox(child: CircularProgressIndicator(), height: 28.0, width: 28.0,)
+                      ),
+                      Visibility(
+                        visible: !_updatingBalance && _haveSeed(),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Text(_balanceText, style: Theme.of(context).textTheme.headline1),
+                            SizedBox.fromSize(size: Size(4, 1)),
+                            Image.asset('assets/icon-zap.png', height: 20)
+                          ],
+                        )
+                      )
+                    ]
+                  )
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+                margin: EdgeInsets.all(10),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.only(top: 28.0),
+              child: Text('wallet address:', style: Theme.of(context).textTheme.bodyText1),
+            ),
+            Container(
               padding: const EdgeInsets.only(top: 18.0),
+              child: Text(_wallet != null ? _wallet.address : '...', style: Theme.of(context).textTheme.bodyText2),
+            ),
+            Divider(),
+            Container(
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  IconButton(icon: Icon(FontAwesomeIcons.qrcode), onPressed: _showQrCode),
-                  Text(_wallet != null ? _wallet.address : '...', style: TextStyle(fontSize: 12),),
-                  IconButton(onPressed: _copyAddress, icon: Icon(Icons.content_copy)),
+                  RaisedButton(
+                    child: Row(children: <Widget>[
+                      Image.asset('assets/icon-qr.png', height: 14,),
+                      SizedBox.fromSize(size: Size(4, 1)),
+                      Text('view QR code', style: Theme.of(context).textTheme.subtitle1),
+                    ]),
+                    color: Theme.of(context).primaryColor,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18.0)),
+                    onPressed: _showQrCode),
+                  RaisedButton(
+                    child: Text('copy wallet address', style: Theme.of(context).textTheme.subtitle2), 
+                    color: Theme.of(context).highlightColor,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18.0)),
+                    onPressed: _copyAddress),
                 ]
               )
             ),
-            Visibility(
-              visible: _updatingBalance && _haveSeed(),
-              child: Container(
-                padding: const EdgeInsets.only(top: 18.0),
-                child: SizedBox(child: CircularProgressIndicator(), height: 48.0, width: 48.0,),
-              ),
-            ),
+            Container(
+              //height: 300, ???
+              margin: const EdgeInsets.only(top: 40),
+              padding: const EdgeInsets.only(top: 20),
+              color: Colors.white,
+              child: Column(
+                children: <Widget>[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: <Widget>[
+                      Visibility(
+                        visible: _haveSeed(),
+                        child: SquareButton(_send, Image.asset('assets/icon-arrow-up-white.png'), zapyellow, 'SEND ZAP'),
+                      ),
+                      Visibility(
+                        visible: _haveSeed(),
+                        child: SquareButton(_scanQrCode, Image.asset('assets/icon-qr-white.png'), zapblue, 'SCAN QR CODE'),
+                      ),
+                      SquareButton(_receive, Image.asset('assets/icon-arrow-down-white.png'), zapgreen, 'RECEIVE ZAP'),
+                    ],
+                  ),
+                  SizedBox.fromSize(size: Size(1, 10)),
+                  ListButton(_transactions, 'transactions', !_haveSeed()),
+                  //ListButton(_zapRewards, 'zap rewards', false),
+                  Visibility(
+                    visible: _haveSeed(),
+                    child: 
+                      ListButton(_settlement, 'make settlement', _haveSeed()),
+                 ),
+                ],
+              )
+            ),      
             Visibility(
               visible: !_updatingBalance && _haveSeed(),
               child: Container(
@@ -545,42 +637,6 @@ class _ZapHomePageState extends State<ZapHomePage> {
                 ),
               ),
             ),
-            Container(
-              padding: const EdgeInsets.only(top: 18.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Visibility(
-                    visible: _haveSeed(),
-                    child: RaisedButton.icon(onPressed: _send, icon: Icon(Icons.send), label: Text("Send")),
-                  ),
-                  Visibility(
-                    visible: _haveSeed(),
-                    child: RaisedButton.icon(onPressed: _scanQrCode, icon: Icon(Icons.center_focus_weak), label: Text("Scan")),
-                  ),
-                  RaisedButton.icon(onPressed: _receive, icon: Icon(Icons.account_balance_wallet), label: Text("Recieve")),
-                ]
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.only(top: 18.0),
-              child: RaisedButton.icon(
-                  onPressed: _transactions, icon: Icon(Icons.list), label:  Text("Transactions")
-              ),
-            ),
-            /*
-            Container(
-              padding: const EdgeInsets.only(top: 18.0),
-              child: RaisedButton.icon(onPressed: _zapReward, icon: Icon(Icons.send), label: Text("Zap Reward")),
-            ),
-            */
-            Visibility(
-              visible: _haveSeed(),
-              child: Container(
-                padding: const EdgeInsets.only(top: 18.0),
-                child: RaisedButton.icon(onPressed: _settlement, icon: Icon(Icons.monetization_on), label: Text("Make settlement")),
-              ),
-            ),              
           ],
         ),
       ),
