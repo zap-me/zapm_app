@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
-const zapblue = Color(0xFF3765CB);
-const zapyellow = Color(0xFFFFBB00);
-const zapgreen = Color(0xFF009075);
+const zapblue =         Color(0xFF3765CB);
+const zapyellow =       Color(0xFFFFBB00);
+const zapgreen =        Color(0xFF009075);
+const zapwarning =      zapyellow;
+const zapwarninglight = Color(0x80FFBB00);
 
 class SquareButton extends StatelessWidget {
   SquareButton(this.onPressed, this.icon, this.color, this.title) : super();
@@ -57,13 +59,41 @@ class ListButton extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Text('  $title'), Icon(Icons.arrow_right)
+                  Text('  $title'), Icon(Icons.arrow_right, color: Theme.of(context).highlightColor,)
               ]),
               Visibility(
                 visible: last,
                 child: Divider()
               )
             ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class AlertDrawer extends StatelessWidget {
+  AlertDrawer(this.onPressed, this.alerts) : super();
+
+  final VoidCallback onPressed;
+  final List<String> alerts;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: <Widget>[
+        InkWell(
+          onTap: onPressed,
+          child: Container(color: zapwarninglight,
+            child: Column(
+              children: List<Widget>.generate(alerts.length, (index) {
+                return Container(
+                  decoration: BoxDecoration(border: Border(bottom: BorderSide(color: zapwarning))),
+                  child: ListTile(title: Text(alerts[index], style: Theme.of(context).textTheme.bodyText1))
+                );
+              })
+            )
           ),
         ),
       ],

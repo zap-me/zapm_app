@@ -89,6 +89,8 @@ class _ZapHomePageState extends State<ZapHomePage> {
   Decimal _balance = Decimal.fromInt(-1);
   String _balanceText = "...";
   bool _updatingBalance = true;
+  bool _showAlerts = true;
+  List<String> _alerts = List<String>();
 
   _ZapHomePageState();
 
@@ -100,15 +102,21 @@ class _ZapHomePageState extends State<ZapHomePage> {
     super.dispose();
   }
 
+  Future<bool> _hasApiKey() async {
+    var apikey = await Prefs.apikeyGet();
+    if (apikey == null || apikey.isEmpty)
+      return false;
+    var apisecret = await Prefs.apisecretGet();
+    if (apisecret == null || apisecret.isEmpty)
+      return false;  
+    return true;
+  }
+
   void _watchAddress() async {
     // do nothing if the address, apikey or apisecret is not set
     if (_wallet == null)
       return;
-    var apikey = await Prefs.apikeyGet();
-    if (apikey == null || apikey == "")
-      return;
-    var apisecret = await Prefs.apisecretGet();
-    if (apisecret == null || apisecret == "")
+    if (!await _hasApiKey())
       return;
     // register to watch our address
     if (!await merchantWatch(_wallet.address))
@@ -297,6 +305,11 @@ class _ZapHomePageState extends State<ZapHomePage> {
   }
 
   Future<bool> _setWalletDetails() async {
+    _alerts.clear();
+    // check apikey
+    if (!await _hasApiKey())
+      setState(() => _alerts.add('No API KEY set'));
+    // start updating balance spinner
     setState(() {
       _updatingBalance = true;
     });
@@ -344,6 +357,8 @@ class _ZapHomePageState extends State<ZapHomePage> {
     }
     // update testnet
     _testnet = await _setTestnet(_wallet.address, _wallet.isMnemonic);
+    if (_testnet)
+      _alerts.add('Testnet!');
     // update state
     setState(() {
       _wallet = _wallet;
@@ -493,6 +508,10 @@ class _ZapHomePageState extends State<ZapHomePage> {
     return testnet;
   }
 
+  void _toggleAlerts() {
+    setState(() => _showAlerts = !_showAlerts);
+  }
+
   void _init() async  {
     // set libzap to initial testnet value so we can devrive address from mnemonic
     var testnet = await Prefs.testnetGet();
@@ -515,7 +534,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: _testnet ? Icon(Icons.warning) : null,
+        leading: _alerts.length > 0 ? IconButton(onPressed: _toggleAlerts, icon: Icon(Icons.warning, color: _showAlerts ? Colors.grey : zapwarning)) : null,
         title: Center(child: Image.asset('assets/icon.png', height: 30)),
         actions: <Widget>[
           IconButton(icon: Icon(Icons.settings), onPressed: _showSettings),
@@ -525,6 +544,10 @@ class _ZapHomePageState extends State<ZapHomePage> {
         onRefresh: _setWalletDetails,
         child: ListView(
           children: <Widget>[
+            Visibility(
+              visible: _showAlerts && _alerts.length > 0,
+              child: AlertDrawer(_toggleAlerts, _alerts)
+            ),
             Container(
               padding: const EdgeInsets.only(top: 28.0),
               child: Text('my balance:',  style: Theme.of(context).textTheme.bodyText1, textAlign: TextAlign.center,),
