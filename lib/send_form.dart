@@ -6,6 +6,7 @@ import 'package:flushbar/flushbar.dart';
 import 'utils.dart';
 import 'libzap.dart';
 import 'sending_form.dart';
+import 'widgets.dart';
 
 class SendForm extends StatefulWidget {
   final bool _testnet;
@@ -24,9 +25,9 @@ class SendForm extends StatefulWidget {
 
 class SendFormState extends State<SendForm> {
   final _formKey = GlobalKey<FormState>();
-  final _addressController = new TextEditingController();
-  final _amountController = new TextEditingController();
-  final _attachmentController = new TextEditingController();
+  final _addressController = TextEditingController();
+  final _amountController = TextEditingController();
+  final _attachmentController = TextEditingController();
 
   bool setRecipientOrUri(String recipientOrUri) {
     var result = parseRecipientOrWavesUri(widget._testnet, recipientOrUri);
@@ -106,78 +107,66 @@ class SendFormState extends State<SendForm> {
     return Form(
       key: _formKey,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
-          new Stack(alignment: const Alignment(1.0, 1.0), children: <Widget>[
-            new TextFormField(
-              controller: _addressController,
-              keyboardType: TextInputType.text,
-              decoration: new InputDecoration(labelText: 'Recipient Address'),
-              validator: (value) {
-                if (value.isEmpty) {
-                  return 'Please enter a value';
-                }
-                var libzap = new LibZap();
-                var res = libzap.addressCheck(value);
-                if (!res) {
-                  return 'Invalid address';
-                }
-                return null;
-              },
-            ),
-            new FlatButton(
+          TextFormField(
+            controller: _addressController,
+            keyboardType: TextInputType.text,
+            decoration: InputDecoration(labelText: 'recipient address',
+              suffixIcon: FlatButton.icon(
                 onPressed: () {
-                  var qrCode = new QRCodeReader().scan();
+                  var qrCode = QRCodeReader().scan();
                   qrCode.then((value) {
-                    if (value != null)
-                    if (!setRecipientOrUri(value))
+                    if (value != null || !setRecipientOrUri(value))
                       Flushbar(title: "Invalid QR Code", message: "Unable to decipher QR code data", duration: Duration(seconds: 2),)
                         ..show(context);
                   });
                 },
-                child: new Icon(Icons.center_focus_weak))
-          ]),
-          new Stack(alignment: const Alignment(1.0, 1.0), children: <Widget>[
-            TextFormField(
-              controller: _amountController,
-              keyboardType: TextInputType.number,
-              decoration: new InputDecoration(labelText: 'Amount'),
-              validator: (value) {
-                if (value.isEmpty) {
-                  return 'Please enter a value';
-                }
-                final dv = Decimal.parse(value);
-                if (dv > widget._max - widget._fee) {
-                  return 'Max available to send is ${widget._max - widget._fee}';
-                }
-                if (dv <= Decimal.fromInt(0)) {
-                  return 'Please enter a value greater then zero';
-                }
-                return null;
-              },
+                icon: Image.asset('assets/icon-qr-yellow.png', height: 14),
+                label: Text('scan', style: TextStyle(color: zapyellow))
+              )
             ),
-            new FlatButton(
-                onPressed: () {
-                  _amountController.text = "${widget._max - widget._fee}";
-                },
-                child: new Icon(Icons.arrow_upward))
-          ]),
+            validator: (value) {
+              if (value.isEmpty) {
+                return 'Please enter a value';
+              }
+              var libzap = LibZap();
+              var res = libzap.addressCheck(value);
+              if (!res) {
+                return 'Invalid address';
+              }
+              return null;
+            },
+          ),
+          TextFormField(
+            controller: _amountController,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(labelText: 'amount',
+              suffixIcon: FlatButton(onPressed: () => _amountController.text = '${widget._max - widget._fee}', child: Text('max', style: TextStyle(color: zapyellow)))),
+            validator: (value) {
+              if (value.isEmpty) {
+                return 'Please enter a value';
+              }
+              final dv = Decimal.parse(value);
+              if (dv > widget._max - widget._fee) {
+                return 'Max available to send is ${widget._max - widget._fee}';
+              }
+              if (dv <= Decimal.fromInt(0)) {
+                return 'Please enter a value greater then zero';
+              }
+              return null;
+            }, 
+          ),
           TextFormField(
             controller: _attachmentController,
             keyboardType: TextInputType.text,
-            decoration: new InputDecoration(labelText: 'Attachment'),
+            decoration: InputDecoration(labelText: 'attachment'),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16.0),
-            child: RaisedButton.icon(
-                onPressed: send,
-                icon: Icon(Icons.send),
-                label: Text('Submit')),
+            child: RoundedButton(send, Colors.white, zapyellow, 'send zap')
           ),
-          RaisedButton.icon(
-              onPressed: () { Navigator.pop(context); },
-              icon: Icon(Icons.cancel),
-              label: Text('Cancel')),
+          RoundedButton(() => Navigator.pop(context), zapblue, Colors.white, 'cancel', borderColor: zapblue),
         ],
       ),
     );

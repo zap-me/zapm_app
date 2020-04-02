@@ -54,7 +54,6 @@ class MyApp extends StatelessWidget {
         brightness: Brightness.light,
         primaryColor: Colors.white,
         accentColor: zapblue,
-        highlightColor: Colors.blueGrey,
         textTheme: Typography.blackMountainView.copyWith(
           headline1: TextStyle(color: zapblue, fontSize: 28, fontWeight: FontWeight.w400),
           bodyText1: TextStyle(color: Colors.black54, fontSize: 16, fontWeight: FontWeight.w400),
@@ -66,7 +65,6 @@ class MyApp extends StatelessWidget {
       home: ZapHomePage(title: 'Zap'),
     );
   }
-
 }
 
 class ZapHomePage extends StatefulWidget {
@@ -597,20 +595,8 @@ class _ZapHomePageState extends State<ZapHomePage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  RaisedButton(
-                    child: Row(children: <Widget>[
-                      Image.asset('assets/icon-qr.png', height: 14,),
-                      SizedBox.fromSize(size: Size(4, 1)),
-                      Text('view QR code', style: Theme.of(context).textTheme.subtitle1),
-                    ]),
-                    color: Theme.of(context).primaryColor,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18.0)),
-                    onPressed: _showQrCode),
-                  RaisedButton(
-                    child: Text('copy wallet address', style: Theme.of(context).textTheme.subtitle2), 
-                    color: Theme.of(context).accentColor,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18.0)),
-                    onPressed: _copyAddress),
+                  RoundedButton(_showQrCode, zapblue, Colors.white, 'view QR code', iconFilename: 'assets/icon-qr.png'),
+                  RoundedButton(_copyAddress, Colors.white, zapblue, 'copy wallet address')
                 ]
               )
             ),
