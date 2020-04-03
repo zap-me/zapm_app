@@ -6,13 +6,13 @@ import 'prefs.dart';
 import 'qrwidget.dart';
 import 'libzap.dart';
 import 'merchant.dart';
+import 'widgets.dart';
 
 class ReceiveForm extends StatefulWidget {
-  final VoidCallback onClosed;
   final bool _testnet;
   final String _address;
   
-  ReceiveForm(this.onClosed, this._testnet, this._address) : super();
+  ReceiveForm(this._testnet, this._address) : super();
 
   @override
   ReceiveFormState createState() {
@@ -20,12 +20,15 @@ class ReceiveForm extends StatefulWidget {
   }
 }
 
+const String RATES_FAILED = 'rates failed';
+const String NO_API_KEY = 'no API KEY';
+
 class ReceiveFormState extends State<ReceiveForm> {
   final _formKey = GlobalKey<FormState>();
-  final _amountController = new TextEditingController();
-  final _uriController = new TextEditingController();
+  final _amountController = TextEditingController();
+  final _uriController = TextEditingController();
   String _uri;
-  String _amountType = "ZAP";
+  String _amountType = 'nzd';
   StreamSubscription<String> _uriSub;
 
   Future<String> makeUri() async {
@@ -34,12 +37,13 @@ class ReceiveFormState extends State<ReceiveForm> {
       amount = Decimal.parse(_amountController.text);
     }
     catch (e) {}
-    if (_amountType == "NZD") {
+    if (_amountType == 'nzd') {
       try {
         amount = await equivalentCustomerZapForNzd(amount);
-      }
-      catch (e) {
-        return e.toString();
+      } on NoApiKeyException {
+        return NO_API_KEY;
+      } on RatesFailedException {
+        return RATES_FAILED;
       }
     }
     var deviceName = await Prefs.deviceNameGet();
@@ -83,26 +87,39 @@ class ReceiveFormState extends State<ReceiveForm> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Center(
-              child: QrWidget(_uri, size: 260, version: 8)
-            ),
-            new TextFormField(
-              controller: _uriController,
-              enabled: false,
-              decoration: new InputDecoration(labelText: 'Receive URI'),
-              maxLines: 5,
-            ),
-            new Stack(alignment: const Alignment(1.0, 1.0), children: <Widget>[
-              new TextFormField(
+    return WillPopScope(child: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              Center(heightFactor: 5, child: Text('scan QR code', style: Theme.of(context).textTheme.subtitle2, textAlign: TextAlign.center)),
+              Center(child: Card(
+                margin: EdgeInsets.all(20),
+                child: _uri != RATES_FAILED && _uri != NO_API_KEY ? QrWidget(_uri, size: 240, version: 8) : Container(width: 240, height: 240))
+              ),
+              TextFormField(
+                controller: _uriController,
+                enabled: false,
+                decoration: InputDecoration(labelText: 'receive URI'),
+                maxLines: 5,
+              ),
+              TextFormField(
                 controller: _amountController,
                 keyboardType: TextInputType.number,
-                decoration: new InputDecoration(labelText: 'Amount'),
+                decoration: InputDecoration(labelText: 'amount',
+                  suffixIcon: FlatButton(
+                    onPressed: () {
+                      setState(() {
+                        if (_amountType == 'zap')
+                          _amountType = 'nzd';
+                        else
+                          _amountType = 'zap';                
+                      });
+                      updateUriUi();
+                    },
+                    child: Text(_amountType, style: TextStyle(color: zapgreen)))
+                ),
                 validator: (value) {
                   if (value.isEmpty) {
                     return 'Please enter a value';
@@ -114,27 +131,13 @@ class ReceiveFormState extends State<ReceiveForm> {
                   return null;
                 },
               ),
-              new FlatButton(
-                  onPressed: () {
-                    setState(() {
-                      if (_amountType == "ZAP")
-                        _amountType = "NZD";
-                      else
-                        _amountType = "ZAP";                
-                    });
-                    updateUriUi();
-                  },
-                  child: new Text(_amountType))
-            ]),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16.0),
-              child: RaisedButton.icon(
-                  onPressed: widget.onClosed,
-                  icon: Icon(Icons.close),
-                  label: Text('Close')),
-            ),
-          ],
-        ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                child: RoundedButton(() => Navigator.pop(context), zapblue, Colors.white, 'cancel', borderColor: zapblue),
+              ),
+            ],
+          ),
+        )
       ),
       onWillPop: canLeave,
     );

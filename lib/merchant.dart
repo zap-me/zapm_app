@@ -76,11 +76,23 @@ String createHmacSig(String secret, String message) {
   return base64.encode(digest.bytes);
 }
 
+class NoApiKeyException implements Exception {
+
+}
+
+void CheckApiKey(String apikey, String apisecret) {
+  if (apikey == null)
+    throw NoApiKeyException();
+  if (apisecret == null)
+    throw NoApiKeyException();
+}
+
 Future<ClaimCode> merchantRegister(Decimal amount, int amountInt) async {
   var claimCode = ClaimCode.generate(amount);
   var url = baseUrl + "register";
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
+  CheckApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce, "token": claimCode.token, "amount": amountInt});
   var sig = createHmacSig(apisecret, body);
@@ -95,6 +107,7 @@ Future<String> merchantCheck(ClaimCode claimCode) async {
   var url = baseUrl + "check";
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
+  CheckApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce, "token": claimCode.token});
   var sig = createHmacSig(apisecret, body);
@@ -119,6 +132,7 @@ Future<bool> merchantWatch(String address) async {
   var url = baseUrl + "watch";
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
+  CheckApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce, "address": address});
   var sig = createHmacSig(apisecret, body);
@@ -133,6 +147,7 @@ Future<bool> merchantWalletAddress(String address) async {
   var url = baseUrl + "wallet_address";
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
+  CheckApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce, "address": address});
   var sig = createHmacSig(apisecret, body);
@@ -147,6 +162,7 @@ Future<Rates> merchantRates() async {
   var url = baseUrl + "rates";
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
+  CheckApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce});
   var sig = createHmacSig(apisecret, body);
@@ -162,6 +178,7 @@ Future<List<Bank>> merchantBanks() async {
   var url = baseUrl + "banks";
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
+  CheckApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce});
   var sig = createHmacSig(apisecret, body);
@@ -182,6 +199,7 @@ Future<Settlement> merchantSettlement(Decimal amount, String bankToken) async {
   var url = baseUrl + "settlement";
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
+  CheckApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var d100 = Decimal.fromInt(100);
   var body = jsonEncode({"api_key": apikey, "nonce": nonce, "bank": bankToken, "amount": (amount * d100).toInt()});
@@ -198,6 +216,7 @@ Future<Settlement> merchantSettlementUpdate(String token, String txid) async {
   var url = baseUrl + "settlement_set_txid";
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
+  CheckApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce, "token": token, "txid": txid});
   var sig = createHmacSig(apisecret, body);
@@ -214,6 +233,7 @@ typedef TxNotificationCallback = void Function(String, String, double);
 Future<Socket> merchantSocket(TxNotificationCallback txNotificationCallback) async {
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
+  CheckApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
 
   var socket = io(baseUrl, <String, dynamic>{
@@ -250,10 +270,15 @@ Future<Socket> merchantSocket(TxNotificationCallback txNotificationCallback) asy
   return socket;
 }
 
+class RatesFailedException implements Exception {
+  String cause;
+  RatesFailedException(this.cause);
+}
+
 Future<Decimal> equivalentCustomerZapForNzd(Decimal nzdReqOrProvided) async {
   var rates = await merchantRates();
   if (rates == null) {
-    throw new Exception("could not get rates");
+    throw RatesFailedException("could not get rates");
   }
   return nzdReqOrProvided * (Decimal.fromInt(1) + rates.customerRate);
 }

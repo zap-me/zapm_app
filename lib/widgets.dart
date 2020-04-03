@@ -133,18 +133,20 @@ class AlertDrawer extends StatelessWidget {
   }
 }
 
-class CustomWave extends CustomPainter{
-  CustomWave(this.color) : super();
+class CustomCurve extends CustomPainter{
+  CustomCurve(this.color, this.curveStart, this.curveBottom) : super();
 
   final Color color;
+  final double curveStart;
+  final double curveBottom;
 
   @override
   void paint(Canvas canvas, Size size) {
     var path = Path();
     var paint = Paint();
     path.moveTo(0, 0);
-    path.lineTo(0, size.height * 0.75);
-    path.quadraticBezierTo(size.width / 2, size.height, size.width, size.height * 0.75);
+    path.lineTo(0, curveStart);
+    path.quadraticBezierTo(size.width / 2, curveBottom, size.width, curveStart);
     path.lineTo(size.width, 0);
     path.close();
     paint.color = color;

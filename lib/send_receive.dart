@@ -22,21 +22,15 @@ class SendScreen extends StatelessWidget {
           title: Text('send zap', style: Theme.of(context).textTheme.subtitle2, textAlign: TextAlign.center),
           backgroundColor: zapyellow,
         ),
-        body: Column(children: <Widget>[
-          CustomPaint(
-            painter: CustomWave(zapyellow),
-            child: Container(
-              padding: EdgeInsets.all(50),
-              width: MediaQuery.of(context).size.width, 
-              height: 200,
-              child: Text('send zap', style: Theme.of(context).textTheme.subtitle2, textAlign: TextAlign.center)
-            ) 
-          ),
-          Container(
-            padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
+        body: CustomPaint(
+          painter: CustomCurve(zapyellow, 90, 140),
+          child: Container(
+            width: MediaQuery.of(context).size.width, 
+            height: MediaQuery.of(context).size.height,
+            padding: EdgeInsets.all(20),
             child: SendForm(_testnet, _seed, _fee, _recipientOrUri, _max)
-          )
-        ])
+          ) 
+        )
     );
   }
 }
@@ -55,19 +49,15 @@ class ReceiveScreen extends StatelessWidget {
           title: Text("recieve zap", style: Theme.of(context).textTheme.subtitle2, textAlign: TextAlign.center),
           backgroundColor: zapgreen,
         ),
-        body: Column(children: <Widget>[
-          CustomPaint(
-            painter: CustomWave(zapgreen),
-            size: Size(MediaQuery.of(context).size.width, 100)
-          ),
-          Container(
-            padding: new EdgeInsets.all(20.0),
-            child: ReceiveForm(() {
-              Navigator.pop(context);
-            }, _testnet, _address)
+        body: CustomPaint(
+          painter: CustomCurve(zapgreen, 150, 250),
+          child: Container(
+            width: MediaQuery.of(context).size.width, 
+            height: MediaQuery.of(context).size.height,
+            padding: EdgeInsets.all(20),
+            child: ReceiveForm(_testnet, _address)
           )
-        ]
-      )
+        )
     );
   }
 }
