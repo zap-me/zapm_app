@@ -229,13 +229,12 @@ Future<Settlement> merchantSettlementUpdate(String token, String txid) async {
   return null;
 }
 
-typedef TxNotificationCallback = void Function(String, String, double);
+typedef TxNotificationCallback = void Function(String txid, String sender, String recipient, double amount, String attachment);
 Future<Socket> merchantSocket(TxNotificationCallback txNotificationCallback) async {
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
-  CheckApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
-
+ 
   var socket = io(baseUrl, <String, dynamic>{
     'secure': true,
     'transports': ['websocket'],
@@ -261,12 +260,12 @@ Future<Socket> merchantSocket(TxNotificationCallback txNotificationCallback) asy
   socket.on('tx', (data) {
     print(data);
     var json = jsonDecode(data);
-    txNotificationCallback(json["id"], json["recipient"], json["amount"].toDouble());
+    txNotificationCallback(json["id"], json["sender"], json["recipient"], json["amount"].toDouble(), json["attachment"]);
   });
   socket.on('disconnect', (_) {
     print('ws disconnect');
   });
-
+ 
   return socket;
 }
 

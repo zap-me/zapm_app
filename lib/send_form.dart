@@ -50,7 +50,8 @@ class SendFormState extends State<SendForm> {
       // send parameters
       var recipient = _addressController.text;
       var amountText = _amountController.text;
-      var amount = (Decimal.parse(amountText) * Decimal.fromInt(100)).toInt();
+      var amountDec = Decimal.parse(amountText);
+      var amount = (amountDec * Decimal.fromInt(100)).toInt();
       var fee = (widget._fee * Decimal.fromInt(100)).toInt();
       var attachment = _attachmentController.text;
       // double check with user
@@ -58,15 +59,13 @@ class SendFormState extends State<SendForm> {
           context: context,
           builder: (BuildContext context) {
             return SimpleDialog(
-              title: const Text("Confirm Send"),
+              title: const Text('confirm send'),
               children: <Widget>[
                 SimpleDialogOption(
-                  onPressed: () { Navigator.pop(context, true); },
-                  child: Text("Yes send $amountText ZAP to $recipient"),
+                  child: RoundedButton(() => Navigator.pop(context, true), Colors.white, zapyellow, 'yes send ${amountDec.toStringAsFixed(2)} zap'),
                 ),
                 SimpleDialogOption(
-                  onPressed: () { Navigator.pop(context, false); },
-                  child: const Text("Cancel"),
+                  child: RoundedButton(() => Navigator.pop(context, false), zapblue, Colors.white, 'cancel', borderColor: zapblue),
                 ),
               ],
             );

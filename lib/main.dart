@@ -126,9 +126,28 @@ class _ZapHomePageState extends State<ZapHomePage> {
     // create socket to receive tx alerts
     if (socket != null) 
       socket.close();
-    socket = await merchantSocket((txid, recipient, amount) => {
-    Flushbar(title: "Received $amount ZAP", message: "TXID: $txid", duration: Duration(seconds: 2),)
-      ..show(context)
+    socket = await merchantSocket((txid, sender, recipient, amount, attachment) {
+      showDialog(
+        context: context,
+        barrierDismissible: false, // dialog is dismissible with a tap on the barrier
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("received ${amount.toStringAsFixed(2)} zap"),
+            content: ListView(
+              shrinkWrap: true,
+              children: <Widget>[
+                ListTile(title: Text("TXID"), subtitle: Text(txid)),
+                ListTile(title: Text("sender"), subtitle: Text(sender),),
+                ListTile(title: Text("amount"), subtitle: Text("${amount.toStringAsFixed(2)} ZAP")),
+                ListTile(title: Text(attachment != null && attachment.isNotEmpty ? "attachment: $attachment" : "")),
+              ],
+            ),
+            actions: <Widget>[
+              RoundedButton(() => Navigator.pop(context), zapblue, Colors.white, 'ok', borderColor: zapblue),
+            ],
+          );
+        }
+      );
     });
   }
 
@@ -371,7 +390,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
         _fee = Decimal.fromInt(feeResult.value) / Decimal.fromInt(100);
       if (balanceResult.success) {
         _balance = Decimal.fromInt(balanceResult.value) / Decimal.fromInt(100);
-        _balanceText = "$_balance";
+        _balanceText = _balance.toStringAsFixed(2);
       }
       else {
         _balance = Decimal.fromInt(-1);

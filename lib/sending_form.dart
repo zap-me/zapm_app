@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'libzap.dart';
+import 'widgets.dart';
 
 
 class SendingForm extends StatefulWidget {
@@ -51,25 +52,20 @@ class SendingFormState extends State<SendingForm> {
               Visibility(visible: _sending, child: Container(padding: const EdgeInsets.only(top: 20.0))),
               Visibility(
                 visible: _sending,
-                child: Text("Broadcasting transaction..."),
+                child: Text("broadcasting transaction..."),
               ),
               Visibility(
                 visible: !_sending && _tx != null,
-                child: Text("Broadcast complete (${_tx?.id})"),
+                child: Text("broadcast complete (${_tx?.id})", style: Theme.of(context).textTheme.bodyText2),
               ),
               Visibility(
                 visible: !_sending && _tx == null,
-                child: Text("Broadcast failed :("),
+                child: Text("broadcast failed :("),
               ),
               Visibility(visible: !_sending, child: Container(padding: const EdgeInsets.only(top: 20.0))),
               Visibility(
                   visible: !_sending,
-                  child: RaisedButton.icon(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      icon: Icon(Icons.close),
-                      label: Text('Close'))
+                  child: RoundedButton(() => Navigator.pop(context), zapblue, Colors.white, 'close', borderColor: zapblue)
               ),
           ],
         ),
