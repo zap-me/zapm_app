@@ -121,8 +121,10 @@ class AlertDrawer extends StatelessWidget {
             child: Column(
               children: List<Widget>.generate(alerts.length, (index) {
                 return Container(
+                  padding: EdgeInsets.all(8),
+                  width: MediaQuery.of(context).size.width,
                   decoration: BoxDecoration(border: Border(bottom: BorderSide(color: zapwarning))),
-                  child: ListTile(title: Text(alerts[index], style: Theme.of(context).textTheme.bodyText1))
+                  child: Text(alerts[index], style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.black54))
                 );
               })
             )
