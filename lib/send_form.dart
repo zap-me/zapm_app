@@ -118,7 +118,7 @@ class SendFormState extends State<SendForm> {
                 onPressed: () {
                   var qrCode = QRCodeReader().scan();
                   qrCode.then((value) {
-                    if (value != null || !setRecipientOrUri(value))
+                    if (value == null || !setRecipientOrUri(value))
                       Flushbar(title: "Invalid QR Code", message: "Unable to decipher QR code data", duration: Duration(seconds: 2),)
                         ..show(context);
                   });
