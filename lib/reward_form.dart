@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
-import 'package:flushbar/flushbar.dart';
 
 import 'claiming_form.dart';
 import 'utils.dart';
+import 'widgets.dart';
 
 class RewardForm extends StatefulWidget {
   final bool _testnet;
@@ -63,8 +63,7 @@ class RewardFormState extends State<RewardForm> {
       }
     }
     else
-      Flushbar(title: "Validation failed", message: "correct data please", duration: Duration(seconds: 2),)
-        ..show(context);
+      flushbarMsg(context, 'validation failed', category: MessageCategory.Warning);
   }
 
   @protected

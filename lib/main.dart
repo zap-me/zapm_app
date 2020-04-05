@@ -5,8 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qrcode_reader/qrcode_reader.dart';
 import 'package:decimal/decimal.dart';
-import 'package:flushbar/flushbar.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:flutter_icons/flutter_icons.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 
 import 'qrwidget.dart';
@@ -119,8 +118,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
     // register to watch our address
     if (!await merchantWatch(_wallet.address))
     {
-      Flushbar(title: "Failed to register address", message: _wallet.address, duration: Duration(seconds: 2),)
-        ..show(context);
+      flushbarMsg(context, 'failed to register address', category: MessageCategory.Warning);
       return;
     }
     // create socket to receive tx alerts
@@ -286,21 +284,18 @@ class _ZapHomePageState extends State<ZapHomePage> {
             var result = parseApiKeyUri(value);
             if (result.error == NO_ERROR) {
               if (result.walletAddress == null || result.walletAddress.isEmpty) {
-                Flushbar(title: "Wallet address not present", message: ":(", duration: Duration(seconds: 2),)
-                  ..show(context);
+                flushbarMsg(context, 'wallet address not present', category: MessageCategory.Warning);
                 break;
               }
               await Prefs.addressSet(result.walletAddress);
               await Prefs.deviceNameSet(result.deviceName);
               await Prefs.apikeySet(result.apikey);
               await Prefs.apisecretSet(result.apisecret);
-              Flushbar(title: "Api Key set", message: "${result.apikey}", duration: Duration(seconds: 2),)
-                ..show(context);
+              flushbarMsg(context, 'API KEY set');
               address = result.walletAddress;
             }
             else
-              Flushbar(title: "Invalid QR Code", message: "Unable to decipher QR code data", duration: Duration(seconds: 2),)
-                ..show(context);
+              flushbarMsg(context, 'invalid QR code', category: MessageCategory.Warning);
           }
           break;
       }
@@ -418,8 +413,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
 
   void _copyAddress() {
     Clipboard.setData(ClipboardData(text: _wallet.address)).then((value) {
-      Flushbar(title: "Copied address to clipboard", message: _wallet.address, duration: Duration(seconds: 2),)
-        ..show(context);
+      flushbarMsg(context, 'copied address to clipboard');
     });
   }
 
@@ -439,15 +433,12 @@ class _ZapHomePageState extends State<ZapHomePage> {
         var result = parseClaimCodeUri(value);
         if (result.error == NO_ERROR) {
           if (await merchantClaim(result.code, _wallet.address))
-            Flushbar(title: "Claim succeded", message: "Claimed reward to ${_wallet.address}", duration: Duration(seconds: 2),)
-              ..show(context);
+            flushbarMsg(context, 'claim succeded');
           else 
-            Flushbar(title: "Claim failed", message: "Unable to claim reward to ${_wallet.address}", duration: Duration(seconds: 2),)
-              ..show(context);
+            flushbarMsg(context, 'claim failed', category: MessageCategory.Warning);
         }
         else
-          Flushbar(title: "Invalid QR Code", message: "Unable to decipher QR code data", duration: Duration(seconds: 2),)
-            ..show(context);
+          flushbarMsg(context, 'invalid QR code', category: MessageCategory.Warning);
       }
     }
   }
@@ -614,7 +605,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  RoundedButton(_showQrCode, zapblue, Colors.white, 'view QR code', iconFilename: 'assets/icon-qr.png'),
+                  RoundedButton(_showQrCode, zapblue, Colors.white, 'view QR code', icon: MaterialCommunityIcons.qrcode_scan),
                   RoundedButton(_copyAddress, Colors.white, zapblue, 'copy wallet address')
                 ]
               )
@@ -631,13 +622,13 @@ class _ZapHomePageState extends State<ZapHomePage> {
                     children: <Widget>[
                       Visibility(
                         visible: _haveSeed(),
-                        child: SquareButton(_send, Image.asset('assets/icon-arrow-up-white.png'), zapyellow, 'SEND ZAP'),
+                        child: SquareButton(_send, MaterialCommunityIcons.chevron_double_up, zapyellow, 'SEND ZAP'),
                       ),
                       Visibility(
                         visible: _haveSeed(),
-                        child: SquareButton(_scanQrCode, Image.asset('assets/icon-qr-white.png'), zapblue, 'SCAN QR CODE'),
+                        child: SquareButton(_scanQrCode, MaterialCommunityIcons.qrcode_scan, zapblue, 'SCAN QR CODE'),
                       ),
-                      SquareButton(_receive, Image.asset('assets/icon-arrow-down-white.png'), zapgreen, 'RECEIVE ZAP'),
+                      SquareButton(_receive, MaterialCommunityIcons.chevron_double_down, zapgreen, 'RECEIVE ZAP'),
                     ],
                   ),
                   SizedBox.fromSize(size: Size(1, 10)),

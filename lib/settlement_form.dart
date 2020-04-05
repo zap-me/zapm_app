@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
-import 'package:flushbar/flushbar.dart';
 
 import 'merchant.dart';
 import 'libzap.dart';
 import 'utils.dart';
+import 'widgets.dart';
 
 class SettlementForm extends StatefulWidget {
   final bool _testnet;
@@ -36,8 +36,7 @@ class SettlementFormState extends State<SettlementForm> {
       var fee = (widget._fee * Decimal.fromInt(100)).toInt();
       var lz = LibZap();
       if (!lz.addressCheck(_rates.settlementAddress)) {
-        Flushbar(title: "Unable to create settlement", message: "Settlement address is invalid", duration: Duration(seconds: 2),)
-        ..show(context);
+        flushbarMsg(context, 'unable to create settlement', category: MessageCategory.Warning);
         return;
       }
       // get amount to receive
@@ -76,23 +75,20 @@ class SettlementFormState extends State<SettlementForm> {
         var settlement = await merchantSettlement(amountDec, bankToken);
         Navigator.pop(context);
         if (settlement == null) {
-          Flushbar(title: "Failed to create settlement", message: ":(", duration: Duration(seconds: 2),)
-            ..show(context);
+          flushbarMsg(context, 'failed to create settlement', category: MessageCategory.Warning);
           return;
         }
         // send funds
         var libzap = LibZap();
         var spendTx = libzap.transactionCreate(widget._seed, _rates.settlementAddress, amount, fee, settlement.token);
         if (!spendTx.success) {
-          Flushbar(title: "Failed to create Tx", message: ":(", duration: Duration(seconds: 2),)
-            ..show(context);
+          flushbarMsg(context, 'failed to create transaction', category: MessageCategory.Warning);
             return;
         }
         showAlertDialog(context, "Sending settlement transaction..");
         var tx = await LibZap.transactionBroadcast(spendTx);
         if (tx == null) {
-          Flushbar(title: "Failed to create broadcast Tx", message: ":(", duration: Duration(seconds: 2),)
-            ..show(context);
+          flushbarMsg(context, 'failed to create broadcast transaction', category: MessageCategory.Warning);
             Navigator.pop(context);
             return;
         }
@@ -100,19 +96,16 @@ class SettlementFormState extends State<SettlementForm> {
         showAlertDialog(context, "Updating settlement..");
         var res = await merchantSettlementUpdate(settlement.token, tx.id);
         if (res == null) {
-          Flushbar(title: "Failed to update settlement", message: ":(", duration: Duration(seconds: 2),)
-            ..show(context);
+          flushbarMsg(context, 'failed to update settlement', category: MessageCategory.Warning);
             Navigator.pop(context);
             return;
         }
         Navigator.pop(context);
-        Flushbar(title: "Settlement created", message: settlement.token, duration: Duration(seconds: 2),)
-          ..show(context);
+        flushbarMsg(context, 'settlement created');
       }
     }
     else
-      Flushbar(title: "Validation failed", message: "correct data please", duration: Duration(seconds: 2),)
-        ..show(context);
+      flushbarMsg(context, 'validation failed', category: MessageCategory.Warning);
   }
 
   @protected
@@ -126,8 +119,7 @@ class SettlementFormState extends State<SettlementForm> {
       var rates = await merchantRates();
       Navigator.pop(context);
       if (rates == null) {
-        Flushbar(title: "Unable to get rates", message: "Could not get rates", duration: Duration(seconds: 2),)
-        ..show(context);
+        flushbarMsg(context, 'unable to get rates', category: MessageCategory.Warning);
         return;
       }
       // get banks
@@ -135,8 +127,7 @@ class SettlementFormState extends State<SettlementForm> {
       var banks = await merchantBanks();
       Navigator.pop(context);
       if (banks == null) {
-        Flushbar(title: "Unable to get bank accounts", message: "Could not get bank accounts", duration: Duration(seconds: 2),)
-        ..show(context);
+        flushbarMsg(context, 'unable to get bank accounts', category: MessageCategory.Warning);
         return;
       }
       if (banks.length > 0) {
@@ -150,8 +141,7 @@ class SettlementFormState extends State<SettlementForm> {
           }
         });
       } else {
-        Flushbar(title: "User has no bank accounts", message: "Set up a bank account in the web interface", duration: Duration(seconds: 2),)
-        ..show(context);
+        flushbarMsg(context, 'user has no bank accounts', category: MessageCategory.Warning);
         return;
       } 
     }();

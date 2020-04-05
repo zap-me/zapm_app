@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:flushbar/flushbar.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'libzap.dart';
 import 'utils.dart';
+import 'widgets.dart';
 
 class TransactionsScreen extends StatefulWidget {
   final String _address;
@@ -91,8 +91,7 @@ class _TransactionsState extends State<TransactionsScreen> {
           _offset = newOffset;
         }
         else {
-          Flushbar(title: "Failed to load transactions", message: "try again? :(", duration: Duration(seconds: 2),)
-            ..show(context);
+          flushbarMsg(context, 'failed to load transactions', category: MessageCategory.Warning);
         }
         _loading = false;
       });
@@ -197,8 +196,7 @@ class _TransactionsState extends State<TransactionsScreen> {
         while (true) {
           var txs = await _downloadMoreTxs(100);
           if (txs == -1) {
-            Flushbar(title: "Failed to load transactions", message: "try again? :(", duration: Duration(seconds: 2),)
-              ..show(context);
+            flushbarMsg(context, 'failed to load transactions', category: MessageCategory.Warning);
             setState(() {
               _loading = false;
             });
@@ -218,8 +216,7 @@ class _TransactionsState extends State<TransactionsScreen> {
             });
             break;
           }
-          Flushbar(title: "Loaded ${_txs.length} transactions", message: "...", duration: Duration(seconds: 2),)
-            ..show(context);
+          flushbarMsg(context, 'loaded ${_txs.length} transactions');
         }
         break;
     }

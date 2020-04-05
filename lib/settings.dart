@@ -1,16 +1,17 @@
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter_icons/flutter_icons.dart';
 import 'package:package_info/package_info.dart';
 import 'package:yaml/yaml.dart';
 import 'package:qrcode_reader/qrcode_reader.dart';
-import 'package:flushbar/flushbar.dart';
 
 import 'merchant.dart';
 import 'libzap.dart';
 import 'prefs.dart';
 import 'utils.dart';
 import 'pinentry.dart';
+import 'widgets.dart';
 
 class SettingsScreen extends StatefulWidget {
   final bool _pinProtectedInitial;
@@ -110,8 +111,7 @@ class _SettingsState extends State<SettingsScreen> {
       );
       if (pin2 != null && pin == pin2) {
         await Prefs.pinSet(pin);
-        Flushbar(title: 'Pin set', message: ':)', duration: Duration(seconds: 2),)
-          ..show(context);
+        flushbarMsg(context, 'pin set');
         setState(() {
           _pinProtected = true;
         });
@@ -140,8 +140,7 @@ class _SettingsState extends State<SettingsScreen> {
     );
     if (pin == pin2) {
       await Prefs.pinSet('');
-      Flushbar(title: 'Pin removed', message: ':)', duration: Duration(seconds: 2),)
-        ..show(context);
+      flushbarMsg(context, 'pin removed');
       setState(() {
         _pinProtected = false;
       });
@@ -173,26 +172,22 @@ class _SettingsState extends State<SettingsScreen> {
           _apikey = result.apikey;
           _apisecret = result.apisecret;
         });
-        Flushbar(title: "Api Key set", message: "${result.apikey}", duration: Duration(seconds: 2),)
-          ..show(context);
+        flushbarMsg(context, 'API KEY set');
         if (result.accountAdmin && result.walletAddress.isEmpty) {
           var address = _getWalletAddress(widget._mnemonic);
           var yes = await askYesNo(context, "Do you want to set the account wallet address ($address)?");
           if (yes) {
             var res = await merchantWalletAddress(address);
             if (res) {
-              Flushbar(title: "Account Wallet Address Set", message: address, duration: Duration(seconds: 2),)
-                ..show(context);
+              flushbarMsg(context, 'account wallet address set');
             } else {
-              Flushbar(title: "Failed to Set Account Wallet Address", message: address, duration: Duration(seconds: 2),)
-                ..show(context);
+              flushbarMsg(context, 'failed to set account wallet address', category: MessageCategory.Warning);
             }
           }
         }
       }
       else
-        Flushbar(title: "Invalid QR Code", message: "Unable to decipher QR code data", duration: Duration(seconds: 2),)
-          ..show(context);
+        flushbarMsg(context, 'invalid QR code', category: MessageCategory.Warning);
     }
   }
 
@@ -297,7 +292,7 @@ class _SettingsState extends State<SettingsScreen> {
             Container(
               padding: const EdgeInsets.only(top: 18.0),
               child: ListTile(
-                title: RaisedButton.icon(label: Text("Scan Api Key"), icon: Icon(Icons.center_focus_weak), onPressed: _scanApikey),
+                title: RaisedButton.icon(label: Text("Scan Api Key"), icon: Icon(MaterialCommunityIcons.qrcode_scan), onPressed: _scanApikey),
               ),
             ),
             ListTile(title: Text("Device Name"), subtitle: Text("$_deviceName"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: _editDeviceName),),

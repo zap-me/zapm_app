@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flushbar/flushbar.dart';
 
 const zapgrey =         Color(0xFFF8F6F1);
 const zapblue =         Color(0xFF3765CB);
@@ -7,26 +8,51 @@ const zapgreen =        Color(0xFF009075);
 const zapwarning =      zapyellow;
 const zapwarninglight = Color(0x80FFBB00);
 
+enum MessageCategory {
+  Info,
+  Warning,
+}
+
 Widget backButton(BuildContext context) {
   return IconButton(icon: Icon(Icons.arrow_back_ios, color: Theme.of(context).textTheme.subtitle2.color), onPressed: () => Navigator.of(context).pop());
 }
 
+
+void flushbarMsg(BuildContext context, String msg, {int seconds = 3, MessageCategory category = MessageCategory.Info}) {
+  IconData icon;
+  switch (category) {
+    case MessageCategory.Info:
+      icon = Icons.info;
+      break;
+    case MessageCategory.Warning:
+      icon = Icons.warning;
+      break;
+  }
+  Flushbar(
+    messageText: Text(msg, style: TextStyle(color: zapblue)),
+    icon: Icon(icon, size: 28.0, color: category == MessageCategory.Info ? zapblue : zapwarning),
+    duration: Duration(seconds: seconds),
+    leftBarIndicatorColor: zapblue,
+    backgroundColor: Colors.white,
+  )..show(context);
+}
+
 class RoundedButton extends StatelessWidget {
-  RoundedButton(this.onPressed, this.textColor, this.fillColor, this.title, {this.iconFilename, this.borderColor}) : super();
+  RoundedButton(this.onPressed, this.textColor, this.fillColor, this.title, {this.icon, this.borderColor}) : super();
 
   final VoidCallback onPressed;
   final Color textColor;
   final Color fillColor;
   final String title;
-  final String iconFilename;
+  final IconData icon;
   final Color borderColor;
 
   @override
   Widget build(BuildContext context) {
     Widget child = Text(title, style: TextStyle(color: textColor, fontSize: 14));
-    if (iconFilename != null)
+    if (icon != null)
       child = Row(children: <Widget>[
-        Image.asset(iconFilename, height: 14),
+        Icon(icon, color: textColor, size: 14),
         SizedBox.fromSize(size: Size(4, 1)),
         child]);
     var _borderColor = borderColor != null ? borderColor : fillColor;
@@ -42,7 +68,7 @@ class SquareButton extends StatelessWidget {
   SquareButton(this.onPressed, this.icon, this.color, this.title) : super();
 
   final VoidCallback onPressed;
-  final Image icon;
+  final IconData icon;
   final Color color;
   final String title;
 
@@ -61,7 +87,7 @@ class SquareButton extends StatelessWidget {
             ),
             child: Container(
               padding: EdgeInsets.all(30),
-              child: icon
+              child: Icon(icon, color: Colors.white)
             )
           ),
         ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
+import 'package:flutter_icons/flutter_icons.dart';
 import 'package:qrcode_reader/qrcode_reader.dart';
-import 'package:flushbar/flushbar.dart';
 
 import 'utils.dart';
 import 'libzap.dart';
@@ -85,13 +85,11 @@ class SendFormState extends State<SendForm> {
           );
         }
         else
-          Flushbar(title: "Failed to create Tx", message: ":(", duration: Duration(seconds: 2),)
-            ..show(context);
+          flushbarMsg(context, 'failed to create transaction', category: MessageCategory.Warning);
       }
     }
     else
-      Flushbar(title: "Validation failed", message: "correct data please", duration: Duration(seconds: 2),)
-        ..show(context);
+      flushbarMsg(context, 'validation failed', category: MessageCategory.Warning);
   }
 
   @protected
@@ -118,11 +116,10 @@ class SendFormState extends State<SendForm> {
                   var qrCode = QRCodeReader().scan();
                   qrCode.then((value) {
                     if (value == null || !setRecipientOrUri(value))
-                      Flushbar(title: "Invalid QR Code", message: "Unable to decipher QR code data", duration: Duration(seconds: 2),)
-                        ..show(context);
+                      flushbarMsg(context, 'invalid QR code', category: MessageCategory.Warning);
                   });
                 },
-                icon: Image.asset('assets/icon-qr-yellow.png', height: 14),
+                icon: Icon(MaterialCommunityIcons.qrcode_scan, size: 14, color: zapyellow),
                 label: Text('scan', style: TextStyle(color: zapyellow))
               )
             ),

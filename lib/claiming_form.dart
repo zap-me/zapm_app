@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flushbar/flushbar.dart';
 import 'package:decimal/decimal.dart';
 
 import 'libzap.dart';
 import 'qrwidget.dart';
 import 'merchant.dart';
 import 'sending_form.dart';
+import 'widgets.dart';
 
 class ClaimingForm extends StatefulWidget {
   final Decimal _amountDec;
@@ -48,8 +48,7 @@ class ClaimingFormState extends State<ClaimingForm> {
         );
       }
       else
-        Flushbar(title: "Failed to create Tx", message: ":(", duration: Duration(seconds: 2),)
-          ..show(context);
+        flushbarMsg(context, 'failed to create transaction', category: MessageCategory.Warning);
     }
   }
 
@@ -63,8 +62,7 @@ class ClaimingFormState extends State<ClaimingForm> {
         setState(() {
           _checking = false;
         });
-        Flushbar(title: "Failed to create claim code", message: ":(", duration: Duration(seconds: 2),)
-          ..show(context);
+        flushbarMsg(context, 'failed to create claim code', category: MessageCategory.Warning);
         return;
       }
       // create uri
