@@ -19,7 +19,7 @@ class SendScreen extends StatelessWidget {
     return Scaffold(
         appBar: AppBar(
           leading: backButton(context),
-          title: Text('send zap', style: Theme.of(context).textTheme.subtitle2, textAlign: TextAlign.center),
+          title: Text('send zap', style: TextStyle(color: Colors.white)),
           backgroundColor: zapyellow,
         ),
         body: CustomPaint(
@@ -46,7 +46,7 @@ class ReceiveScreen extends StatelessWidget {
     return Scaffold(
         appBar: AppBar(
           leading: backButton(context),
-          title: Text("recieve zap", style: Theme.of(context).textTheme.subtitle2, textAlign: TextAlign.center),
+          title: Text("recieve zap", style: TextStyle(color: Colors.white)),
           backgroundColor: zapgreen,
         ),
         body: CustomPaint(

@@ -119,72 +119,60 @@ class _TransactionsState extends State<TransactionsScreen> {
     var amountText = amount.toStringAsFixed(2);
     var fee = Decimal.fromInt(tx.fee) / Decimal.fromInt(100);
     var feeText = fee.toStringAsFixed(2);
-    amountText = outgoing ? "-$amountText" : "+$amountText";
-    var color = outgoing ? Colors.red : Colors.green;
+    amountText = outgoing ? '- $amountText' : '+ $amountText';
+    var color = outgoing ? zapyellow : zapgreen;
     var date = new DateTime.fromMillisecondsSinceEpoch(tx.timestamp);
-    var dateStr = DateFormat("yyyyMMdd").format(date);
-    var dateStrLong = DateFormat("yyyy-MM-dd HH:mm").format(date);
-    var tofrom = outgoing ? "Recipient: ${tx.recipient}" : "Sender: ${tx.sender}";
-    var subtitle = "$dateStr: $tofrom";
-    var link = widget._testnet ? "https://wavesexplorer.com/testnet/tx/${tx.id}" : "https://wavesexplorer.com/tx/${tx.id}";
+    var dateStrLong = DateFormat('yyyy-MM-dd HH:mm').format(date);
+    var link = widget._testnet ? 'https://wavesexplorer.com/testnet/tx/${tx.id}' : 'https://wavesexplorer.com/tx/${tx.id}';
     var attachment = tx.attachment;
-    if (tx.attachment != null && tx.attachment != "")
+    if (tx.attachment != null && tx.attachment.isNotEmpty)
       attachment = base58decode(tx.attachment);
-    return Card(
-      child: ListTile(
-        leading: Icon(icon, color: color,),
-        title: Text("${tx.id}", maxLines: 1, overflow: TextOverflow.ellipsis,),
-        subtitle: Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis,),
-        trailing: Text(amountText, style: TextStyle(color: color),),
-        onTap: () {
-          Navigator.of(context).push(
-            // We will now use PageRouteBuilder
-            PageRouteBuilder(
-                opaque: false,
-                pageBuilder: (BuildContext context, __, ___) {
-                  return new Scaffold(
-                    backgroundColor: Colors.black45,
-                    body: Container(
-                      color: Colors.white,
-                      child: Column(
-                        children: <Widget>[
-                          Container(
-                            padding: const EdgeInsets.only(top: 5.0),
-                            child: ListTile(title: Text("Transaction ID"),
-                                subtitle: InkWell(
-                                  child: Text(tx.id, style: new TextStyle(color: Colors.blue, decoration: TextDecoration.underline))),
-                                  onTap: () => launch(link),
-                                ),
+    return ListTx(() {
+      Navigator.of(context).push(
+        // We will now use PageRouteBuilder
+        PageRouteBuilder(
+          opaque: false,
+          pageBuilder: (BuildContext context, __, ___) {
+            return new Scaffold(
+              appBar: AppBar(
+                leading: backButton(context, color: zapblue),
+                title: Text('transaction', style: TextStyle(color: zapblue)),
+              ),
+              body: Container(
+                color: Colors.white,
+                child: Column(
+                  children: <Widget>[
+                    Container(
+                      padding: const EdgeInsets.only(top: 5.0),
+                      child: ListTile(title: Text('transaction ID'),
+                          subtitle: InkWell(
+                            child: Text(tx.id, style: new TextStyle(color: zapblue, decoration: TextDecoration.underline))),
+                            onTap: () => launch(link),
+                          ),
 
-                          ),
-                          ListTile(title: Text("Date"), subtitle: Text(dateStrLong)),
-                          ListTile(title: Text("Sender"), subtitle: Text(tx.sender)),
-                          ListTile(title: Text("Recipient"), subtitle: Text(tx.recipient)),
-                          ListTile(title: Text("Amount"), subtitle: Text("$amountText ZAP", style: TextStyle(color: color),)),
-                          ListTile(title: Text("Fee"), subtitle: Text("$feeText ZAP",)),
-                          Visibility(
-                            visible: attachment != null && attachment != "",
-                            child:
-                              ListTile(title: Text("Attachment"), subtitle: Text(attachment)),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.only(top: 5.0),
-                            child: RaisedButton.icon(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                },
-                                icon: Icon(Icons.close),
-                                label: Text('Close'))
-                          ),
-                        ],
-                      ),
-                    )
-                  ); // Scaffold
-                })
+                    ),
+                    ListTile(title: Text('date'), subtitle: Text(dateStrLong)),
+                    ListTile(title: Text('sender'), subtitle: Text(tx.sender)),
+                    ListTile(title: Text('recipient'), subtitle: Text(tx.recipient)),
+                    ListTile(title: Text('amount'), subtitle: Text('$amountText zap', style: TextStyle(color: color),)),
+                    ListTile(title: Text('fee'), subtitle: Text('$feeText zap',)),
+                    Visibility(
+                      visible: attachment != null && attachment != "",
+                      child:
+                        ListTile(title: Text("Attachment"), subtitle: Text(attachment)),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.only(top: 5.0),
+                      child: RoundedButton(() => Navigator.pop(context), zapblue, Colors.white, 'close', borderColor: zapblue)
+                    ),
+                  ],
+                ),
+              )
             );
           }
-        ),
+        )
       );
+    }, date, tx.id, amount, outgoing);
   }
 
   void _select(Choice choice) async {
@@ -226,9 +214,11 @@ class _TransactionsState extends State<TransactionsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Transactions"),
+        leading: backButton(context, color: zapblue),
+        title: Text("transactions", style: TextStyle(color: zapblue)),
         actions: <Widget>[
           PopupMenuButton<Choice>(
+            icon: Icon(Icons.more_vert, color: zapblue),
             onSelected: _select,
             enabled: !_loading,
             itemBuilder: (BuildContext context) {
@@ -263,20 +253,14 @@ class _TransactionsState extends State<TransactionsScreen> {
                 Visibility(
                     visible: !_loading && _less,
                     child: Container(
-                        padding: const EdgeInsets.only(top: 18.0),
-                        child: RaisedButton.icon(
-                            onPressed: () => _loadTxs(LoadDirection.Previous),
-                            icon: Icon(Icons.navigate_before),
-                            label: Text('Prev'))
+                        padding: const EdgeInsets.all(5),
+                        child: RoundedButton(() => _loadTxs(LoadDirection.Previous), zapblue, Colors.white, 'prev', icon: Icons.navigate_before, borderColor: zapblue)
                     )),
                 Visibility(
                     visible: !_loading && _more,
                     child: Container(
-                        padding: const EdgeInsets.only(top: 18.0),
-                        child: RaisedButton.icon(
-                            onPressed: () => _loadTxs(LoadDirection.Next),
-                            icon: Icon(Icons.navigate_next),
-                            label: Text('Next'))
+                        padding: const EdgeInsets.all(5),
+                        child: RoundedButton(() => _loadTxs(LoadDirection.Next), zapblue, Colors.white, 'next', icon: Icons.navigate_next, borderColor: zapblue)
                     )),
 
               ],

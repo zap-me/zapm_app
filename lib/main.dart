@@ -545,7 +545,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
         leading: _alerts.length > 0 ? IconButton(onPressed: _toggleAlerts, icon: Icon(Icons.warning, color: _showAlerts ? Colors.grey : zapwarning)) : null,
         title: Center(child: Image.asset('assets/icon.png', height: 30)),
         actions: <Widget>[
-          IconButton(icon: Icon(Icons.settings), onPressed: _showSettings),
+          IconButton(icon: Icon(Icons.settings, color: zapblue), onPressed: _showSettings),
         ],
       ),
       body: RefreshIndicator(

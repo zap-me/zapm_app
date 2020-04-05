@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flushbar/flushbar.dart';
+import 'package:decimal/decimal.dart';
+import 'package:flutter_icons/flutter_icons.dart';
+import 'package:intl/intl.dart';
 
 const zapgrey =         Color(0xFFF8F6F1);
 const zapblue =         Color(0xFF3765CB);
@@ -13,8 +16,8 @@ enum MessageCategory {
   Warning,
 }
 
-Widget backButton(BuildContext context) {
-  return IconButton(icon: Icon(Icons.arrow_back_ios, color: Theme.of(context).textTheme.subtitle2.color), onPressed: () => Navigator.of(context).pop());
+Widget backButton(BuildContext context, {Color color = Colors.white}) {
+  return IconButton(icon: Icon(Icons.arrow_back_ios, color: color), onPressed: () => Navigator.of(context).pop());
 }
 
 
@@ -107,26 +110,64 @@ class ListButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onPressed,
+      child: Column(
+        children: <Widget>[
+          Divider(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text('  $title'), Icon(Icons.arrow_right, color: Theme.of(context).highlightColor,)
+          ]),
+          Visibility(
+            visible: last,
+            child: Divider()
+          )
+        ],
+      ),
+    );
+  }
+}
+
+class ListTx extends StatelessWidget {
+  ListTx(this.onPressed, this.date, this.txid, this.amount, this.outgoing, {this.last = false}) : super();
+
+  final VoidCallback onPressed;
+  final DateTime date;
+  final String txid;
+  final Decimal amount;
+  final bool outgoing;
+  final bool last;
+
+  @override
+  Widget build(BuildContext context) {
+    var ts = TextStyle(fontSize: 12);
+    var color = outgoing ? zapyellow : zapgreen;
+    var amountStr = '${outgoing ? '-' : '+'} ${amount.toStringAsFixed(2)} zap';
+    var icon = outgoing ? MaterialCommunityIcons.chevron_double_up : MaterialCommunityIcons.chevron_double_down;
     return Column(
       children: <Widget>[
-        InkWell(
+        Divider(),
+        ListTile(
           onTap: onPressed,
-          child: Column(
-            children: <Widget>[
-              Divider(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Text('  $title'), Icon(Icons.arrow_right, color: Theme.of(context).highlightColor,)
-              ]),
-              Visibility(
-                visible: last,
-                child: Divider()
-              )
-            ],
-          ),
+          dense: true,
+          contentPadding: EdgeInsets.symmetric(horizontal: 8),
+          leading: Column(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+            Text(DateFormat('d MMM').format(date).toUpperCase(), style: ts),
+            Text(DateFormat('yyyy').format(date), style: ts),
+          ]),
+          title: Text(txid),
+          trailing: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+            Text(amountStr, style: TextStyle(color: color, fontSize: 12)), 
+            Icon(icon, color: color, size: 14)]
+          )
         ),
-      ],
+        Visibility(
+          visible: last,
+          child: Divider()
+        )
+      ]
     );
   }
 }
