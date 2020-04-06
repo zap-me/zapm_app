@@ -46,16 +46,19 @@ class SettlementFormState extends State<SettlementForm> {
           context: context,
           builder: (BuildContext context) {
             return SimpleDialog(
-              title: Text("Confirm Zap Settlement Amount (receiving $amountReceive NZD)"),
+              title: Column(children: <Widget>[
+                Text('confirm ZAP settlement amount', style: TextStyle(fontSize: 16)),
+                Text('receiving ${amountReceive.toStringAsFixed(2)} NZD', style: TextStyle(fontSize: 16, color: zapblue))
+              ]),
               children: <Widget>[
                 SimpleDialogOption(
-                  onPressed: () { Navigator.pop(context, true); },
-                  child: Text("Yes send $amountText ZAP"),
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: RoundedButton(() => Navigator.pop(context, true), Colors.white, zapblue, 'yes send ${amountDec.toStringAsFixed(2)} zap'),
                 ),
                 SimpleDialogOption(
-                  onPressed: () { Navigator.pop(context, false); },
-                  child: const Text("Cancel"),
-                ),
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: RoundedButton(() => Navigator.pop(context, false), zapblue, Colors.white, 'cancel', borderColor: zapblue),
+                )
               ],
             );
           }
@@ -65,8 +68,8 @@ class SettlementFormState extends State<SettlementForm> {
           return;
         }
         // create settlement
-        showAlertDialog(context, "Creating settlement..");
-        var bankToken = "";
+        showAlertDialog(context, 'creating settlement...');
+        var bankToken = '';
         for (var bank in _banks) {
           if (bank.accountNumber == _bankAccount) {
             bankToken = bank.token;
@@ -85,7 +88,7 @@ class SettlementFormState extends State<SettlementForm> {
           flushbarMsg(context, 'failed to create transaction', category: MessageCategory.Warning);
             return;
         }
-        showAlertDialog(context, "Sending settlement transaction..");
+        showAlertDialog(context, 'sending settlement transaction...');
         var tx = await LibZap.transactionBroadcast(spendTx);
         if (tx == null) {
           flushbarMsg(context, 'failed to create broadcast transaction', category: MessageCategory.Warning);
@@ -93,7 +96,7 @@ class SettlementFormState extends State<SettlementForm> {
             return;
         }
         Navigator.pop(context);
-        showAlertDialog(context, "Updating settlement..");
+        showAlertDialog(context, 'updating settlement...');
         var res = await merchantSettlementUpdate(settlement.token, tx.id);
         if (res == null) {
           flushbarMsg(context, 'failed to update settlement', category: MessageCategory.Warning);
@@ -113,9 +116,12 @@ class SettlementFormState extends State<SettlementForm> {
   void initState() {
     super.initState();
     () async {
-      await Future.delayed(Duration.zero);
+      if (!await hasApiKey()) {
+        flushbarMsg(context, 'no API KEY', category: MessageCategory.Warning);
+        return;
+      }
       // get rates
-      showAlertDialog(context, "Getting rates..");
+      showAlertDialog(context, 'getting rates...');
       var rates = await merchantRates();
       Navigator.pop(context);
       if (rates == null) {
@@ -123,7 +129,7 @@ class SettlementFormState extends State<SettlementForm> {
         return;
       }
       // get banks
-      showAlertDialog(context, "Getting banks..");
+      showAlertDialog(context, 'getting banks...');
       var banks = await merchantBanks();
       Navigator.pop(context);
       if (banks == null) {
@@ -152,12 +158,13 @@ class SettlementFormState extends State<SettlementForm> {
     return Form(
       key: _formKey,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
+          Center(heightFactor: 3, child: Text('make settlement\n  ', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold), textAlign: TextAlign.center)),
           TextFormField(
             controller: _amountController,
             keyboardType: TextInputType.number,
-            decoration: new InputDecoration(labelText: 'Amount'),
+            decoration: new InputDecoration(labelText: 'amount'),
             validator: (value) {
               if (value.isEmpty) {
                 return 'Please enter a value';
@@ -173,7 +180,7 @@ class SettlementFormState extends State<SettlementForm> {
             },
           ),
           DropdownButton<String>(
-            hint: Text('Bank Account'),
+            hint: Text('bank account'),
             value: _bankAccount,
             items: _banks == null ? null : _banks.map((e) => DropdownMenuItem(child: Text(e.accountNumber), value: e.accountNumber,)).toList(),
             onChanged: (e) {
@@ -184,15 +191,9 @@ class SettlementFormState extends State<SettlementForm> {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16.0),
-            child: RaisedButton.icon(
-                onPressed: _bankAccount == null ? null : send,   
-                icon: Icon(Icons.send),
-                label: Text('Submit')),
+            child: RoundedButton(_bankAccount == null ? null : send, Colors.white, zapblue, 'submit')
           ),
-          RaisedButton.icon(
-              onPressed: () { Navigator.pop(context); },
-              icon: Icon(Icons.cancel),
-              label: Text('Cancel')),
+          RoundedButton(() => Navigator.pop(context), zapblue, Colors.white, 'cancel', borderColor: zapblue),
         ],
       ),
     );

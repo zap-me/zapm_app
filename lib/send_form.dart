@@ -62,9 +62,11 @@ class SendFormState extends State<SendForm> {
               title: const Text('confirm send'),
               children: <Widget>[
                 SimpleDialogOption(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
                   child: RoundedButton(() => Navigator.pop(context, true), Colors.white, zapyellow, 'yes send ${amountDec.toStringAsFixed(2)} zap'),
                 ),
                 SimpleDialogOption(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
                   child: RoundedButton(() => Navigator.pop(context, false), zapblue, Colors.white, 'cancel', borderColor: zapblue),
                 ),
               ],

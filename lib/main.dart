@@ -100,21 +100,11 @@ class _ZapHomePageState extends State<ZapHomePage> {
     super.dispose();
   }
 
-  Future<bool> _hasApiKey() async {
-    var apikey = await Prefs.apikeyGet();
-    if (apikey == null || apikey.isEmpty)
-      return false;
-    var apisecret = await Prefs.apisecretGet();
-    if (apisecret == null || apisecret.isEmpty)
-      return false;  
-    return true;
-  }
-
   void _watchAddress() async {
     // do nothing if the address, apikey or apisecret is not set
     if (_wallet == null)
       return;
-    if (!await _hasApiKey())
+    if (!await hasApiKey())
       return;
     // register to watch our address
     if (!await merchantWatch(_wallet.address))
@@ -320,7 +310,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
   Future<bool> _setWalletDetails() async {
     _alerts.clear();
     // check apikey
-    if (!await _hasApiKey())
+    if (!await hasApiKey())
       setState(() => _alerts.add('No API KEY set'));
     // start updating balance spinner
     setState(() {

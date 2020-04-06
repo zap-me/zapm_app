@@ -460,3 +460,13 @@ Future<bool> pinCheck(BuildContext context) async {
   }
   return true;
 }
+
+Future<bool> hasApiKey() async {
+  var apikey = await Prefs.apikeyGet();
+  if (apikey == null || apikey.isEmpty)
+    return false;
+  var apisecret = await Prefs.apisecretGet();
+  if (apisecret == null || apisecret.isEmpty)
+    return false;  
+  return true;
+}
