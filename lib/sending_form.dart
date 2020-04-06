@@ -56,7 +56,7 @@ class SendingFormState extends State<SendingForm> {
               ),
               Visibility(
                 visible: !_sending && _tx != null,
-                child: Text("broadcast complete (${_tx?.id})", style: Theme.of(context).textTheme.bodyText2),
+                child: Text("broadcast complete (${_tx?.id})", style: TextStyle(color: zapblue)),
               ),
               Visibility(
                 visible: !_sending && _tx == null,

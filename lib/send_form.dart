@@ -106,7 +106,7 @@ class SendFormState extends State<SendForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
-          Center(heightFactor: 5, child: Text('send zap', style: Theme.of(context).textTheme.subtitle2, textAlign: TextAlign.center)),
+          Center(heightFactor: 3, child: Text('send zap\n  ', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold), textAlign: TextAlign.center)),
           TextFormField(
             controller: _addressController,
             keyboardType: TextInputType.text,

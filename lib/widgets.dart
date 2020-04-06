@@ -10,6 +10,8 @@ const zapyellow =       Color(0xFFFFBB00);
 const zapgreen =        Color(0xFF009075);
 const zapwarning =      zapyellow;
 const zapwarninglight = Color(0x80FFBB00);
+const zapblackmed =     Colors.black54;
+const zapblacklight =   Colors.black38;
 
 enum MessageCategory {
   Info,
@@ -115,11 +117,13 @@ class ListButton extends StatelessWidget {
       child: Column(
         children: <Widget>[
           Divider(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              Text('  $title'), Icon(Icons.arrow_right, color: Theme.of(context).highlightColor,)
-          ]),
+          Padding(padding: EdgeInsets.symmetric(vertical: 8), child: 
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Padding(padding: EdgeInsets.only(left: 16), child: Text(title, style: TextStyle(color: zapblackmed))),
+                Padding(padding: EdgeInsets.only(right: 8), child: Icon(Icons.chevron_right, color: zapblackmed))
+            ])),
           Visibility(
             visible: last,
             child: Divider()

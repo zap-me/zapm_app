@@ -7,6 +7,7 @@ import 'package:qrcode_reader/qrcode_reader.dart';
 import 'package:decimal/decimal.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:socket_io_client/socket_io_client.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import 'qrwidget.dart';
 import 'send_receive.dart';
@@ -54,11 +55,11 @@ class MyApp extends StatelessWidget {
         primaryColor: Colors.white,
         accentColor: zapblue,
         textTheme: Typography.blackMountainView.copyWith(
-          headline1: TextStyle(color: zapblue, fontSize: 28, fontWeight: FontWeight.w400),
-          bodyText1: TextStyle(color: Colors.black54, fontSize: 16, fontWeight: FontWeight.w400),
-          bodyText2: TextStyle(color: Colors.black38, fontSize: 16, fontWeight: FontWeight.w400),
-          subtitle1: TextStyle(color: zapblue, fontSize: 14, fontWeight: FontWeight.w400),
-          subtitle2: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w400),
+          headline1: TextStyle(color: zapblue, fontSize: 28, fontWeight: FontWeight.w500),
+          bodyText1: TextStyle(color: Colors.black54, fontSize: 16, fontWeight: FontWeight.w500),
+          bodyText2: TextStyle(color: Colors.black38, fontSize: 16, fontWeight: FontWeight.w500),
+          subtitle1: TextStyle(color: zapblue, fontSize: 14, fontWeight: FontWeight.w500),
+          subtitle2: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
         ),
       ),
       home: ZapHomePage(title: 'Zap'),
@@ -558,7 +559,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
             ),
             Container(
               padding: const EdgeInsets.only(top: 28.0),
-              child: Text('my balance:',  style: Theme.of(context).textTheme.bodyText1, textAlign: TextAlign.center,),
+              child: Text('my balance:',  style: TextStyle(color: zapblackmed), textAlign: TextAlign.center,),
             ),
             Container(
               height: 100,
@@ -577,9 +578,9 @@ class _ZapHomePageState extends State<ZapHomePage> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: <Widget>[
-                            Text(_balanceText, style: Theme.of(context).textTheme.headline1),
+                            Text(_balanceText, style: TextStyle(color: zapblue, fontSize: 28)),
                             SizedBox.fromSize(size: Size(4, 1)),
-                            Image.asset('assets/icon-zap.png', height: 20)
+                            SvgPicture.asset('assets/icon-bolt.svg', height: 20)
                           ],
                         )
                       )
@@ -594,11 +595,11 @@ class _ZapHomePageState extends State<ZapHomePage> {
             ),
             Container(
               padding: const EdgeInsets.only(top: 28.0),
-              child: Text('wallet address:', style: Theme.of(context).textTheme.bodyText1, textAlign: TextAlign.center),
+              child: Text('wallet address:', style: TextStyle(color: zapblackmed), textAlign: TextAlign.center),
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),
-              child: Text(_wallet != null ? _wallet.address : '...', style: Theme.of(context).textTheme.bodyText2, textAlign: TextAlign.center),
+              child: Text(_wallet != null ? _wallet.address : '...', style: TextStyle(color: zapblacklight), textAlign: TextAlign.center),
             ),
             Divider(),
             Container(

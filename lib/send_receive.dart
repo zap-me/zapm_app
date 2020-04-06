@@ -23,7 +23,7 @@ class SendScreen extends StatelessWidget {
           backgroundColor: zapyellow,
         ),
         body: CustomPaint(
-          painter: CustomCurve(zapyellow, 90, 140),
+          painter: CustomCurve(zapyellow, 110, 170),
           child: Container(
             width: MediaQuery.of(context).size.width, 
             height: MediaQuery.of(context).size.height,

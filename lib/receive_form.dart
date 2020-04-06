@@ -93,7 +93,7 @@ class ReceiveFormState extends State<ReceiveForm> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-              Center(heightFactor: 5, child: Text('scan QR code', style: Theme.of(context).textTheme.subtitle2, textAlign: TextAlign.center)),
+              Center(heightFactor: 5, child: Text('scan QR code', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold), textAlign: TextAlign.center)),
               Center(child: Card(
                 margin: EdgeInsets.all(20),
                 child: _uri != RATES_FAILED && _uri != NO_API_KEY ? QrWidget(_uri, size: 240, version: 8) : Container(width: 240, height: 240))
