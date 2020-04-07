@@ -54,18 +54,17 @@ class RoundedButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget child = Text(title, style: TextStyle(color: textColor, fontSize: 14));
-    if (icon != null)
-      child = Row(children: <Widget>[
-        Icon(icon, color: textColor, size: 14),
-        SizedBox.fromSize(size: Size(4, 1)),
-        child]);
     var _borderColor = borderColor != null ? borderColor : fillColor;
-    return RaisedButton(
-      child: child, 
-      color: fillColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18.0), side: BorderSide(color: _borderColor)),
-      onPressed: onPressed);
+    var shape = RoundedRectangleBorder(borderRadius: BorderRadius.circular(18.0), side: BorderSide(color: _borderColor));
+    Widget text = Text(title, style: TextStyle(color: textColor, fontSize: 14));
+    if (icon != null)
+      return RaisedButton.icon(onPressed: onPressed,
+        icon: Icon(icon, color: textColor, size: 14), label: text,
+        shape: shape, color: fillColor);
+    else
+      return RaisedButton(onPressed: onPressed,
+        child: text,
+        shape: shape, color: fillColor);
   }
 }
 
@@ -146,7 +145,7 @@ class ListTx extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var ts = TextStyle(fontSize: 12);
+    var ts = TextStyle(fontSize: 12, color: zapblacklight);
     var color = outgoing ? zapyellow : zapgreen;
     var amountStr = '${outgoing ? '-' : '+'} ${amount.toStringAsFixed(2)} zap';
     var icon = outgoing ? MaterialCommunityIcons.chevron_double_up : MaterialCommunityIcons.chevron_double_down;

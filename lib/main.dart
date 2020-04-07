@@ -8,6 +8,7 @@ import 'package:decimal/decimal.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'qrwidget.dart';
 import 'send_receive.dart';
@@ -49,20 +50,16 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Zap',
+      title: 'Zap Merchant',
       theme: ThemeData(
         brightness: Brightness.light,
         primaryColor: Colors.white,
         accentColor: zapblue,
-        textTheme: Typography.blackMountainView.copyWith(
-          headline1: TextStyle(color: zapblue, fontSize: 28, fontWeight: FontWeight.w500),
-          bodyText1: TextStyle(color: Colors.black54, fontSize: 16, fontWeight: FontWeight.w500),
-          bodyText2: TextStyle(color: Colors.black38, fontSize: 16, fontWeight: FontWeight.w500),
-          subtitle1: TextStyle(color: zapblue, fontSize: 14, fontWeight: FontWeight.w500),
-          subtitle2: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
+        textTheme: GoogleFonts.oxygenTextTheme(
+          Theme.of(context).textTheme,
         ),
       ),
-      home: ZapHomePage(title: 'Zap'),
+      home: ZapHomePage(title: 'Zap Merchant'),
     );
   }
 }
@@ -549,7 +546,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
             ),
             Container(
               padding: const EdgeInsets.only(top: 28.0),
-              child: Text('my balance:',  style: TextStyle(color: zapblackmed), textAlign: TextAlign.center,),
+              child: Text('my balance:',  style: TextStyle(color: zapblackmed, fontWeight: FontWeight.w700), textAlign: TextAlign.center,),
             ),
             Container(
               height: 100,
@@ -585,7 +582,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
             ),
             Container(
               padding: const EdgeInsets.only(top: 28.0),
-              child: Text('wallet address:', style: TextStyle(color: zapblackmed), textAlign: TextAlign.center),
+              child: Text('wallet address:', style: TextStyle(color: zapblackmed, fontWeight: FontWeight.w700), textAlign: TextAlign.center),
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),

@@ -39,6 +39,7 @@ dependencies:
   pin_code_text_field: ^1.5.1
   edit_distance: ^0.4.1
   flutter_svg: ^0.17.3+1
+  google_fonts: ^0.3.10
 
 dev_dependencies:
   flutter_test:
@@ -78,9 +79,9 @@ flutter:
         - asset: assets/fonts/Roboto/Roboto-Black.ttf
           weight: 900
 
-  # add pubspec so we can read the version on desktop
   assets:
     - assets/
+    # add pubspec so we can read the version on desktop
     - pubspec.yaml
     - native-libraries/windows/
 
