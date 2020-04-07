@@ -43,7 +43,7 @@ void flushbarMsg(BuildContext context, String msg, {int seconds = 3, MessageCate
 }
 
 class RoundedButton extends StatelessWidget {
-  RoundedButton(this.onPressed, this.textColor, this.fillColor, this.title, {this.icon, this.borderColor}) : super();
+  RoundedButton(this.onPressed, this.textColor, this.fillColor, this.title, {this.icon, this.borderColor, this.minWidth}) : super();
 
   final VoidCallback onPressed;
   final Color textColor;
@@ -51,20 +51,25 @@ class RoundedButton extends StatelessWidget {
   final String title;
   final IconData icon;
   final Color borderColor;
+  final double minWidth;
 
   @override
   Widget build(BuildContext context) {
     var _borderColor = borderColor != null ? borderColor : fillColor;
     var shape = RoundedRectangleBorder(borderRadius: BorderRadius.circular(18.0), side: BorderSide(color: _borderColor));
     Widget text = Text(title, style: TextStyle(color: textColor, fontSize: 14));
+    RaisedButton btn;
     if (icon != null)
-      return RaisedButton.icon(onPressed: onPressed,
+      btn = RaisedButton.icon(onPressed: onPressed,
         icon: Icon(icon, color: textColor, size: 14), label: text,
         shape: shape, color: fillColor);
     else
-      return RaisedButton(onPressed: onPressed,
+      btn = RaisedButton(onPressed: onPressed,
         child: text,
         shape: shape, color: fillColor);
+    if (minWidth != null)
+      return ButtonTheme(minWidth: minWidth, child: btn);
+    return btn;
   }
 }
 

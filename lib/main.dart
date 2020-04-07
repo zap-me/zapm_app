@@ -593,8 +593,8 @@ class _ZapHomePageState extends State<ZapHomePage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  RoundedButton(_showQrCode, zapblue, Colors.white, 'view QR code', icon: MaterialCommunityIcons.qrcode_scan),
-                  RoundedButton(_copyAddress, Colors.white, zapblue, 'copy wallet address')
+                  RoundedButton(_showQrCode, zapblue, Colors.white, 'view QR code', icon: MaterialCommunityIcons.qrcode_scan, minWidth: MediaQuery.of(context).size.width / 2 - 20),
+                  RoundedButton(_copyAddress, Colors.white, zapblue, 'copy wallet address', minWidth: MediaQuery.of(context).size.width / 2 - 20),
                 ]
               )
             ),

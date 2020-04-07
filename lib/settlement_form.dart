@@ -190,10 +190,10 @@ class SettlementFormState extends State<SettlementForm> {
             },
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16.0),
-            child: RoundedButton(_bankAccount == null ? null : send, Colors.white, zapblue, 'submit')
+            padding: const EdgeInsets.only(top: 24.0),
+            child: RoundedButton(_bankAccount == null ? null : send, Colors.white, zapblue, 'submit', minWidth: MediaQuery.of(context).size.width / 2)
           ),
-          RoundedButton(() => Navigator.pop(context), zapblue, Colors.white, 'cancel', borderColor: zapblue),
+          RoundedButton(() => Navigator.pop(context), zapblue, Colors.white, 'cancel', borderColor: zapblue, minWidth: MediaQuery.of(context).size.width / 2),
         ],
       ),
     );

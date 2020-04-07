@@ -132,8 +132,8 @@ class ReceiveFormState extends State<ReceiveForm> {
                 },
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16.0),
-                child: RoundedButton(() => Navigator.pop(context), zapblue, Colors.white, 'cancel', borderColor: zapblue),
+                padding: const EdgeInsets.only(top: 24.0),
+                child: RoundedButton(() => Navigator.pop(context), zapblue, Colors.white, 'cancel', borderColor: zapblue, minWidth: MediaQuery.of(context).size.width / 2),
               ),
             ],
           ),
