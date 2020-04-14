@@ -12,6 +12,7 @@ import 'prefs.dart';
 import 'utils.dart';
 import 'pinentry.dart';
 import 'widgets.dart';
+import 'bip39widget.dart';
 
 class SettingsScreen extends StatefulWidget {
   final bool _pinProtectedInitial;
@@ -277,7 +278,7 @@ class _SettingsState extends State<SettingsScreen> {
                   ),
                   Container(
                     padding: const EdgeInsets.only(top: 18.0),
-                    child: ListTile(title: Text("Recovery words"), subtitle: Text(widget._mnemonic != null ? widget._mnemonic : 'n/a'), trailing: _mnemonicPasswordProtected ? Icon(Icons.lock) : Icon(Icons.lock_open),),
+                    child: ListTile(title: Text("Recovery words"), subtitle: widget._mnemonic != null ? Bip39Words.fromString(widget._mnemonic) : Text('n/a'), trailing: _mnemonicPasswordProtected ? Icon(Icons.lock) : Icon(Icons.lock_open),),
                   ),
                   Visibility(
                     visible: !_mnemonicPasswordProtected,

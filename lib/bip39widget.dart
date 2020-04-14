@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:edit_distance/edit_distance.dart';
 
 import 'libzap.dart';
+import 'widgets.dart';
 
+typedef WordIndexCallback = void Function(int); 
 typedef WordsCallback = void Function(List<String>); 
 
 extension ExtendedIterable<E> on Iterable<E> {
@@ -18,58 +20,124 @@ extension ExtendedIterable<E> on Iterable<E> {
   }
 }
 
-class Bip39Widget extends StatefulWidget {
-  Bip39Widget(this.onWordsUpdate) : super();
+class Bip39Words extends StatelessWidget {
+  Bip39Words(this.words, this.validBip39, this.onWordPressed, {this.rowSize = 4}) : super();
 
-  WordsCallback onWordsUpdate;
+  final List<String> words;
+  final bool validBip39;
+  final WordIndexCallback onWordPressed;
+  final int rowSize;
+
+  static Bip39Words fromString(String words) {
+    return Bip39Words(words.split(' '), false, (i){});
+  }
 
   @override
-  _Bip39WidgetState createState() => new _Bip39WidgetState();
+  Widget build(BuildContext context) {
+    var rows = List<List<String>>();
+    var row = List<String>();
+    for (var word in words) {
+      row.add(word);
+      if (row.length >= rowSize) {
+        rows.add(row);
+        row = List<String>();
+      }
+    }
+    if (row.length > 0)
+      rows.add(row);
+    return Column(
+      children: rows.mapIndex((item, rowIndex) {
+        return Row(children: item.mapIndex((item, index) {
+          return Container(
+            width: 65, height: 30, padding: EdgeInsets.all(1),
+            child: ButtonTheme(buttonColor: validBip39 ? zapgreen.withAlpha(198) : Colors.white, padding: EdgeInsets.all(2),
+            child: RaisedButton(
+              child: Row(children: [
+                Text(' ${rowIndex * rowSize + index + 1}', style: TextStyle(color: zapblacklight, fontSize: 8)),
+                Expanded(
+                  child: Center(child: Text(item, style: TextStyle(fontSize: 11)))
+                )]),
+              onPressed: () => onWordPressed(index))));
+          }).toList()
+        );
+      }).toList()
+    );
+  }
 }
 
-class _Bip39WidgetState extends State<Bip39Widget> {
+class Bip39Entry extends StatefulWidget {
+  Bip39Entry(this.onWordsUpdate) : super();
+
+  final WordsCallback onWordsUpdate;
+
+  @override
+  _Bip39EntryState createState() => _Bip39EntryState();
+}
+
+class _Bip39EntryState extends State<Bip39Entry> {
   var _textController = TextEditingController();
   var _levenshtein = Levenshtein();
   List<String> _wordlist = LibZap().mnemonicWordlist();
   List<String> _mnemonicWords = List<String>();
-  var _candidate1 = '';
-  var _candidate2 = '';
-  var _candidate3 = '';
+  var _candidates = ['', '', ''];
   var _validBip39 = false;
 
+  void clearCandidates() {
+    for (var i = 0; i < _candidates.length; i += 1)
+      _candidates[i] = '';
+  }
+
   void inputChanged(String value) {
-    var c1 = '', c2 = '', c3 = '';
-    var d1 = 1.0, d2 = 1.0, d3 = 1.0;
+    // all bip39 words are lowercase
+    value = value.toLowerCase();
+
+    // initialize our potential candidate variables
+    var c = List<String>(_candidates.length);
+    c.forEachIndex((e, i) => c[i] = '');
+    var d = List<double>(_candidates.length);
+    d.forEachIndex((e, i) => d[i] = 1.0);
+    var prefixMatched = 0;
+
     for (var item in _wordlist) {
+      // if the item matches exactly then add it and reset
       if (value == item) {
         setState(() {
-          _candidate1 = '';
-          _candidate2 = '';
-          _candidate3 = '';
+          clearCandidates();
           _mnemonicWords.add(value);
           updateWords();
           _textController.text = '';
         });
         return;
       }
+
+      // if we have filled the candidates with prefix matched values then dont bother checking for more
+      if (prefixMatched >= c.length)
+        continue;
+
+      // check for words that match the prefix exactly
+      if (value.isNotEmpty && item.length > value.length && value == item.substring(0, value.length)) {
+        c[prefixMatched] = item;
+        prefixMatched++;
+        continue;
+      }
+
+      // check for words that are close in terms of levenshtein distance
       var dist = _levenshtein.normalizedDistance(value, item);
       if (dist > 0.4)
         continue;
-      if (dist < d1) {
-        d1 = dist;
-        c1 = item;
-      } else if (dist < d2) {
-        d2 = dist;
-        c2 = item;
-      } else if (dist < d3) {
-        d3 = dist;
-        c3 = item;
+      // we make prefix matched candidates higher priority then levenshtein distance matched candidates by initializing the candidateIndex here
+      var candidateIndex = prefixMatched;
+      while (candidateIndex < c.length) {
+        if (dist < d[candidateIndex]) {
+          d[candidateIndex] = dist;
+          c[candidateIndex] = item;
+          break;
+        }
+        candidateIndex++;
       }
     }
     setState(() {
-      _candidate1 = c1;
-      _candidate2 = c2;
-      _candidate3 = c3;      
+      _candidates = c;      
     });
   }
 
@@ -98,16 +166,13 @@ class _Bip39WidgetState extends State<Bip39Widget> {
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: <Widget>[
-            ButtonTheme(minWidth: 40, height: 25, child: RaisedButton(child: Text(_candidate1), onPressed: () => inputChanged(_candidate1),)),
-            ButtonTheme(minWidth: 40, height: 25, child: RaisedButton(child: Text(_candidate2), onPressed: () => inputChanged(_candidate2),)),
-            ButtonTheme(minWidth: 40, height: 25, child: RaisedButton(child: Text(_candidate3), onPressed: () => inputChanged(_candidate3),)),
-          ]),
-        Wrap(
-          children: _mnemonicWords.mapIndex((item, index) {
-            return ButtonTheme(buttonColor: _validBip39 ? Colors.greenAccent : Colors.white, minWidth: 40, height: 30, child: RaisedButton(child: Text(item), onPressed: () => wordRemove(index), padding: EdgeInsets.all(4)));
-          }).toList().cast<Widget>(),
+          children: List<Widget>.generate(_candidates.length, (index) {
+            return ButtonTheme(minWidth: 40, height: 25, buttonColor: zapyellow.withAlpha(198),
+              child: RaisedButton(child: Text(_candidates[index]), onPressed: () => inputChanged(_candidates[index]))
+            ); 
+          })
         ),
+        Bip39Words(_mnemonicWords, _validBip39, (index) => wordRemove(index), rowSize: 3)
       ],
     );
   }

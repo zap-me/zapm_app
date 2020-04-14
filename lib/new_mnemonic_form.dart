@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'bip39widget.dart';
+
 class NewMnemonicForm extends StatefulWidget {
   final String _mnemonic;
 
@@ -28,7 +30,7 @@ class NewMnemonicFormState extends State<NewMnemonicForm> {
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),
-              child: ListTile(title: Text(widget._mnemonic)),
+              child: ListTile(title: Bip39Words.fromString(widget._mnemonic)),
             ),
             Container(
                 padding: const EdgeInsets.only(top: 18.0),

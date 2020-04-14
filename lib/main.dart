@@ -182,7 +182,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text("Enter your recovery words to recover your account"),
-          content: Bip39Widget((words) => mnemonic = words.join(' ')),
+          content: Bip39Entry((words) => mnemonic = words.join(' ')),
           actions: <Widget>[
             FlatButton(
               child: Text("Ok"),
