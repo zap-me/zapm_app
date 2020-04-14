@@ -30,21 +30,26 @@ class ReceiveFormState extends State<ReceiveForm> {
   String _uri;
   String _amountType = 'nzd';
   StreamSubscription<String> _uriSub;
+  Rates _rates;
 
   Future<String> makeUri() async {
+    if (_rates == null) {
+      try {
+        _rates = await merchantRates();
+      } on NoApiKeyException {
+        return NO_API_KEY;
+      } 
+    }
+    if (_rates == null) {
+      return RATES_FAILED;
+    }
     var amount = Decimal.fromInt(0);
     try {
       amount = Decimal.parse(_amountController.text);
     }
     catch (e) {}
     if (_amountType == 'nzd') {
-      try {
-        amount = await equivalentCustomerZapForNzd(amount);
-      } on NoApiKeyException {
-        return NO_API_KEY;
-      } on RatesFailedException {
-        return RATES_FAILED;
-      }
+      amount = equivalentCustomerZapForNzd(amount, _rates);
     }
     var deviceName = await Prefs.deviceNameGet();
     return LibZap.paymentUriDec(widget._testnet, widget._address, amount, deviceName);
@@ -96,13 +101,14 @@ class ReceiveFormState extends State<ReceiveForm> {
               Center(heightFactor: 5, child: Text('scan QR code', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold), textAlign: TextAlign.center)),
               Center(child: Card(
                 margin: EdgeInsets.all(20),
-                child: _uri != RATES_FAILED && _uri != NO_API_KEY ? QrWidget(_uri, size: 240, version: 8) : Container(width: 240, height: 240))
+                child: _uri != RATES_FAILED && _uri != NO_API_KEY ? QrWidget(_uri, size: 240, version: 10) : Container(width: 240, height: 240))
               ),
               TextFormField(
                 controller: _uriController,
                 enabled: false,
                 decoration: InputDecoration(labelText: 'receive URI'),
-                maxLines: 5,
+                maxLines: 4,
+                style: TextStyle(fontSize: 12),
               ),
               TextFormField(
                 controller: _amountController,

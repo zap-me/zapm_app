@@ -269,15 +269,6 @@ Future<Socket> merchantSocket(TxNotificationCallback txNotificationCallback) asy
   return socket;
 }
 
-class RatesFailedException implements Exception {
-  String cause;
-  RatesFailedException(this.cause);
-}
-
-Future<Decimal> equivalentCustomerZapForNzd(Decimal nzdReqOrProvided) async {
-  var rates = await merchantRates();
-  if (rates == null) {
-    throw RatesFailedException("could not get rates");
-  }
+Decimal equivalentCustomerZapForNzd(Decimal nzdReqOrProvided, Rates rates) {
   return nzdReqOrProvided * (Decimal.fromInt(1) + rates.customerRate);
 }
