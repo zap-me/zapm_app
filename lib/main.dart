@@ -143,25 +143,25 @@ class _ZapHomePageState extends State<ZapHomePage> {
         barrierDismissible: true,
         builder: (BuildContext context) {
           return SimpleDialog(
-            title: const Text("You do not have a mnemonic or address saved, what would you like to do?"),
+            title: const Text("You do not have recovery words or an address saved, what would you like to do?"),
             children: <Widget>[
               SimpleDialogOption(
                 onPressed: () {
                   Navigator.pop(context, NoWalletAction.CreateMnemonic);
                 },
-                child: const Text("Create a new mnemonic"),
+                child: const Text("Create new recovery words"),
               ),
               SimpleDialogOption(
                 onPressed: () {
                   Navigator.pop(context, NoWalletAction.RecoverMnemonic);
                 },
-                child: const Text("Recover using your mnemonic"),
+                child: const Text("Recover using your recovery words"),
               ),
               SimpleDialogOption(
                 onPressed: () {
                   Navigator.pop(context, NoWalletAction.RecoverRaw);
                 },
-                child: const Text("Recover using your raw seed string (advanced use only)"),
+                child: const Text("Recover using a raw seed string (advanced use only)"),
               ),
               SimpleDialogOption(
                 onPressed: () {
@@ -181,7 +181,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
       barrierDismissible: false, // dialog is dismissible with a tap on the barrier
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Enter your mnemonic to recover your account"),
+          title: Text("Enter your recovery words to recover your account"),
           content: Bip39Widget((words) => mnemonic = words.join(' ')),
           actions: <Widget>[
             FlatButton(
@@ -260,7 +260,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
             }
           }
           if (mnemonic == null)
-            await alert(context, "Mnemonic not valid", "The mnemonic you entered is not valid");
+            await alert(context, "Recovery words not valid", "The recovery words you entered are not valid");
           break;
         case NoWalletAction.RecoverRaw:
           // recover raw seed string
@@ -289,7 +289,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
       }
       if (mnemonic != null && mnemonic.isNotEmpty) {
         await Prefs.mnemonicSet(mnemonic);
-        await alert(context, "Mnemonic saved", ":)");
+        await alert(context, "Recovery words saved", ":)");
         // update wallet details now we have a mnemonic
         _setWalletDetails();
         break;        
@@ -328,11 +328,11 @@ class _ZapHomePageState extends State<ZapHomePage> {
             var iv = await Prefs.cryptoIVGet();
             var decryptedMnemonic = decryptMnemonic(mnemonic, iv, password);
             if (decryptedMnemonic == null) {
-              await alert(context, "Could not decrypt mnemonic", "probably wrong password :(");
+              await alert(context, "Could not decrypt recovery words", "the password entered is probably wrong");
               continue;
             }
             if (!libzap.mnemonicCheck(decryptedMnemonic)) {
-              var yes = await askYesNo(context, 'Mnemonic is not valid, is this ok?');
+              var yes = await askYesNo(context, 'The recovery words are not valid, is this ok?');
               if (!yes)
                 continue;
             }

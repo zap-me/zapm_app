@@ -307,7 +307,7 @@ Future<String> askSetMnemonicPassword(BuildContext context) async {
     context: context,
     builder: (BuildContext context) {
       return AlertDialog(
-        title: Text("Create password to protect your mnemonic"),
+        title: Text("Create password to protect your recovery words"),
         content: buildForm(context),
       );
     },
@@ -364,7 +364,7 @@ Future<String> askMnemonicPassword(BuildContext context) async {
     context: context,
     builder: (BuildContext context) {
       return AlertDialog(
-        title: Text("Enter password to decrypt your mnemonic"),
+        title: Text("Enter password to decrypt your recovery words"),
         content: buildForm(context),
       );
     },

@@ -93,7 +93,7 @@ class _Bip39WidgetState extends State<Bip39Widget> {
         TextField(
           autofocus: true,
           controller: _textController,
-          decoration: InputDecoration(labelText: "Mnemonic",),
+          decoration: InputDecoration(labelText: "Recovery Words",),
           onChanged: inputChanged,
         ),
         Row(

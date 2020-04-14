@@ -225,6 +225,7 @@ class _SettingsState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: backButton(context, color: Colors.black),
         title: Text("Settings"),
       ),
       body: Center(
@@ -276,13 +277,13 @@ class _SettingsState extends State<SettingsScreen> {
                   ),
                   Container(
                     padding: const EdgeInsets.only(top: 18.0),
-                    child: ListTile(title: Text("Mnemonic"), subtitle: Text(widget._mnemonic != null ? widget._mnemonic : 'n/a'), trailing: _mnemonicPasswordProtected ? Icon(Icons.lock) : Icon(Icons.lock_open),),
+                    child: ListTile(title: Text("Recovery words"), subtitle: Text(widget._mnemonic != null ? widget._mnemonic : 'n/a'), trailing: _mnemonicPasswordProtected ? Icon(Icons.lock) : Icon(Icons.lock_open),),
                   ),
                   Visibility(
                     visible: !_mnemonicPasswordProtected,
                     child: Container(
                       child: ListTile(
-                        title: RaisedButton.icon(label: Text("Password Protect Mnemonic"), icon: Icon(Icons.lock), onPressed: _addPasswordProtection),
+                        title: RaisedButton.icon(label: Text("Password Protect Recovery words"), icon: Icon(Icons.lock), onPressed: _addPasswordProtection),
                       ),
                     ),
                   ),

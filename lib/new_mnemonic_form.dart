@@ -17,14 +17,14 @@ class NewMnemonicFormState extends State<NewMnemonicForm> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("New Mnemonic"),
+        title: Text("New recovery words"),
       ),
       body: Center(
         child: Column(
           children: <Widget>[
             Container(
               padding: const EdgeInsets.only(top: 18.0),
-              child: ListTile(title: Text("New Mnemonic"), subtitle: Text("You need to take care of your mnemonic, if you lose it you could lose your ZAP")),
+              child: ListTile(title: Text("New recovery words"), subtitle: Text("You need to take care of your recovery words, if you lose them you could lose your ZAP")),
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),
