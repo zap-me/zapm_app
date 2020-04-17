@@ -81,10 +81,12 @@ class SendFormState extends State<SendForm> {
         var libzap = LibZap();
         var spendTx = libzap.transactionCreate(widget._seed, recipient, amount, fee, attachment);
         if (spendTx.success) {
-          await Navigator.push(
+          var result = await Navigator.push<bool>(
             context,
             MaterialPageRoute(builder: (context) => SendingForm(spendTx)),
           );
+          if (result)
+            Navigator.pop(context);
         }
         else
           flushbarMsg(context, 'failed to create transaction', category: MessageCategory.Warning);

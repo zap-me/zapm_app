@@ -27,7 +27,7 @@ class SettlementFormState extends State<SettlementForm> {
   List<Bank> _banks;
   String _bankAccount;
 
-  void send() async {
+  void send(BuildContext context) async {
     if (_formKey.currentState.validate()) {
       // send parameters
       var amountText = _amountController.text;
@@ -75,15 +75,15 @@ class SettlementFormState extends State<SettlementForm> {
             bankToken = bank.token;
           }
         }
-        var settlement = await merchantSettlement(amountDec, bankToken);
+        var result = await merchantSettlement(amountDec, bankToken);
         Navigator.pop(context);
-        if (settlement == null) {
-          flushbarMsg(context, 'failed to create settlement', category: MessageCategory.Warning);
+        if (result.settlement == null) {
+          flushbarMsg(context, 'failed to create settlement (${result.error})', category: MessageCategory.Warning);
           return;
         }
         // send funds
         var libzap = LibZap();
-        var spendTx = libzap.transactionCreate(widget._seed, _rates.settlementAddress, amount, fee, settlement.token);
+        var spendTx = libzap.transactionCreate(widget._seed, _rates.settlementAddress, amount, fee, result.settlement.token);
         if (!spendTx.success) {
           flushbarMsg(context, 'failed to create transaction', category: MessageCategory.Warning);
             return;
@@ -97,14 +97,20 @@ class SettlementFormState extends State<SettlementForm> {
         }
         Navigator.pop(context);
         showAlertDialog(context, 'updating settlement...');
-        var res = await merchantSettlementUpdate(settlement.token, tx.id);
-        if (res == null) {
-          flushbarMsg(context, 'failed to update settlement', category: MessageCategory.Warning);
+        result = await merchantSettlementUpdate(result.settlement.token, tx.id);
+        if (result.settlement == null) {
+          flushbarMsg(context, 'failed to update settlement (${result.error})', category: MessageCategory.Warning);
             Navigator.pop(context);
             return;
         }
         Navigator.pop(context);
-        flushbarMsg(context, 'settlement created');
+        showAlertDialog(context, 'completed');
+        Future.delayed(Duration(milliseconds: 500), () {
+          Navigator.pop(context);
+          Navigator.pop(context); // close settlement form
+          flushbarMsg(context, 'settlement created');
+        });
+        return;
       }
     }
     else
@@ -191,7 +197,11 @@ class SettlementFormState extends State<SettlementForm> {
           ),
           Padding(
             padding: const EdgeInsets.only(top: 24.0),
-            child: RoundedButton(_bankAccount == null ? null : send, Colors.white, zapblue, 'submit', minWidth: MediaQuery.of(context).size.width / 2)
+            child: RoundedButton(() {
+              if (_bankAccount == null)
+                return;
+              send(context);
+            }, Colors.white, zapblue, 'submit', minWidth: MediaQuery.of(context).size.width / 2)
           ),
           RoundedButton(() => Navigator.pop(context), zapblue, Colors.white, 'cancel', borderColor: zapblue, minWidth: MediaQuery.of(context).size.width / 2),
         ],

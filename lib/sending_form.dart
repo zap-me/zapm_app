@@ -65,7 +65,7 @@ class SendingFormState extends State<SendingForm> {
               Visibility(visible: !_sending, child: Container(padding: const EdgeInsets.only(top: 20.0))),
               Visibility(
                   visible: !_sending,
-                  child: RoundedButton(() => Navigator.pop(context), zapblue, Colors.white, 'close', borderColor: zapblue)
+                  child: RoundedButton(() => Navigator.pop(context, _tx != null), zapblue, Colors.white, 'close', borderColor: zapblue)
               ),
           ],
         ),

@@ -59,6 +59,13 @@ class Settlement {
   Settlement({this.token, this.amount, this.amountReceive, this.bankAccount, this.txid, this.status});
 }
 
+class SettlementResult {
+  final Settlement settlement;
+  final String error;
+
+  SettlementResult(this.settlement, this.error);
+}
+
 String claimCodeUri(ClaimCode claimCode) {
   return "claimcode:${claimCode.token}?secret=${claimCode.secret}";
 }
@@ -195,7 +202,7 @@ Future<List<Bank>> merchantBanks() async {
   return null;
 }
 
-Future<Settlement> merchantSettlement(Decimal amount, String bankToken) async {
+Future<SettlementResult> merchantSettlement(Decimal amount, String bankToken) async {
   var url = baseUrl + "settlement";
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
@@ -207,12 +214,15 @@ Future<Settlement> merchantSettlement(Decimal amount, String bankToken) async {
   var response = await http.post(url, headers: {"X-Signature": sig, "Content-Type": "application/json"}, body: body);
   if (response.statusCode == 200) {
     var jsnObj = json.decode(response.body);
-    return Settlement(token: jsnObj["token"], amount: Decimal.fromInt(jsnObj["amount"]) / d100, amountReceive: Decimal.fromInt(jsnObj["amount_receive"]) / d100, bankAccount: jsnObj["bankAccount"], txid: jsnObj["txid"], status: jsnObj["status"]);
+    return SettlementResult(
+      Settlement(token: jsnObj["token"], amount: Decimal.fromInt(jsnObj["amount"]) / d100, amountReceive: Decimal.fromInt(jsnObj["amount_receive"]) / d100, bankAccount: jsnObj["bankAccount"], txid: jsnObj["txid"], status: jsnObj["status"]),
+      null);
   }
-  return null;
+  var jsnObj = json.decode(response.body);
+  return SettlementResult(null, jsnObj["message"]);
 }
 
-Future<Settlement> merchantSettlementUpdate(String token, String txid) async {
+Future<SettlementResult> merchantSettlementUpdate(String token, String txid) async {
   var url = baseUrl + "settlement_set_txid";
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
@@ -224,9 +234,12 @@ Future<Settlement> merchantSettlementUpdate(String token, String txid) async {
   if (response.statusCode == 200) {
     var jsnObj = json.decode(response.body);
     var d100 = Decimal.fromInt(100);
-    return Settlement(token: jsnObj["token"], amount: Decimal.fromInt(jsnObj["amount"]) / d100, amountReceive: Decimal.fromInt(jsnObj["amount_receive"]) / d100, bankAccount: jsnObj["bankAccount"], txid: jsnObj["txid"], status: jsnObj["status"]);
+    return SettlementResult( 
+      Settlement(token: jsnObj["token"], amount: Decimal.fromInt(jsnObj["amount"]) / d100, amountReceive: Decimal.fromInt(jsnObj["amount_receive"]) / d100, bankAccount: jsnObj["bankAccount"], txid: jsnObj["txid"], status: jsnObj["status"]),
+      null);
   }
-  return null;
+  var jsnObj = json.decode(response.body);
+  return SettlementResult(null, jsnObj["message"]);
 }
 
 typedef TxNotificationCallback = void Function(String txid, String sender, String recipient, double amount, String attachment);
