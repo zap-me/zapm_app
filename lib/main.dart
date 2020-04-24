@@ -544,41 +544,46 @@ class _ZapHomePageState extends State<ZapHomePage> {
               visible: _showAlerts && _alerts.length > 0,
               child: AlertDrawer(_toggleAlerts, _alerts)
             ),
-            Container(
-              padding: const EdgeInsets.only(top: 28.0),
-              child: Text('my balance:',  style: TextStyle(color: zapblackmed, fontWeight: FontWeight.w700), textAlign: TextAlign.center,),
-            ),
-            Container(
-              height: 100,
-              width: MediaQuery.of(context).size.width,
-              child: Card(
-                child: Align(alignment: Alignment.center, 
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Visibility(
-                        visible: _updatingBalance && _haveSeed(),
-                        child: SizedBox(child: CircularProgressIndicator(), height: 28.0, width: 28.0,)
-                      ),
-                      Visibility(
-                        visible: !_updatingBalance && _haveSeed(),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            Text(_balanceText, style: TextStyle(color: zapblue, fontSize: 28)),
-                            SizedBox.fromSize(size: Size(4, 1)),
-                            SvgPicture.asset('assets/icon-bolt.svg', height: 20)
-                          ],
-                        )
+            Visibility(
+              visible: _haveSeed(),
+              child: Column(children: <Widget>[
+                Container(
+                  padding: const EdgeInsets.only(top: 28.0),
+                  child: Text('my balance:',  style: TextStyle(color: zapblackmed, fontWeight: FontWeight.w700), textAlign: TextAlign.center,),
+                ),
+                Container(
+                  height: 100,
+                  width: MediaQuery.of(context).size.width,
+                  child: Card(
+                    child: Align(alignment: Alignment.center, 
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          Visibility(
+                            visible: _updatingBalance,
+                            child: SizedBox(child: CircularProgressIndicator(), height: 28.0, width: 28.0,)
+                          ),
+                          Visibility(
+                            visible: !_updatingBalance,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                Text(_balanceText, style: TextStyle(color: zapblue, fontSize: 28)),
+                                SizedBox.fromSize(size: Size(4, 1)),
+                                SvgPicture.asset('assets/icon-bolt.svg', height: 20)
+                              ],
+                            )
+                          )
+                        ]
                       )
-                    ]
-                  )
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                    margin: EdgeInsets.all(10),
+                  ),
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-                margin: EdgeInsets.all(10),
-              ),
+              ],)
             ),
             Container(
               padding: const EdgeInsets.only(top: 28.0),
@@ -608,16 +613,10 @@ class _ZapHomePageState extends State<ZapHomePage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: <Widget>[
-                      Visibility(
-                        visible: _haveSeed(),
-                        child: SquareButton(_send, MaterialCommunityIcons.chevron_double_up, zapyellow, 'SEND ZAP'),
-                      ),
-                      Visibility(
-                        visible: _haveSeed(),
-                        child: SquareButton(_scanQrCode, MaterialCommunityIcons.qrcode_scan, zapblue, 'SCAN QR CODE'),
-                      ),
+                      _haveSeed() ? SquareButton(_send, MaterialCommunityIcons.chevron_double_up, zapyellow, 'SEND ZAP') : null,
+                      _haveSeed() ? SquareButton(_scanQrCode, MaterialCommunityIcons.qrcode_scan, zapblue, 'SCAN QR CODE') : null,
                       SquareButton(_receive, MaterialCommunityIcons.chevron_double_down, zapgreen, 'RECEIVE ZAP'),
-                    ],
+                    ].where((child) => child != null).toList(),
                   ),
                   SizedBox.fromSize(size: Size(1, 10)),
                   ListButton(_transactions, 'transactions', !_haveSeed()),
