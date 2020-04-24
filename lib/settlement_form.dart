@@ -201,7 +201,7 @@ class SettlementFormState extends State<SettlementForm> {
               if (_bankAccount == null)
                 return;
               send(context);
-            }, Colors.white, zapblue, 'submit', minWidth: MediaQuery.of(context).size.width / 2)
+            }, Colors.white, zapblue, 'submit', minWidth: MediaQuery.of(context).size.width / 2, holePunch: true)
           ),
           RoundedButton(() => Navigator.pop(context), zapblue, Colors.white, 'cancel', borderColor: zapblue, minWidth: MediaQuery.of(context).size.width / 2),
         ],

@@ -43,7 +43,7 @@ void flushbarMsg(BuildContext context, String msg, {int seconds = 3, MessageCate
 }
 
 class RoundedButton extends StatelessWidget {
-  RoundedButton(this.onPressed, this.textColor, this.fillColor, this.title, {this.icon, this.borderColor, this.minWidth}) : super();
+  RoundedButton(this.onPressed, this.textColor, this.fillColor, this.title, {this.icon, this.borderColor, this.minWidth, this.holePunch = false}) : super();
 
   final VoidCallback onPressed;
   final Color textColor;
@@ -52,6 +52,7 @@ class RoundedButton extends StatelessWidget {
   final IconData icon;
   final Color borderColor;
   final double minWidth;
+  final bool holePunch;
 
   @override
   Widget build(BuildContext context) {
@@ -59,14 +60,26 @@ class RoundedButton extends StatelessWidget {
     var shape = RoundedRectangleBorder(borderRadius: BorderRadius.circular(18.0), side: BorderSide(color: _borderColor));
     Widget text = Text(title, style: TextStyle(color: textColor, fontSize: 14));
     RaisedButton btn;
+    if (icon != null && holePunch)
+      throw ArgumentError('Can only use "icon" parameter OR "fwdArrowColor"');
     if (icon != null)
       btn = RaisedButton.icon(onPressed: onPressed,
         icon: Icon(icon, color: textColor, size: 14), label: text,
         shape: shape, color: fillColor);
-    else
+    else {
+      Widget child = text;
+      if (holePunch) {
+        // this is a hack, there is no drop shadow in the hole punch, and it is not aligned with the border
+        var icon = Container(width: 20, height: 20, decoration: BoxDecoration(color: textColor, shape: BoxShape.circle),
+          child: Icon(Icons.arrow_forward_ios, size: 14, color: fillColor));
+        child = Container(width: minWidth - 16 - 16,
+         child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[SizedBox(width: 14), text, icon]));
+      }
       btn = RaisedButton(onPressed: onPressed,
-        child: text,
+        child: child,
         shape: shape, color: fillColor);
+    }
     if (minWidth != null)
       return ButtonTheme(minWidth: minWidth, child: btn);
     return btn;

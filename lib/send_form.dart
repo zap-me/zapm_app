@@ -165,7 +165,7 @@ class SendFormState extends State<SendForm> {
           ),
           Padding(
             padding: const EdgeInsets.only(top: 24.0),
-            child: RoundedButton(send, Colors.white, zapyellow, 'send zap', minWidth: MediaQuery.of(context).size.width / 2)
+            child: RoundedButton(send, Colors.white, zapyellow, 'send zap', minWidth: MediaQuery.of(context).size.width / 2, holePunch: true),
           ),
           RoundedButton(() => Navigator.pop(context), zapblue, Colors.white, 'cancel', borderColor: zapblue, minWidth: MediaQuery.of(context).size.width / 2),
         ],
