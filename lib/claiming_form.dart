@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:ZapMerchant/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
 
@@ -7,15 +8,16 @@ import 'qrwidget.dart';
 import 'merchant.dart';
 import 'sending_form.dart';
 import 'widgets.dart';
+import 'prefs.dart';
 
 class ClaimingForm extends StatefulWidget {
   final Decimal _amountDec;
   final String _seed;
   final int _amount;
   final int _fee;
-  final String _attachment;
+  final String _msg;
 
-  ClaimingForm(this._amountDec, this._seed, this._amount, this._fee, this._attachment) : super();
+  ClaimingForm(this._amountDec, this._seed, this._amount, this._fee, this._msg) : super();
 
   @override
   ClaimingFormState createState() {
@@ -40,7 +42,9 @@ class ClaimingFormState extends State<ClaimingForm> {
        _checking = false; 
       });
       var libzap = LibZap();
-      var spendTx = libzap.transactionCreate(widget._seed, addr, widget._amount, widget._fee, widget._attachment);
+      var deviceName = await Prefs.deviceNameGet();
+      var attachment = formatAttachment(deviceName, widget._msg, 'reward');
+      var spendTx = libzap.transactionCreate(widget._seed, addr, widget._amount, widget._fee, attachment);
       if (spendTx.success) {
         await Navigator.push(
           context,

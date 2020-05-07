@@ -5,6 +5,7 @@ import 'merchant.dart';
 import 'libzap.dart';
 import 'utils.dart';
 import 'widgets.dart';
+import 'prefs.dart';
 
 class SettlementForm extends StatefulWidget {
   final bool _testnet;
@@ -83,7 +84,9 @@ class SettlementFormState extends State<SettlementForm> {
         }
         // send funds
         var libzap = LibZap();
-        var spendTx = libzap.transactionCreate(widget._seed, _rates.settlementAddress, amount, fee, result.settlement.token);
+        var deviceName = await Prefs.deviceNameGet();
+        var attachment = formatAttachment(deviceName, result.settlement.token, 'settlement');
+        var spendTx = libzap.transactionCreate(widget._seed, _rates.settlementAddress, amount, fee, attachment);
         if (!spendTx.success) {
           flushbarMsg(context, 'failed to create transaction', category: MessageCategory.Warning);
             return;

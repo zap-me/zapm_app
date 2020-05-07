@@ -21,6 +21,27 @@ const INVALID_ASSET_ID = 2;
 const INVALID_CLAIMCODE_URI = 3;
 const INVALID_APIKEY_URI = 4;
 
+String formatAttachment(String deviceName, String msg, String category, {String currentAttachment}) {
+  var map = Map<String, dynamic>();
+  if (currentAttachment != null && currentAttachment.isNotEmpty)
+    try {
+      map = json.decode(currentAttachment);
+    } catch(_) {}
+  if (msg != null && msg.isNotEmpty)
+    map['msg'] = msg;
+  else
+    map.remove('msg');
+  if (deviceName != null && deviceName.isNotEmpty)
+    map['device_name'] = deviceName;
+  else
+    map.remove('device_name');
+  if (category != null && category.isNotEmpty)
+    map['category'] = category;
+  else
+    map.remove('category');
+  return json.encode(map);
+}
+
 String parseUriParameter(String input, String token) {
   token = token + '=';
   if (input.length > token.length && input.substring(0, token.length).toLowerCase() == token)

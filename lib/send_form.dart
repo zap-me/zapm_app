@@ -1,3 +1,4 @@
+import 'dart:core';
 import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
 import 'package:flutter_icons/flutter_icons.dart';
@@ -7,6 +8,7 @@ import 'utils.dart';
 import 'libzap.dart';
 import 'sending_form.dart';
 import 'widgets.dart';
+import 'prefs.dart';
 
 class SendForm extends StatefulWidget {
   final bool _testnet;
@@ -27,7 +29,8 @@ class SendFormState extends State<SendForm> {
   final _formKey = GlobalKey<FormState>();
   final _addressController = TextEditingController();
   final _amountController = TextEditingController();
-  final _attachmentController = TextEditingController();
+  final _msgController = TextEditingController();
+  String _attachment;
 
   bool setRecipientOrUri(String recipientOrUri) {
     var result = parseRecipientOrWavesUri(widget._testnet, recipientOrUri);
@@ -39,10 +42,19 @@ class SendFormState extends State<SendForm> {
       var parts = parseWavesUri(widget._testnet, recipientOrUri);
       _addressController.text = parts.address;
       _amountController.text = parts.amount.toString();
-      _attachmentController.text = parts.attachment;
+      _attachment = Uri.decodeFull(parts.attachment);
+      _msgController.text = '';
+      updateAttachment(null);
       return true;
     }
     return false;
+  }
+
+  void updateAttachment(String msg) async {
+    var deviceName = await Prefs.deviceNameGet();
+    setState(() {
+      _attachment = formatAttachment(deviceName, msg, null, currentAttachment: _attachment);      
+    });
   }
 
   void send() async {
@@ -53,7 +65,6 @@ class SendFormState extends State<SendForm> {
       var amountDec = Decimal.parse(amountText);
       var amount = (amountDec * Decimal.fromInt(100)).toInt();
       var fee = (widget._fee * Decimal.fromInt(100)).toInt();
-      var attachment = _attachmentController.text;
       // double check with user
       if (await showDialog<bool>(
           context: context,
@@ -79,7 +90,7 @@ class SendFormState extends State<SendForm> {
         }
         // create tx
         var libzap = LibZap();
-        var spendTx = libzap.transactionCreate(widget._seed, recipient, amount, fee, attachment);
+        var spendTx = libzap.transactionCreate(widget._seed, recipient, amount, fee, _attachment);
         if (spendTx.success) {
           var result = await Navigator.push<bool>(
             context,
@@ -159,10 +170,12 @@ class SendFormState extends State<SendForm> {
             }, 
           ),
           TextFormField(
-            controller: _attachmentController,
+            controller: _msgController,
             keyboardType: TextInputType.text,
-            decoration: InputDecoration(labelText: 'attachment'),
+            decoration: InputDecoration(labelText: 'message'),
+            onChanged: updateAttachment,
           ),
+          Text(_attachment != null ? _attachment : '', style: TextStyle(color: zapblacklight)),
           Padding(
             padding: const EdgeInsets.only(top: 24.0),
             child: RoundedButton(send, Colors.white, zapyellow, 'send zap', minWidth: MediaQuery.of(context).size.width / 2, holePunch: true),

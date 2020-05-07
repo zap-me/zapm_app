@@ -22,7 +22,7 @@ class RewardForm extends StatefulWidget {
 class RewardFormState extends State<RewardForm> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = new TextEditingController();
-  final _attachmentController = new TextEditingController();
+  final _msgController = new TextEditingController();
 
   void send() async {
     if (_formKey.currentState.validate()) {
@@ -31,7 +31,7 @@ class RewardFormState extends State<RewardForm> {
       var amountDec = Decimal.parse(amountText);
       var amount = (amountDec * Decimal.fromInt(100)).toInt();
       var fee = (widget._fee * Decimal.fromInt(100)).toInt();
-      var attachment = _attachmentController.text;
+      var msg = _msgController.text;
       // double check with user
       if (await showDialog<bool>(
           context: context,
@@ -58,7 +58,7 @@ class RewardFormState extends State<RewardForm> {
         // start claim process
         await Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => ClaimingForm(amountDec, widget._seed, amount, fee, attachment)),
+          MaterialPageRoute(builder: (context) => ClaimingForm(amountDec, widget._seed, amount, fee, msg)),
         );
       }
     }
@@ -70,7 +70,7 @@ class RewardFormState extends State<RewardForm> {
   @mustCallSuper
   void initState() {
     super.initState();
-    _attachmentController.text = "Thank you for shopping at Qwik-e-mart!";
+    _msgController.text = "Thank you for shopping at Qwik-e-mart!";
   }
 
   @override
@@ -99,9 +99,9 @@ class RewardFormState extends State<RewardForm> {
             },
           ),
           TextFormField(
-            controller: _attachmentController,
+            controller: _msgController,
             keyboardType: TextInputType.text,
-            decoration: new InputDecoration(labelText: 'Attachment'),
+            decoration: new InputDecoration(labelText: 'Message'),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16.0),
