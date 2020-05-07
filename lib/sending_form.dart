@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'libzap.dart';
 import 'widgets.dart';
+import 'merchant.dart';
 
 
 class SendingForm extends StatefulWidget {
@@ -26,6 +27,10 @@ class SendingFormState extends State<SendingForm> {
       _sending = false;
       _tx = tx;
     });
+    try {
+      // alert server to update merchant tx table
+      merchantTx();
+    } catch(_) {}
   }
 
   @override

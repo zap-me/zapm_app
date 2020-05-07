@@ -83,11 +83,9 @@ String createHmacSig(String secret, String message) {
   return base64.encode(digest.bytes);
 }
 
-class NoApiKeyException implements Exception {
+class NoApiKeyException implements Exception {}
 
-}
-
-void CheckApiKey(String apikey, String apisecret) {
+void checkApiKey(String apikey, String apisecret) {
   if (apikey == null)
     throw NoApiKeyException();
   if (apisecret == null)
@@ -99,7 +97,7 @@ Future<ClaimCode> merchantRegister(Decimal amount, int amountInt) async {
   var url = baseUrl + "register";
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
-  CheckApiKey(apikey, apisecret);
+  checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce, "token": claimCode.token, "amount": amountInt});
   var sig = createHmacSig(apisecret, body);
@@ -114,7 +112,7 @@ Future<String> merchantCheck(ClaimCode claimCode) async {
   var url = baseUrl + "check";
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
-  CheckApiKey(apikey, apisecret);
+  checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce, "token": claimCode.token});
   var sig = createHmacSig(apisecret, body);
@@ -139,7 +137,7 @@ Future<bool> merchantWatch(String address) async {
   var url = baseUrl + "watch";
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
-  CheckApiKey(apikey, apisecret);
+  checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce, "address": address});
   var sig = createHmacSig(apisecret, body);
@@ -154,9 +152,24 @@ Future<bool> merchantWalletAddress(String address) async {
   var url = baseUrl + "wallet_address";
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
-  CheckApiKey(apikey, apisecret);
+  checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce, "address": address});
+  var sig = createHmacSig(apisecret, body);
+  var response = await http.post(url, headers: {"X-Signature": sig, "Content-Type": "application/json"}, body: body);
+  if (response.statusCode == 200) {
+    return true;
+  }
+  return false;
+}
+
+Future<bool> merchantTx() async {
+  var url = baseUrl + "merchanttx";
+  var apikey = await Prefs.apikeyGet();
+  var apisecret = await Prefs.apisecretGet();
+  checkApiKey(apikey, apisecret);
+  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
+  var body = jsonEncode({"api_key": apikey, "nonce": nonce,});
   var sig = createHmacSig(apisecret, body);
   var response = await http.post(url, headers: {"X-Signature": sig, "Content-Type": "application/json"}, body: body);
   if (response.statusCode == 200) {
@@ -169,7 +182,7 @@ Future<Rates> merchantRates() async {
   var url = baseUrl + "rates";
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
-  CheckApiKey(apikey, apisecret);
+  checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce});
   var sig = createHmacSig(apisecret, body);
@@ -185,7 +198,7 @@ Future<List<Bank>> merchantBanks() async {
   var url = baseUrl + "banks";
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
-  CheckApiKey(apikey, apisecret);
+  checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce});
   var sig = createHmacSig(apisecret, body);
@@ -206,7 +219,7 @@ Future<SettlementResult> merchantSettlement(Decimal amount, String bankToken) as
   var url = baseUrl + "settlement";
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
-  CheckApiKey(apikey, apisecret);
+  checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var d100 = Decimal.fromInt(100);
   var body = jsonEncode({"api_key": apikey, "nonce": nonce, "bank": bankToken, "amount": (amount * d100).toInt()});
@@ -226,7 +239,7 @@ Future<SettlementResult> merchantSettlementUpdate(String token, String txid) asy
   var url = baseUrl + "settlement_set_txid";
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
-  CheckApiKey(apikey, apisecret);
+  checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce, "token": token, "txid": txid});
   var sig = createHmacSig(apisecret, body);

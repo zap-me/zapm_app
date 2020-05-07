@@ -94,7 +94,7 @@ class SettlementFormState extends State<SettlementForm> {
         showAlertDialog(context, 'sending settlement transaction...');
         var tx = await LibZap.transactionBroadcast(spendTx);
         if (tx == null) {
-          flushbarMsg(context, 'failed to create broadcast transaction', category: MessageCategory.Warning);
+          flushbarMsg(context, 'failed to broadcast transaction', category: MessageCategory.Warning);
             Navigator.pop(context);
             return;
         }
@@ -113,6 +113,8 @@ class SettlementFormState extends State<SettlementForm> {
           Navigator.pop(context); // close settlement form
           flushbarMsg(context, 'settlement created');
         });
+        // alert server to update merchant tx table
+        merchantTx();
         return;
       }
     }

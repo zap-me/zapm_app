@@ -113,6 +113,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
     if (socket != null) 
       socket.close();
     socket = await merchantSocket((txid, sender, recipient, amount, attachment) {
+      // show user overview of new tx
       showDialog(
         context: context,
         barrierDismissible: false, // dialog is dismissible with a tap on the barrier
@@ -134,6 +135,8 @@ class _ZapHomePageState extends State<ZapHomePage> {
           );
         }
       );
+      // alert server to update merchant tx table
+      merchantTx();
     });
   }
 
