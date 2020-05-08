@@ -13,8 +13,9 @@ import 'widgets.dart';
 class TransactionsScreen extends StatefulWidget {
   final String _address;
   final bool _testnet;
+  final String _deviceName;
 
-  TransactionsScreen(this._address, this._testnet) : super();
+  TransactionsScreen(this._address, this._testnet, this._deviceName) : super();
 
   @override
   _TransactionsState createState() => new _TransactionsState();
@@ -35,15 +36,23 @@ const List<Choice> choices = const <Choice>[
   const Choice(title: "Export JSON", icon: Icons.save),
 ];
 
+class DownloadResult {
+  final int downloadCount;
+  final int validCount;
+  DownloadResult(this.downloadCount, this.validCount);
+}
+
 class _TransactionsState extends State<TransactionsScreen> {
   bool _loading = true;
-  List<Tx> _txs = List<Tx>();
-  int _offset = 0;
-  int _count = 10;
+  var _txsAll = List<Tx>();
+  var _txsFiltered = List<Tx>();
+  var _offset = 0;
+  var _downloadCount = 100;
+  var _displayCount = 10;
   String _after;
-  bool _more = false;
-  bool _less = false;
-  bool _foundEnd = false;
+  var _more = false;
+  var _less = false;
+  var _foundEnd = false;
 
   @override
   void initState() {
@@ -51,54 +60,84 @@ class _TransactionsState extends State<TransactionsScreen> {
     super.initState();
   }
 
-  Future<int> _downloadMoreTxs(int count) async {
+  Future<DownloadResult> _downloadMoreTxs(int count) async {
     var txs = await LibZap.addressTransactions(widget._address, count, _after);
+    var txsFiltered = List<Tx>();
     if (txs != null) {
-      _txs = _txs + txs;
-      if (_txs.length > 0)
-        _after = _txs[_txs.length - 1].id;
+      for (var tx in txs) {
+        // check asset id
+        var zapAssetId = widget._testnet ? LibZap.TESTNET_ASSET_ID : LibZap.MAINNET_ASSET_ID;
+        if (tx.assetId != zapAssetId)
+          continue;
+        // check device name
+        if (tx.attachment != null && tx.attachment.isNotEmpty)
+        tx.attachment = base58decode(tx.attachment);
+        // check device name
+        var deviceName = '';
+        try {
+          deviceName = json.decode(tx.attachment)['device_name'];
+        } catch (_) {}
+        if (widget._deviceName != null && widget._deviceName.isNotEmpty && widget._deviceName != deviceName)
+          continue;
+        txsFiltered.add(tx);
+      }
+      _txsAll += txs;
+      _txsFiltered += txsFiltered;
+      if (_txsAll.length > 0)
+        _after = _txsAll[_txsAll.length - 1].id;
       if (txs.length < count)
         _foundEnd = true;
     }
     else
-      return -1;
-    return txs.length;
+      return null;
+    return DownloadResult(txs.length, txsFiltered.length);
   }
 
   void _loadTxs(LoadDirection dir) async {
     var newOffset = _offset;
     if (dir == LoadDirection.Next) {
-      newOffset += _count;
-      if (newOffset > _txs.length)
-        newOffset = _txs.length;
+      newOffset += _displayCount;
+      if (newOffset > _txsFiltered.length)
+        newOffset = _txsFiltered.length;
     }
     else if (dir == LoadDirection.Previous) {
-      newOffset -= _count;
+      newOffset -= _displayCount;
       if (newOffset < 0)
         newOffset = 0;
     }
-    if (newOffset == _txs.length) {
+    if (newOffset == _txsFiltered.length) {
       // set loading
       setState(() {
         _loading = true;
       });
       // load new txs
-      var res = await _downloadMoreTxs(_count);
+      var count = 0;
+      var remaining = _displayCount;
+      var failed = false;
+      while (true) {
+        var res = await _downloadMoreTxs(_downloadCount);
+        if (res == null) {
+          flushbarMsg(context, 'failed to load transactions', category: MessageCategory.Warning);
+          failed = true;
+          break;
+        }
+        count += res.validCount;
+        if (count >= _displayCount || res.downloadCount < remaining)
+          break;
+        remaining = _displayCount - count;
+      }
       setState(() {
-        if (res != -1) {
-          _more = res == _count;
+        if (!failed) {
+          _more = count >= _displayCount;
           _less = newOffset > 0;
           _offset = newOffset;
-        }
-        else {
-          flushbarMsg(context, 'failed to load transactions', category: MessageCategory.Warning);
         }
         _loading = false;
       });
     }
     else {
       setState(() {
-        _more = !_foundEnd || newOffset < _txs.length - _count;
+        _more = !_foundEnd || newOffset < _txsFiltered.length - _displayCount;
         _less = newOffset > 0;
         _offset = newOffset;
       });
@@ -107,14 +146,10 @@ class _TransactionsState extends State<TransactionsScreen> {
 
   Widget _buildTxList(BuildContext context, int index) {
     var offsetIndex = _offset + index;
-    if (offsetIndex >= _offset + _count || offsetIndex >= _txs.length)
+    if (offsetIndex >= _offset + _displayCount || offsetIndex >= _txsFiltered.length)
       return null;
-    var tx = _txs[offsetIndex];
-    var zapAssetId = widget._testnet ? LibZap.TESTNET_ASSET_ID : LibZap.MAINNET_ASSET_ID;
-    if (tx.assetId != zapAssetId)
-      return SizedBox.shrink();
+    var tx = _txsFiltered[offsetIndex];
     var outgoing = tx.sender == widget._address;
-    var icon = outgoing ? Icons.remove_circle : Icons.add_circle;
     var amount = Decimal.fromInt(tx.amount) / Decimal.fromInt(100);
     var amountText = amount.toStringAsFixed(2);
     var fee = Decimal.fromInt(tx.fee) / Decimal.fromInt(100);
@@ -124,9 +159,6 @@ class _TransactionsState extends State<TransactionsScreen> {
     var date = new DateTime.fromMillisecondsSinceEpoch(tx.timestamp);
     var dateStrLong = DateFormat('yyyy-MM-dd HH:mm').format(date);
     var link = widget._testnet ? 'https://wavesexplorer.com/testnet/tx/${tx.id}' : 'https://wavesexplorer.com/tx/${tx.id}';
-    var attachment = tx.attachment;
-    if (tx.attachment != null && tx.attachment.isNotEmpty)
-      attachment = base58decode(tx.attachment);
     return ListTx(() {
       Navigator.of(context).push(
         // We will now use PageRouteBuilder
@@ -149,7 +181,6 @@ class _TransactionsState extends State<TransactionsScreen> {
                             child: Text(tx.id, style: new TextStyle(color: zapblue, decoration: TextDecoration.underline))),
                             onTap: () => launch(link),
                           ),
-
                     ),
                     ListTile(title: Text('date'), subtitle: Text(dateStrLong)),
                     ListTile(title: Text('sender'), subtitle: Text(tx.sender)),
@@ -157,9 +188,9 @@ class _TransactionsState extends State<TransactionsScreen> {
                     ListTile(title: Text('amount'), subtitle: Text('$amountText zap', style: TextStyle(color: color),)),
                     ListTile(title: Text('fee'), subtitle: Text('$feeText zap',)),
                     Visibility(
-                      visible: attachment != null && attachment != "",
+                      visible: tx.attachment != null && tx.attachment.isNotEmpty,
                       child:
-                        ListTile(title: Text("Attachment"), subtitle: Text(attachment)),
+                        ListTile(title: Text("Attachment"), subtitle: Text(tx.attachment)),
                     ),
                     Container(
                       padding: const EdgeInsets.only(top: 5.0),
@@ -182,8 +213,8 @@ class _TransactionsState extends State<TransactionsScreen> {
           _loading = true;
         });
         while (true) {
-          var txs = await _downloadMoreTxs(100);
-          if (txs == -1) {
+          var txs = await _downloadMoreTxs(_downloadCount);
+          if (txs == null) {
             flushbarMsg(context, 'failed to load transactions', category: MessageCategory.Warning);
             setState(() {
               _loading = false;
@@ -191,7 +222,7 @@ class _TransactionsState extends State<TransactionsScreen> {
             return;
           }
           else if (_foundEnd) {
-            var json = jsonEncode(_txs);
+            var json = jsonEncode(_txsFiltered);
             var filename = "zap_txs.json";
             if (Platform.isAndroid || Platform.isIOS) {
               var dir = await getExternalStorageDirectory();
@@ -204,7 +235,7 @@ class _TransactionsState extends State<TransactionsScreen> {
             });
             break;
           }
-          flushbarMsg(context, 'loaded ${_txs.length} transactions');
+          flushbarMsg(context, 'loaded ${_txsFiltered.length} transactions');
         }
         break;
     }
@@ -238,13 +269,13 @@ class _TransactionsState extends State<TransactionsScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
             Visibility(
-                visible: !_loading && _txs.length == 0,
+                visible: !_loading && _txsFiltered.length == 0,
                 child: Text("Nothing here..")),
             Visibility(
               visible: !_loading,
               child: Expanded(
                 child: new ListView.builder(
-                  itemCount: _txs.length,
+                  itemCount: _txsFiltered.length,
                   itemBuilder: (BuildContext context, int index) => _buildTxList(context, index),
                 ))),
             Row(

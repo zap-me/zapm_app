@@ -452,9 +452,10 @@ class _ZapHomePageState extends State<ZapHomePage> {
   }
 
   void _transactions() async {
+    var deviceName = await Prefs.deviceNameGet();
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => TransactionsScreen(_wallet.address, _testnet)),
+      MaterialPageRoute(builder: (context) => TransactionsScreen(_wallet.address, _testnet, _haveSeed() ? null : deviceName)),
     );
     _setWalletDetails();
   }
