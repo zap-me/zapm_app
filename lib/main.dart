@@ -97,6 +97,41 @@ class _ZapHomePageState extends State<ZapHomePage> {
     super.dispose();
   }
 
+  void _txNotification(txid, sender, recipient, amount, attachment) {
+    // decode attachment
+    if (attachment != null && attachment.isNotEmpty)
+        attachment = base58decode(attachment);
+    // show user overview of new tx
+    showDialog(
+      context: context,
+      barrierDismissible: false, // dialog is dismissible with a tap on the barrier
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("received ${amount.toStringAsFixed(2)} zap"),
+          content: Container(
+            width: double.maxFinite,
+            child: ListView(
+              shrinkWrap: true,
+              children: <Widget>[
+                ListTile(title: Text("TXID"), subtitle: Text(txid)),
+                ListTile(title: Text("sender"), subtitle: Text(sender),),
+                ListTile(title: Text("amount"), subtitle: Text("${amount.toStringAsFixed(2)} ZAP")),
+                ListTile(title: Text(attachment != null && attachment.isNotEmpty ? "attachment: $attachment" : "")),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            RoundedButton(() => Navigator.pop(context), zapblue, Colors.white, 'ok', borderColor: zapblue),
+          ],
+        );
+      }
+    );
+    // alert server to update merchant tx table
+    merchantTx();
+    // update balance
+    _updateBalance();
+  }
+
   void _watchAddress() async {
     // do nothing if the address, apikey or apisecret is not set
     if (_wallet == null)
@@ -112,37 +147,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
     // create socket to receive tx alerts
     if (socket != null) 
       socket.close();
-    socket = await merchantSocket((txid, sender, recipient, amount, attachment) {
-      // decode attachment
-      if (attachment != null && attachment.isNotEmpty)
-          attachment = base58decode(attachment);
-      // show user overview of new tx
-      showDialog(
-        context: context,
-        barrierDismissible: false, // dialog is dismissible with a tap on the barrier
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text("received ${amount.toStringAsFixed(2)} zap"),
-            content: ListView(
-              shrinkWrap: true,
-              children: <Widget>[
-                ListTile(title: Text("TXID"), subtitle: Text(txid)),
-                ListTile(title: Text("sender"), subtitle: Text(sender),),
-                ListTile(title: Text("amount"), subtitle: Text("${amount.toStringAsFixed(2)} ZAP")),
-                ListTile(title: Text(attachment != null && attachment.isNotEmpty ? "attachment: $attachment" : "")),
-              ],
-            ),
-            actions: <Widget>[
-              RoundedButton(() => Navigator.pop(context), zapblue, Colors.white, 'ok', borderColor: zapblue),
-            ],
-          );
-        }
-      );
-      // alert server to update merchant tx table
-      merchantTx();
-      // update balance
-      _updateBalance();
-    });
+    socket = await merchantSocket(_txNotification);
   }
 
   Future<NoWalletAction> _noWalletDialog(BuildContext context) async {
