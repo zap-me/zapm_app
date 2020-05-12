@@ -69,9 +69,9 @@ class _TransactionsState extends State<TransactionsScreen> {
         var zapAssetId = widget._testnet ? LibZap.TESTNET_ASSET_ID : LibZap.MAINNET_ASSET_ID;
         if (tx.assetId != zapAssetId)
           continue;
-        // check device name
+        // decode attachment
         if (tx.attachment != null && tx.attachment.isNotEmpty)
-        tx.attachment = base58decode(tx.attachment);
+          tx.attachment = base58decode(tx.attachment);
         // check device name
         var deviceName = '';
         try {

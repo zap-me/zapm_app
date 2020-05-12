@@ -97,7 +97,7 @@ class SendFormState extends State<SendForm> {
             MaterialPageRoute(builder: (context) => SendingForm(spendTx)),
           );
           if (result)
-            Navigator.pop(context);
+            Navigator.pop(context, true);
         }
         else
           flushbarMsg(context, 'failed to create transaction', category: MessageCategory.Warning);
@@ -180,7 +180,7 @@ class SendFormState extends State<SendForm> {
             padding: const EdgeInsets.only(top: 24.0),
             child: RoundedButton(send, Colors.white, zapyellow, 'send zap', minWidth: MediaQuery.of(context).size.width / 2, holePunch: true),
           ),
-          RoundedButton(() => Navigator.pop(context), zapblue, Colors.white, 'cancel', borderColor: zapblue, minWidth: MediaQuery.of(context).size.width / 2),
+          RoundedButton(() => Navigator.pop(context, false), zapblue, Colors.white, 'cancel', borderColor: zapblue, minWidth: MediaQuery.of(context).size.width / 2),
         ],
       ),
     );

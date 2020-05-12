@@ -28,6 +28,7 @@ class ClaimingForm extends StatefulWidget {
 class ClaimingFormState extends State<ClaimingForm> {
   bool _init = false;
   bool _checking = true;
+  bool _sentFunds = false;
   String _uri;
   Timer _timer;
   ClaimCode _claimCode = ClaimCode(amount: Decimal.fromInt(0), token: "", secret: "");
@@ -46,7 +47,7 @@ class ClaimingFormState extends State<ClaimingForm> {
       var attachment = formatAttachment(deviceName, widget._msg, 'reward');
       var spendTx = libzap.transactionCreate(widget._seed, addr, widget._amount, widget._fee, attachment);
       if (spendTx.success) {
-        await Navigator.push(
+        _sentFunds = await Navigator.push<bool>(
           context,
           MaterialPageRoute(builder: (context) => SendingForm(spendTx)),
         );
@@ -112,7 +113,7 @@ class ClaimingFormState extends State<ClaimingForm> {
                   visible: !_checking,
                   child: RaisedButton.icon(
                       onPressed: () {
-                        Navigator.pop(context);
+                        Navigator.pop(context, _sentFunds);
                       },
                       icon: Icon(Icons.close),
                       label: Text('Close'))

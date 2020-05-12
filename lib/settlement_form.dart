@@ -28,7 +28,7 @@ class SettlementFormState extends State<SettlementForm> {
   List<Bank> _banks;
   String _bankAccount;
 
-  void send(BuildContext context) async {
+  Future<bool> send(BuildContext context) async {
     if (_formKey.currentState.validate()) {
       // send parameters
       var amountText = _amountController.text;
@@ -38,7 +38,7 @@ class SettlementFormState extends State<SettlementForm> {
       var lz = LibZap();
       if (!lz.addressCheck(_rates.settlementAddress)) {
         flushbarMsg(context, 'unable to create settlement', category: MessageCategory.Warning);
-        return;
+        return false;
       }
       // get amount to receive
       var amountReceive = amountDec / (Decimal.fromInt(1) + _rates.merchantRate);
@@ -66,7 +66,7 @@ class SettlementFormState extends State<SettlementForm> {
       )) {
         // check pin
         if (!await pinCheck(context)) {
-          return;
+          return false;
         }
         // create settlement
         showAlertDialog(context, 'creating settlement...');
@@ -80,7 +80,7 @@ class SettlementFormState extends State<SettlementForm> {
         Navigator.pop(context);
         if (result.settlement == null) {
           flushbarMsg(context, 'failed to create settlement (${result.error})', category: MessageCategory.Warning);
-          return;
+          return false;
         }
         // send funds
         var libzap = LibZap();
@@ -89,14 +89,14 @@ class SettlementFormState extends State<SettlementForm> {
         var spendTx = libzap.transactionCreate(widget._seed, _rates.settlementAddress, amount, fee, attachment);
         if (!spendTx.success) {
           flushbarMsg(context, 'failed to create transaction', category: MessageCategory.Warning);
-            return;
+            return false;
         }
         showAlertDialog(context, 'sending settlement transaction...');
         var tx = await LibZap.transactionBroadcast(spendTx);
         if (tx == null) {
           flushbarMsg(context, 'failed to broadcast transaction', category: MessageCategory.Warning);
             Navigator.pop(context);
-            return;
+            return false;
         }
         Navigator.pop(context);
         showAlertDialog(context, 'updating settlement...');
@@ -104,22 +104,17 @@ class SettlementFormState extends State<SettlementForm> {
         if (result.settlement == null) {
           flushbarMsg(context, 'failed to update settlement (${result.error})', category: MessageCategory.Warning);
             Navigator.pop(context);
-            return;
+            return true;
         }
         Navigator.pop(context);
-        showAlertDialog(context, 'completed');
-        Future.delayed(Duration(milliseconds: 500), () {
-          Navigator.pop(context);
-          Navigator.pop(context); // close settlement form
-          flushbarMsg(context, 'settlement created');
-        });
         // alert server to update merchant tx table
         merchantTx();
-        return;
+        return true;
       }
     }
     else
       flushbarMsg(context, 'validation failed', category: MessageCategory.Warning);
+    return false;
   }
 
   @protected
@@ -202,13 +197,16 @@ class SettlementFormState extends State<SettlementForm> {
           ),
           Padding(
             padding: const EdgeInsets.only(top: 24.0),
-            child: RoundedButton(() {
+            child: RoundedButton(() async {
               if (_bankAccount == null)
                 return;
-              send(context);
+              if (await send(context)) {
+                Navigator.pop(context, true);
+                flushbarMsg(context, 'settlement created');
+              }
             }, Colors.white, zapblue, 'submit', minWidth: MediaQuery.of(context).size.width / 2, holePunch: true)
           ),
-          RoundedButton(() => Navigator.pop(context), zapblue, Colors.white, 'cancel', borderColor: zapblue, minWidth: MediaQuery.of(context).size.width / 2),
+          RoundedButton(() => Navigator.pop(context, false), zapblue, Colors.white, 'cancel', borderColor: zapblue, minWidth: MediaQuery.of(context).size.width / 2),
         ],
       ),
     );

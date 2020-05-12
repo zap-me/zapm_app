@@ -19,7 +19,7 @@ enum MessageCategory {
 }
 
 Widget backButton(BuildContext context, {Color color = Colors.white}) {
-  return IconButton(icon: Icon(Icons.arrow_back_ios, color: color), onPressed: () => Navigator.of(context).pop());
+  return IconButton(icon: Icon(Icons.arrow_back_ios, color: color), onPressed: () => Navigator.of(context).pop(false));
 }
 
 

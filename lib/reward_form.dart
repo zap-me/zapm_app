@@ -56,10 +56,12 @@ class RewardFormState extends State<RewardForm> {
           return;
         }
         // start claim process
-        await Navigator.push(
+        var sentFunds = await Navigator.push<bool>(
           context,
           MaterialPageRoute(builder: (context) => ClaimingForm(amountDec, widget._seed, amount, fee, msg)),
         );
+        if (sentFunds)
+          Navigator.pop(context, true);
       }
     }
     else
@@ -111,7 +113,7 @@ class RewardFormState extends State<RewardForm> {
                 label: Text('Submit')),
           ),
           RaisedButton.icon(
-              onPressed: () { Navigator.pop(context); },
+              onPressed: () { Navigator.pop(context, false); },
               icon: Icon(Icons.cancel),
               label: Text('Cancel')),
         ],

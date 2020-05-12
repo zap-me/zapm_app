@@ -113,6 +113,9 @@ class _ZapHomePageState extends State<ZapHomePage> {
     if (socket != null) 
       socket.close();
     socket = await merchantSocket((txid, sender, recipient, amount, attachment) {
+      // decode attachment
+      if (attachment != null && attachment.isNotEmpty)
+          attachment = base58decode(attachment);
       // show user overview of new tx
       showDialog(
         context: context,
@@ -137,6 +140,8 @@ class _ZapHomePageState extends State<ZapHomePage> {
       );
       // alert server to update merchant tx table
       merchantTx();
+      // update balance
+      _updateBalance();
     });
   }
 
@@ -307,15 +312,54 @@ class _ZapHomePageState extends State<ZapHomePage> {
     }
   }
 
+  Future<bool> _updateTestnet() async {
+    // update testnet
+    _testnet = await _setTestnet(_wallet.address, _wallet.isMnemonic);
+    setState(() {
+      var testnetText = 'Textnet!';
+      if (_testnet && !_alerts.contains(testnetText))
+        _alerts.add(testnetText);
+      if (!_testnet && _alerts.contains(testnetText))
+        _alerts.remove(testnetText);
+    });
+    return true;
+  }
+
+  Future<bool> _updateBalance() async {
+    // start updating balance spinner
+    setState(() {
+      _updatingBalance = true;
+    });
+    // update state
+    setState(() {
+      _wallet = _wallet;
+    });
+    // get fee
+    var feeResult = await LibZap.transactionFee();
+    // get balance
+    var balanceResult = await LibZap.addressBalance(_wallet.address);
+    // update state
+    setState(() {
+      if (feeResult.success)
+        _fee = Decimal.fromInt(feeResult.value) / Decimal.fromInt(100);
+      if (balanceResult.success) {
+        _balance = Decimal.fromInt(balanceResult.value) / Decimal.fromInt(100);
+        _balanceText = _balance.toStringAsFixed(2);
+      }
+      else {
+        _balance = Decimal.fromInt(-1);
+        _balanceText = ":(";
+      }
+      _updatingBalance = false;
+    });
+    return true;
+  }
+
   Future<bool> _setWalletDetails() async {
     _alerts.clear();
     // check apikey
     if (!await hasApiKey())
       setState(() => _alerts.add('No API KEY set'));
-    // start updating balance spinner
-    setState(() {
-      _updatingBalance = true;
-    });
     // check mnemonic
     if (_wallet == null) {
       var libzap = LibZap();
@@ -358,32 +402,9 @@ class _ZapHomePageState extends State<ZapHomePage> {
       var address = LibZap().seedAddress(_wallet.mnemonic);
       _wallet = Wallet.mnemonic(_wallet.mnemonic, address);
     }
-    // update testnet
-    _testnet = await _setTestnet(_wallet.address, _wallet.isMnemonic);
-    if (_testnet)
-      _alerts.add('Testnet!');
-    // update state
-    setState(() {
-      _wallet = _wallet;
-    });
-    // get fee
-    var feeResult = await LibZap.transactionFee();
-    // get balance
-    var balanceResult = await LibZap.addressBalance(_wallet.address);
-    // update state
-    setState(() {
-      if (feeResult.success)
-        _fee = Decimal.fromInt(feeResult.value) / Decimal.fromInt(100);
-      if (balanceResult.success) {
-        _balance = Decimal.fromInt(balanceResult.value) / Decimal.fromInt(100);
-        _balanceText = _balance.toStringAsFixed(2);
-      }
-      else {
-        _balance = Decimal.fromInt(-1);
-        _balanceText = ":(";
-      }
-      _updatingBalance = false;
-    });
+    // update testnet and balance
+    _updateTestnet();
+    _updateBalance();
     // watch wallet address
     _watchAddress();
     return true;
@@ -413,12 +434,13 @@ class _ZapHomePageState extends State<ZapHomePage> {
     if (value != null) {
       var result = parseRecipientOrWavesUri(_testnet, value);
       if (result != null) {
-        await Navigator.push(
+        var sentFunds = await Navigator.push<bool>(
           context,
           MaterialPageRoute(
               builder: (context) => SendScreen(_testnet, _wallet.mnemonic, _fee, value, _balance)),
         );
-        _setWalletDetails();
+        if (sentFunds)
+          _updateBalance();
       }
       else {
         var result = parseClaimCodeUri(value);
@@ -435,12 +457,13 @@ class _ZapHomePageState extends State<ZapHomePage> {
   }
 
   void _send() async {
-    await Navigator.push(
+    var sentFunds = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
           builder: (context) => SendScreen(_testnet, _wallet.mnemonic, _fee, '', _balance)),
     );
-    _setWalletDetails();
+    if (sentFunds)
+      _updateBalance();
   }
 
   void _receive() async {
@@ -448,7 +471,6 @@ class _ZapHomePageState extends State<ZapHomePage> {
       context,
       MaterialPageRoute(builder: (context) => ReceiveScreen(_testnet, _wallet.address)),
     );
-    _setWalletDetails();
   }
 
   void _transactions() async {
@@ -457,7 +479,6 @@ class _ZapHomePageState extends State<ZapHomePage> {
       context,
       MaterialPageRoute(builder: (context) => TransactionsScreen(_wallet.address, _testnet, _haveSeed() ? null : deviceName)),
     );
-    _setWalletDetails();
   }
 
   void _showSettings() async {
@@ -473,21 +494,23 @@ class _ZapHomePageState extends State<ZapHomePage> {
   }
 
   void _zapReward() async {
-    await Navigator.push(
+    var sentFunds = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
           builder: (context) => RewardScreen(_testnet, _wallet.mnemonic, _fee, _balance)),
     );
-    _setWalletDetails();
+    if (sentFunds)
+      _updateBalance();
   }
 
   void _settlement() async {
-    await Navigator.push(
+    var sentFunds = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
           builder: (context) => SettlementScreen(_testnet, _wallet.mnemonic, _fee, _balance)),
     );
-    _setWalletDetails();
+    if (sentFunds)
+      _updateBalance();
   }
 
   bool _haveSeed() {
@@ -541,7 +564,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: _setWalletDetails,
+        onRefresh: _updateBalance,
         child: ListView(
           children: <Widget>[
             Visibility(
