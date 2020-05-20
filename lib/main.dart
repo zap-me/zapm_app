@@ -321,7 +321,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
     // update testnet
     _testnet = await _setTestnet(_wallet.address, _wallet.isMnemonic);
     setState(() {
-      var testnetText = 'Textnet!';
+      var testnetText = 'Testnet!';
       if (_testnet && !_alerts.contains(testnetText))
         _alerts.add(testnetText);
       if (!_testnet && _alerts.contains(testnetText))
