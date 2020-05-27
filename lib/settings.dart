@@ -13,6 +13,7 @@ import 'utils.dart';
 import 'pinentry.dart';
 import 'widgets.dart';
 import 'bip39widget.dart';
+import 'hidden.dart';
 
 class SettingsScreen extends StatefulWidget {
   final bool _pinProtectedInitial;
@@ -34,6 +35,7 @@ class _SettingsState extends State<SettingsScreen> {
   String _deviceName;
   String _apikey;
   String _apisecret;
+  int _titleTaps = 0;
 
   _SettingsState(this._pinProtected) {
     _initSettings();
@@ -222,12 +224,22 @@ class _SettingsState extends State<SettingsScreen> {
     }
   }
 
+  void _titleTap() {
+    _titleTaps += 1;
+    if (_titleTaps > 10) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => HiddenScreen()),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         leading: backButton(context, color: Colors.black),
-        title: Text("Settings"),
+        title: GestureDetector(onTap: _titleTap, child: Text("Settings")),
       ),
       body: Center(
         child: ListView( 
