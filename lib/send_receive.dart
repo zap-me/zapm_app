@@ -46,7 +46,7 @@ class ReceiveScreen extends StatelessWidget {
     return Scaffold(
         appBar: AppBar(
           leading: backButton(context),
-          title: Text("recieve zap", style: TextStyle(color: Colors.white)),
+          title: Text("receive zap", style: TextStyle(color: Colors.white)),
           backgroundColor: zapgreen,
         ),
         body: CustomPaint(

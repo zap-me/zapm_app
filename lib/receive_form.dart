@@ -112,7 +112,7 @@ class ReceiveFormState extends State<ReceiveForm> {
               ),
               TextFormField(
                 controller: _amountController,
-                keyboardType: TextInputType.number,
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
                 decoration: InputDecoration(labelText: 'amount',
                   suffixIcon: FlatButton(
                     onPressed: () {

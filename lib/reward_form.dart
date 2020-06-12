@@ -84,7 +84,7 @@ class RewardFormState extends State<RewardForm> {
         children: <Widget>[
           TextFormField(
             controller: _amountController,
-            keyboardType: TextInputType.number,
+            keyboardType: TextInputType.numberWithOptions(decimal: true),
             decoration: new InputDecoration(labelText: 'Amount'),
             validator: (value) {
               if (value.isEmpty) {

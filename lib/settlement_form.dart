@@ -169,7 +169,7 @@ class SettlementFormState extends State<SettlementForm> {
           Center(heightFactor: 3, child: Text('make settlement\n  ', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold), textAlign: TextAlign.center)),
           TextFormField(
             controller: _amountController,
-            keyboardType: TextInputType.number,
+            keyboardType: TextInputType.numberWithOptions(decimal: true),
             decoration: new InputDecoration(labelText: 'amount'),
             validator: (value) {
               if (value.isEmpty) {

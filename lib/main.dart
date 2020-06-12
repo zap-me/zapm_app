@@ -49,17 +49,27 @@ void _setTargetPlatformForDesktop() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Zap Merchant',
-      theme: ThemeData(
-        brightness: Brightness.light,
-        primaryColor: Colors.white,
-        accentColor: zapblue,
-        textTheme: GoogleFonts.oxygenTextTheme(
-          Theme.of(context).textTheme,
+    return GestureDetector(
+      onTap: () {
+        // unfocus any text fields when touching non interactive part of app
+        // this should hide any keyboards
+        var currentFocus = FocusScope.of(context);
+        if (!currentFocus.hasPrimaryFocus && currentFocus.focusedChild != null) {
+          FocusManager.instance.primaryFocus.unfocus();
+        }
+      },
+      child: MaterialApp(
+        title: 'Zap Merchant',
+        theme: ThemeData(
+          brightness: Brightness.light,
+          primaryColor: Colors.white,
+          accentColor: zapblue,
+          textTheme: GoogleFonts.oxygenTextTheme(
+            Theme.of(context).textTheme,
+          ),
         ),
-      ),
-      home: ZapHomePage(title: 'Zap Merchant'),
+        home: ZapHomePage(title: 'Zap Merchant'),
+      )
     );
   }
 }
