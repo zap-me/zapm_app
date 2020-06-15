@@ -21,6 +21,8 @@ jobs:
       with:
         flutter-version: '1.17.x'
         channel: 'beta'
+    - name: Install NDK
+      run: echo "y" | sudo /usr/local/lib/android/tools/bin/sdkmanager --install "ndk;20.0.5594570" --sdk_root=${ANDROID_SDK_ROOT}
     - run: flutter pub get
     #- run: flutter test
     - run: flutter build apk
