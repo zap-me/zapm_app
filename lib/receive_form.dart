@@ -29,6 +29,7 @@ class ReceiveFormState extends State<ReceiveForm> {
   final _uriController = TextEditingController();
   String _uri;
   String _amountType = 'nzd';
+  bool _validAmount = true;
   StreamSubscription<String> _uriSub;
   Rates _rates;
 
@@ -101,7 +102,7 @@ class ReceiveFormState extends State<ReceiveForm> {
               Center(heightFactor: 5, child: Text('scan QR code', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold), textAlign: TextAlign.center)),
               Center(child: Card(
                 margin: EdgeInsets.all(20),
-                child: _uri != RATES_FAILED && _uri != NO_API_KEY ? QrWidget(_uri, size: 240, version: 10) : Container(width: 240, height: 240))
+                child: _uri != RATES_FAILED && _uri != NO_API_KEY && _validAmount ? QrWidget(_uri, size: 240, version: 10) : Container(width: 240, height: 240))
               ),
               TextFormField(
                 controller: _uriController,
@@ -126,6 +127,7 @@ class ReceiveFormState extends State<ReceiveForm> {
                     },
                     child: Text(_amountType, style: TextStyle(color: zapgreen)))
                 ),
+                style: _validAmount ? null : TextStyle(color: Colors.red),
                 validator: (value) {
                   if (value.isEmpty) {
                     return 'Please enter a value';
@@ -135,6 +137,18 @@ class ReceiveFormState extends State<ReceiveForm> {
                     return 'Please enter a value greater then zero';
                   }
                   return null;
+                },
+                onChanged: (value) {
+                  if (value.isEmpty) {
+                    setState(() {
+                      _validAmount = true;
+                    });
+                  } else {
+                    var valid = Decimal.tryParse(value) != null;
+                    setState(() {
+                      _validAmount = valid;
+                    });
+                  }
                 },
               ),
               Padding(
