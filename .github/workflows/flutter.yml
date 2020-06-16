@@ -31,7 +31,7 @@ jobs:
     - name: upload apk
       uses: actions/upload-artifact@v1
       with:
-        name: apk
+        name: app-release-android.apk
         path: build/app/outputs/apk/release/app-release.apk
 
   build-ios:
@@ -52,5 +52,5 @@ jobs:
     - name: upload build
       uses: actions/upload-artifact@v1
       with:
-        name: Runner.app
+        name: app-release-ios.app
         path: build/ios/iphoneos/Runner.app
