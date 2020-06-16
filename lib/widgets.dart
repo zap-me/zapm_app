@@ -1,8 +1,11 @@
+import 'package:ZapMerchant/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flushbar/flushbar.dart';
 import 'package:decimal/decimal.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:intl/intl.dart';
+
+import 'merchant.dart';
 
 const zapgrey =         Color(0xFFF8F6F1);
 const zapblue =         Color(0xFF3765CB);
@@ -152,20 +155,30 @@ class ListButton extends StatelessWidget {
 }
 
 class ListTx extends StatelessWidget {
-  ListTx(this.onPressed, this.date, this.txid, this.amount, this.outgoing, {this.last = false}) : super();
+  ListTx(this.onPressed, this.date, this.txid, this.amount, this.merchantRates, this.outgoing, {this.last = false}) : super();
 
   final VoidCallback onPressed;
   final DateTime date;
   final String txid;
   final Decimal amount;
+  final Rates merchantRates;
   final bool outgoing;
   final bool last;
 
   @override
   Widget build(BuildContext context) {
-    var ts = TextStyle(fontSize: 12, color: zapblacklight);
     var color = outgoing ? zapyellow : zapgreen;
-    var amountStr = '${outgoing ? '-' : '+'} ${amount.toStringAsFixed(2)} zap';
+    var tsLeft = TextStyle(fontSize: 12, color: zapblacklight);
+    var tsRight = TextStyle(fontSize: 12, color: color);
+    var amountText = '${amount.toStringAsFixed(2)} ZAP';
+    Widget amountWidget = Text(amountText, style: tsRight);
+    if (merchantRates != null) {
+      var amountNZD = Text(toNZDAmount(amount, merchantRates), style: tsRight);
+      amountWidget = Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+        amountWidget,
+        amountNZD
+      ]);
+    }
     var icon = outgoing ? MaterialCommunityIcons.chevron_double_up : MaterialCommunityIcons.chevron_double_down;
     return Column(
       children: <Widget>[
@@ -175,12 +188,13 @@ class ListTx extends StatelessWidget {
           dense: true,
           contentPadding: EdgeInsets.symmetric(horizontal: 8),
           leading: Column(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
-            Text(DateFormat('d MMM').format(date).toUpperCase(), style: ts),
-            Text(DateFormat('yyyy').format(date), style: ts),
+            Text(DateFormat('d MMM').format(date).toUpperCase(), style: tsLeft),
+            Text(DateFormat('yyyy').format(date), style: tsLeft),
           ]),
           title: Text(txid),
           trailing: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
-            Text(amountStr, style: TextStyle(color: color, fontSize: 12)), 
+            Text(outgoing ? '- ' : '+ ', style: tsRight),
+            amountWidget, 
             Icon(icon, color: color, size: 14)]
           )
         ),

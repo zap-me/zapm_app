@@ -96,6 +96,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
   bool _updatingBalance = true;
   bool _showAlerts = true;
   List<String> _alerts = List<String>();
+  Rates _merchantRates;
 
   _ZapHomePageState();
 
@@ -107,7 +108,13 @@ class _ZapHomePageState extends State<ZapHomePage> {
     super.dispose();
   }
 
-  void _txNotification(txid, sender, recipient, amount, attachment) {
+  void _txNotification(String txid, String sender, String recipient, double amount, String attachment) {
+    var amountString = "${amount.toStringAsFixed(2)} ZAP";
+    // convert amount to NZD
+    if (_merchantRates != null) {
+      var amountNZD = amount / (1.0 + _merchantRates.merchantRate.toDouble());
+      amountString += " / ${amountNZD.toStringAsFixed(2)} NZD";
+    }
     // decode attachment
     if (attachment != null && attachment.isNotEmpty)
         attachment = base58decode(attachment);
@@ -125,8 +132,8 @@ class _ZapHomePageState extends State<ZapHomePage> {
               children: <Widget>[
                 ListTile(title: Text("TXID"), subtitle: Text(txid)),
                 ListTile(title: Text("sender"), subtitle: Text(sender),),
-                ListTile(title: Text("amount"), subtitle: Text("${amount.toStringAsFixed(2)} ZAP")),
-                ListTile(title: Text(attachment != null && attachment.isNotEmpty ? "attachment: $attachment" : "")),
+                ListTile(title: Text("amount"), subtitle: Text(amountString)),
+                ListTile(title: Text(attachment != null && attachment.isNotEmpty ? "attachment" : ""), subtitle: Text(attachment != null && attachment.isNotEmpty ? attachment : "")),
               ],
             ),
           ),
@@ -422,6 +429,9 @@ class _ZapHomePageState extends State<ZapHomePage> {
     _updateBalance();
     // watch wallet address
     _watchAddress();
+    // update merchant rates
+    if (await hasApiKey())
+      merchantRates().then((value) => _merchantRates = value);
     return true;
   }
 
@@ -492,7 +502,7 @@ class _ZapHomePageState extends State<ZapHomePage> {
     var deviceName = await Prefs.deviceNameGet();
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => TransactionsScreen(_wallet.address, _testnet, _haveSeed() ? null : deviceName)),
+      MaterialPageRoute(builder: (context) => TransactionsScreen(_wallet.address, _testnet, _haveSeed() ? null : deviceName, _merchantRates)),
     );
   }
 

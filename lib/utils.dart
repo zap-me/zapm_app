@@ -491,3 +491,11 @@ Future<bool> hasApiKey() async {
     return false;  
   return true;
 }
+
+String toNZDAmount(Decimal amount, Rates merchantRates) {
+  if (merchantRates != null) {
+    var amountNZD = amount / (Decimal.fromInt(1) + merchantRates.merchantRate);
+    return "${amountNZD.toStringAsFixed(2)} NZD";
+  }
+  return "";
+}

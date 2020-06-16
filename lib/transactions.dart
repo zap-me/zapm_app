@@ -9,13 +9,15 @@ import 'package:path_provider/path_provider.dart';
 import 'libzap.dart';
 import 'utils.dart';
 import 'widgets.dart';
+import 'merchant.dart';
 
 class TransactionsScreen extends StatefulWidget {
   final String _address;
   final bool _testnet;
   final String _deviceName;
+  final Rates _merchantRates;
 
-  TransactionsScreen(this._address, this._testnet, this._deviceName) : super();
+  TransactionsScreen(this._address, this._testnet, this._deviceName, this._merchantRates) : super();
 
   @override
   _TransactionsState createState() => new _TransactionsState();
@@ -151,10 +153,12 @@ class _TransactionsState extends State<TransactionsScreen> {
     var tx = _txsFiltered[offsetIndex];
     var outgoing = tx.sender == widget._address;
     var amount = Decimal.fromInt(tx.amount) / Decimal.fromInt(100);
-    var amountText = amount.toStringAsFixed(2);
+    var amountText = "${amount.toStringAsFixed(2)} ZAP";
+    if (widget._merchantRates != null)
+      amountText = "$amountText / ${toNZDAmount(amount, widget._merchantRates)}";
+    amountText = outgoing ? '- $amountText' : '+ $amountText';
     var fee = Decimal.fromInt(tx.fee) / Decimal.fromInt(100);
     var feeText = fee.toStringAsFixed(2);
-    amountText = outgoing ? '- $amountText' : '+ $amountText';
     var color = outgoing ? zapyellow : zapgreen;
     var date = new DateTime.fromMillisecondsSinceEpoch(tx.timestamp);
     var dateStrLong = DateFormat('yyyy-MM-dd HH:mm').format(date);
@@ -185,12 +189,12 @@ class _TransactionsState extends State<TransactionsScreen> {
                     ListTile(title: Text('date'), subtitle: Text(dateStrLong)),
                     ListTile(title: Text('sender'), subtitle: Text(tx.sender)),
                     ListTile(title: Text('recipient'), subtitle: Text(tx.recipient)),
-                    ListTile(title: Text('amount'), subtitle: Text('$amountText zap', style: TextStyle(color: color),)),
-                    ListTile(title: Text('fee'), subtitle: Text('$feeText zap',)),
+                    ListTile(title: Text('amount'), subtitle: Text(amountText, style: TextStyle(color: color),)),
+                    ListTile(title: Text('fee'), subtitle: Text('$feeText ZAP',)),
                     Visibility(
                       visible: tx.attachment != null && tx.attachment.isNotEmpty,
                       child:
-                        ListTile(title: Text("Attachment"), subtitle: Text(tx.attachment)),
+                        ListTile(title: Text("attachment"), subtitle: Text(tx.attachment)),
                     ),
                     Container(
                       padding: const EdgeInsets.only(top: 5.0),
@@ -203,7 +207,7 @@ class _TransactionsState extends State<TransactionsScreen> {
           }
         )
       );
-    }, date, tx.id, amount, outgoing);
+    }, date, tx.id, amount, widget._merchantRates, outgoing);
   }
 
   void _select(Choice choice) async {
