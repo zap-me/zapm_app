@@ -24,7 +24,7 @@ jobs:
     - name: download libzap
       run: wget https://github.com/djpnewton/libzap/releases/download/v12/android.zip
     - name: extract libzap
-      run: cd native-libraries; mkdir android; cd android; unzip ../../android.zip
+      run: mkdir -p native-libraries/android; cd native-libraries/android; unzip ../../android.zip
     - run: flutter pub get
     #- run: flutter test
     - run: flutter build apk
