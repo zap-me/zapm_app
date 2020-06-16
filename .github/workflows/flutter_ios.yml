@@ -19,7 +19,7 @@ jobs:
     - name: download libzap
       run: wget https://github.com/djpnewton/libzap/releases/download/v12/ios.zip
     - name: extract libzap
-      run: cd native-libraries; mkdir ios; cd ios; unzip ../../ios.zip
+      run: mkdir -p native-libraries/ios; mkdir native-libraries/ios; unzip ../../ios.zip
     - run: flutter pub get
     #- run: flutter test
     - run: flutter build appbundle
