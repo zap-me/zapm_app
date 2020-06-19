@@ -85,9 +85,9 @@ class ZapHomePage extends StatefulWidget {
 
 enum NoWalletAction { CreateMnemonic, RecoverMnemonic, RecoverRaw, ScanMerchantApiKey }
 
-class _ZapHomePageState extends State<ZapHomePage> {
-  Socket socket;
-
+class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
+  Socket _socket;
+  
   bool _testnet = true;
   Wallet _wallet;
   Decimal _fee = Decimal.parse("0.01");
@@ -101,11 +101,28 @@ class _ZapHomePageState extends State<ZapHomePage> {
   _ZapHomePageState();
 
   @override
+  void initState() {
+    _init();
+    // add WidgetsBindingObserver
+    WidgetsBinding.instance.addObserver(this);
+    super.initState();
+  }
+
+  @override
   void dispose() {
+    // remove WidgetsBindingObserver
+    WidgetsBinding.instance.removeObserver(this);
     // close socket
-    if (socket != null) 
-      socket.close();
+    if (_socket != null) 
+      _socket.close();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    print("App lifestyle state changed: $state");
+    if (state == AppLifecycleState.resumed)
+      _watchAddress();
   }
 
   void _txNotification(String txid, String sender, String recipient, double amount, String attachment) {
@@ -162,9 +179,9 @@ class _ZapHomePageState extends State<ZapHomePage> {
       return;
     }
     // create socket to receive tx alerts
-    if (socket != null) 
-      socket.close();
-    socket = await merchantSocket(_txNotification);
+    if (_socket != null) 
+      _socket.close();
+    _socket = await merchantSocket(_txNotification);
   }
 
   Future<NoWalletAction> _noWalletDialog(BuildContext context) async {
@@ -570,12 +587,6 @@ class _ZapHomePageState extends State<ZapHomePage> {
       _noWallet();
       _setWalletDetails();
     }
-  }
-
-  @override
-  void initState() {
-    _init();
-    super.initState();
   }
 
   @override
