@@ -1,3 +1,4 @@
+import 'package:ZapMerchant/recovery_form.dart';
 import 'package:flutter/foundation.dart'
     show debugDefaultTargetPlatformOverride;
 import 'dart:io' show Platform;
@@ -21,7 +22,6 @@ import 'prefs.dart';
 import 'new_mnemonic_form.dart';
 import 'transactions.dart';
 import 'merchant.dart';
-import 'bip39widget.dart';
 import 'widgets.dart';
 
 void main() {
@@ -221,26 +221,8 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         });
   }
 
-  Future<String> _recoverMnemonic(BuildContext context) async {
-    String mnemonic = "";
-    return showDialog<String>(
-      context: context,
-      barrierDismissible: false, // dialog is dismissible with a tap on the barrier
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Enter your recovery words to recover your account"),
-          content: Bip39Entry((words) => mnemonic = words.join(' ')),
-          actions: <Widget>[
-            FlatButton(
-              child: Text("Ok"),
-              onPressed: () {
-                Navigator.of(context).pop(mnemonic);
-              },
-            ),
-          ],
-        );
-      },
-    );
+  Future<String> _recoverMnemonic(BuildContext context) {
+    return Navigator.push<String>(context, MaterialPageRoute(builder: (context) => RecoveryForm()));
   }
 
   Future<String> _recoverSeed(BuildContext context) async {

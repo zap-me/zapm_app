@@ -172,7 +172,7 @@ class _Bip39EntryState extends State<Bip39Entry> {
             ); 
           })
         ),
-        Bip39Words(_mnemonicWords, _validBip39, (index) => wordRemove(index), rowSize: 3)
+        Bip39Words(_mnemonicWords, _validBip39, (index) => wordRemove(index))
       ],
     );
   }
