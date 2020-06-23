@@ -57,7 +57,7 @@ class Bip39Words extends StatelessWidget {
                 Expanded(
                   child: Center(child: Text(item, style: TextStyle(fontSize: 11)))
                 )]),
-              onPressed: () => onWordPressed(index))));
+              onPressed: () => onWordPressed(rowIndex * rowSize + index))));
           }).toList()
         );
       }).toList()
