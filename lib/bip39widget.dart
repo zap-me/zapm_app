@@ -87,6 +87,15 @@ class _Bip39EntryState extends State<Bip39Entry> {
       _candidates[i] = '';
   }
 
+  void chooseWord (String word) {
+    setState(() {
+      clearCandidates();
+      _mnemonicWords.add(word);
+      updateWords();
+      _textController.text = '';
+    });
+  }
+
   void inputChanged(String value) {
     // all bip39 words are lowercase
     value = value.toLowerCase();
@@ -99,6 +108,9 @@ class _Bip39EntryState extends State<Bip39Entry> {
     var prefixMatched = 0;
 
     for (var item in _wordlist) {
+      /*
+      removing as some bip39 words are prefixes of other bip39 words (eg ten => tenant, tennis, tent)
+
       // if the item matches exactly then add it and reset
       if (value == item) {
         setState(() {
@@ -109,17 +121,38 @@ class _Bip39EntryState extends State<Bip39Entry> {
         });
         return;
       }
-
-      // if we have filled the candidates with prefix matched values then dont bother checking for more
-      if (prefixMatched >= c.length)
-        continue;
+      */
 
       // check for words that match the prefix exactly
-      if (value.isNotEmpty && item.length > value.length && value == item.substring(0, value.length)) {
-        c[prefixMatched] = item;
-        prefixMatched++;
+      if (value.isNotEmpty && item.length >= value.length && value == item.substring(0, value.length)) {
+        if (prefixMatched < c.length) {
+          // if we have not filled the candidates then just chuck it in the first slot
+          c[prefixMatched] = item;
+          prefixMatched++;
+        } else {
+          // else sort based on shortness of word
+          var cNew = [item];
+          for (var i in List<int>.generate(c.length, (i) => i)) {
+            var oldItem = c[i];
+            var inserted = false;
+            for (var j in List<int>.generate(cNew.length, (j) => j)) {
+              if (oldItem.length < cNew[j].length) {
+                cNew.insert(j, oldItem);
+                inserted = true;
+                break;
+              }
+            }
+            if (!inserted)
+              cNew.add(oldItem);
+          }
+          c = cNew.take(c.length).toList();
+        }
         continue;
       }
+
+      // if we have filled the candidates with prefix matched values then dont bother checking levenstein
+      if (prefixMatched >= c.length)
+        continue;
 
       // check for words that are close in terms of levenshtein distance
       var dist = _levenshtein.normalizedDistance(value, item);
@@ -137,7 +170,7 @@ class _Bip39EntryState extends State<Bip39Entry> {
       }
     }
     setState(() {
-      _candidates = c;      
+      _candidates = c;
     });
   }
 
@@ -168,7 +201,7 @@ class _Bip39EntryState extends State<Bip39Entry> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: List<Widget>.generate(_candidates.length, (index) {
             return ButtonTheme(minWidth: 40, height: 25, buttonColor: zapyellow.withAlpha(198),
-              child: RaisedButton(child: Text(_candidates[index]), onPressed: () => inputChanged(_candidates[index]))
+              child: RaisedButton(child: Text(_candidates[index]), onPressed: () => chooseWord(_candidates[index]))
             ); 
           })
         ),
