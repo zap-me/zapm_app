@@ -35,6 +35,7 @@ class _SettingsState extends State<SettingsScreen> {
   String _deviceName;
   String _apikey;
   String _apisecret;
+  String _apiserver;
   int _titleTaps = 0;
 
   _SettingsState(this._pinProtected) {
@@ -74,10 +75,12 @@ class _SettingsState extends State<SettingsScreen> {
     var deviceName = await Prefs.deviceNameGet();
     var apikey = await Prefs.apikeyGet();
     var apisecret = await Prefs.apisecretGet();
+    var apiserver = await Prefs.apiserverGet();
     setState(() {
       _deviceName = deviceName;
       _apikey = apikey;
       _apisecret = apisecret;
+      _apiserver = apiserver;
     });
   }
 
@@ -170,10 +173,14 @@ class _SettingsState extends State<SettingsScreen> {
         await Prefs.deviceNameSet(result.deviceName);
         await Prefs.apikeySet(result.apikey);
         await Prefs.apisecretSet(result.apisecret);
+        if (result.apiserver != null || result.apiserver.isNotEmpty)
+          await Prefs.apiserverSet(result.apiserver);
         setState(() {
           _deviceName = result.deviceName;
           _apikey = result.apikey;
           _apisecret = result.apisecret;
+          if (result.apiserver != null || result.apiserver.isNotEmpty)
+            _apiserver = result.apiserver;
         });
         flushbarMsg(context, 'API KEY set');
         if (result.accountAdmin && result.walletAddress.isEmpty) {
@@ -220,6 +227,16 @@ class _SettingsState extends State<SettingsScreen> {
       await Prefs.apisecretSet(apisecret);
       setState(() {
         _apisecret = apisecret;
+      });
+    }
+  }
+
+  void _editApiserver() async {
+    var apiserver = await askString(context, "Set Api Server", _apiserver);
+    if (apiserver != null) {
+      await Prefs.apiserverSet(apiserver);
+      setState(() {
+        _apiserver = apiserver;
       });
     }
   }
@@ -312,6 +329,7 @@ class _SettingsState extends State<SettingsScreen> {
             ListTile(title: Text("Device Name"), subtitle: Text("$_deviceName"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: _editDeviceName),),
             ListTile(title: Text("Api Key"), subtitle: Text("$_apikey"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: _editApikey),),
             ListTile(title: Text("Api Secret"), subtitle: Text("$_apisecret"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: _editApisecret),),
+            ListTile(title: Text("Api Server"), subtitle: Text("$_apiserver"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: _editApiserver),),
             ],
           ),
         )

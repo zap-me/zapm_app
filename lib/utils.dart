@@ -124,17 +124,19 @@ class ApiKeyResult {
   final String deviceName;
   final String apikey;
   final String apisecret;
+  final String apiserver;
   final String walletAddress;
   final bool accountAdmin;
   final int error;
 
-  ApiKeyResult(this.deviceName, this.apikey, this.apisecret, this.walletAddress, this.accountAdmin, this.error);
+  ApiKeyResult(this.deviceName, this.apikey, this.apisecret, this.apiserver, this.walletAddress, this.accountAdmin, this.error);
 }
 
 ApiKeyResult parseApiKeyUri(String uri) {
   var deviceName = '';
   var apikey = '';
   var secret = '';
+  var server = '';
   var address = '';
   var admin = false;
   int error = NO_ERROR;
@@ -146,6 +148,8 @@ ApiKeyResult parseApiKeyUri(String uri) {
       for (var part in parts) {
         var res = parseUriParameter(part, 'secret');
         if (res != null) secret = res;
+        res = parseUriParameter(part, 'server');
+        if (res != null) server = res;
         res = parseUriParameter(part, 'name');
         if (res != null) deviceName = res;
         res = parseUriParameter(part, 'address');
@@ -157,7 +161,7 @@ ApiKeyResult parseApiKeyUri(String uri) {
   }
   else
     error = INVALID_APIKEY_URI;
-  return ApiKeyResult(deviceName, apikey, secret, address, admin, error);
+  return ApiKeyResult(deviceName, apikey, secret, server, address, admin, error);
 }
 
 String parseRecipientOrWavesUri(bool testnet, String data) {

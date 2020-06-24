@@ -179,4 +179,18 @@ class Prefs {
     await prefs.setString("apisecret", value);
     return true;
   }
+
+  static Future<String> apiserverGet() async {
+    final prefs = PrefHelper();
+    var server = await prefs.getString("apiserver", null);
+    if (server == null || server.isEmpty)
+      server = "https://merchant-zap.herokuapp.com/";
+    return server;
+  }
+
+  static Future<bool> apiserverSet(String value) async {
+    final prefs = PrefHelper();
+    await prefs.setString("apiserver", value);
+    return true;
+  }
 }

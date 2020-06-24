@@ -8,8 +8,6 @@ import 'package:socket_io_client/socket_io_client.dart';
 
 import 'prefs.dart';
 
-var baseUrl = "https://merchant-zap.herokuapp.com/";
-
 class ClaimCode {
   final Decimal amount;
   final String token;
@@ -94,6 +92,7 @@ void checkApiKey(String apikey, String apisecret) {
 
 Future<ClaimCode> merchantRegister(Decimal amount, int amountInt) async {
   var claimCode = ClaimCode.generate(amount);
+  var baseUrl = await Prefs.apiserverGet();
   var url = baseUrl + "register";
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
@@ -109,6 +108,7 @@ Future<ClaimCode> merchantRegister(Decimal amount, int amountInt) async {
 }
 
 Future<String> merchantCheck(ClaimCode claimCode) async {
+  var baseUrl = await Prefs.apiserverGet();
   var url = baseUrl + "check";
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
@@ -124,6 +124,7 @@ Future<String> merchantCheck(ClaimCode claimCode) async {
 }
 
 Future<bool> merchantClaim(ClaimCode claimCode, String address) async {
+  var baseUrl = await Prefs.apiserverGet();
   var url = baseUrl + "claim";
   var body = jsonEncode({"token": claimCode.token, "secret": claimCode.secret, "address": address});
   var response = await http.post(url, headers: {"Content-Type": "application/json"}, body: body);
@@ -134,6 +135,7 @@ Future<bool> merchantClaim(ClaimCode claimCode, String address) async {
 }
 
 Future<bool> merchantWatch(String address) async {
+  var baseUrl = await Prefs.apiserverGet();
   var url = baseUrl + "watch";
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
@@ -149,6 +151,7 @@ Future<bool> merchantWatch(String address) async {
 }
 
 Future<bool> merchantWalletAddress(String address) async {
+  var baseUrl = await Prefs.apiserverGet();
   var url = baseUrl + "wallet_address";
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
@@ -164,6 +167,7 @@ Future<bool> merchantWalletAddress(String address) async {
 }
 
 Future<bool> merchantTx() async {
+  var baseUrl = await Prefs.apiserverGet();
   var url = baseUrl + "merchanttx";
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
@@ -179,6 +183,7 @@ Future<bool> merchantTx() async {
 }
 
 Future<Rates> merchantRates() async {
+  var baseUrl = await Prefs.apiserverGet();
   var url = baseUrl + "rates";
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
@@ -195,6 +200,7 @@ Future<Rates> merchantRates() async {
 }
 
 Future<List<Bank>> merchantBanks() async {
+  var baseUrl = await Prefs.apiserverGet();
   var url = baseUrl + "banks";
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
@@ -216,6 +222,7 @@ Future<List<Bank>> merchantBanks() async {
 }
 
 Future<SettlementResult> merchantSettlement(Decimal amount, String bankToken) async {
+  var baseUrl = await Prefs.apiserverGet();
   var url = baseUrl + "settlement";
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
@@ -236,6 +243,7 @@ Future<SettlementResult> merchantSettlement(Decimal amount, String bankToken) as
 }
 
 Future<SettlementResult> merchantSettlementUpdate(String token, String txid) async {
+  var baseUrl = await Prefs.apiserverGet();
   var url = baseUrl + "settlement_set_txid";
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
@@ -257,6 +265,7 @@ Future<SettlementResult> merchantSettlementUpdate(String token, String txid) asy
 
 typedef TxNotificationCallback = void Function(String txid, String sender, String recipient, double amount, String attachment);
 Future<Socket> merchantSocket(TxNotificationCallback txNotificationCallback) async {
+  var baseUrl = await Prefs.apiserverGet();
   var apikey = await Prefs.apikeyGet();
   var apisecret = await Prefs.apisecretGet();
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
