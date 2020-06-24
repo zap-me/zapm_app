@@ -27,6 +27,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsState extends State<SettingsScreen> {
   bool _pinProtected;
+  bool _showMnemonic = false;
   bool _mnemonicPasswordProtected;
   String _appVersion;
   String _buildNumber;
@@ -305,9 +306,24 @@ class _SettingsState extends State<SettingsScreen> {
                       ),
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.only(top: 18.0),
-                    child: ListTile(title: Text("Recovery words"), subtitle: widget._mnemonic != null ? Bip39Words.fromString(widget._mnemonic) : Text('n/a'), trailing: _mnemonicPasswordProtected ? Icon(Icons.lock) : Icon(Icons.lock_open),),
+                  Visibility(
+                    visible: !_showMnemonic,
+                    child: Container(
+                      padding: const EdgeInsets.only(top: 18.0),
+                      child: ListTile(
+                        title: RaisedButton(child: Text("Show Recovery Words"), onPressed: () => setState(() => _showMnemonic = true)),
+                      ),
+                    ),
+                  ),
+                  Visibility(
+                    visible: _showMnemonic,
+                    child: Container(
+                      padding: const EdgeInsets.only(top: 18.0),
+                      child: ListTile(
+                        title: Text("Recovery words"),
+                        subtitle: widget._mnemonic != null ? Bip39Words.fromString(widget._mnemonic) : Text('n/a'),
+                        trailing: _mnemonicPasswordProtected ? Icon(Icons.lock) : Icon(Icons.lock_open),),
+                    )
                   ),
                   Visibility(
                     visible: !_mnemonicPasswordProtected,

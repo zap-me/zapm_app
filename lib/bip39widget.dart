@@ -45,23 +45,24 @@ class Bip39Words extends StatelessWidget {
     }
     if (row.length > 0)
       rows.add(row);
-    return Column(
+    return Center(child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: rows.mapIndex((item, rowIndex) {
-        return Row(children: item.mapIndex((item, index) {
+        return Row(mainAxisSize: MainAxisSize.min, children: item.mapIndex((item, index) {
           return Container(
             width: 65, height: 30, padding: EdgeInsets.all(1),
             child: ButtonTheme(buttonColor: validBip39 ? zapgreen.withAlpha(198) : Colors.white, padding: EdgeInsets.all(2),
-            child: RaisedButton(
-              child: Row(children: [
-                Text(' ${rowIndex * rowSize + index + 1}', style: TextStyle(color: zapblacklight, fontSize: 8)),
-                Expanded(
-                  child: Center(child: Text(item, style: TextStyle(fontSize: 11)))
-                )]),
-              onPressed: () => onWordPressed(rowIndex * rowSize + index))));
+              child: RaisedButton(
+                child: Row(children: [
+                  Text(' ${rowIndex * rowSize + index + 1}', style: TextStyle(color: zapblacklight, fontSize: 8)),
+                  Expanded(
+                    child: Center(child: Text(item, style: TextStyle(fontSize: 11)))
+                  )]),
+                onPressed: () => onWordPressed(rowIndex * rowSize + index))));
           }).toList()
         );
       }).toList()
-    );
+    ));
   }
 }
 
