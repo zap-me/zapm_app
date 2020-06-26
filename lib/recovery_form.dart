@@ -4,8 +4,9 @@ import 'bip39widget.dart';
 
 
 class RecoveryForm extends StatefulWidget {
+  final String instructions;
   
-  RecoveryForm() : super();
+  RecoveryForm({this.instructions}) : super();
 
   @override
   RecoveryFormState createState() {
@@ -22,7 +23,7 @@ class RecoveryFormState extends State<RecoveryForm> {
       appBar: PreferredSize(child: Container(), preferredSize: Size(0, 0),),
       body: Container(padding: EdgeInsets.all(20), child: Center(child: Column(
         children: <Widget>[
-          Text("Enter your recovery words to recover your account"),
+          Text(widget.instructions == null ? "Enter your recovery words to recover your account" : widget.instructions),
           Bip39Entry((words) => _mnemonic = words.join(' ')),
           RaisedButton(
             child: Text("Ok"),
