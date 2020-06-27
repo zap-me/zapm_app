@@ -12,24 +12,43 @@ import 'libzap.dart';
 import 'recovery_form.dart';
 
 class SignaturePicker extends StatelessWidget {
-  final void Function(int) signatureSelected;
+  final void Function(int) signatureSelect;
+  final void Function(int, int) signatureSwap;
+  final void Function(int) signatureDelete;
   final String fileData;
   final int signatureIndex;
 
-  SignaturePicker(this.signatureSelected, this.fileData, this.signatureIndex) : super();
+  SignaturePicker(this.signatureSelect, this.signatureSwap, this.signatureDelete, this.fileData, this.signatureIndex) : super();
 
   @override
   Widget build(BuildContext context) {
-    var sigButtons = <Widget>[];
+    var sigs = <Widget>[];
     if (fileData != null) {
       var res = json.decode(fileData);
       for (var i = 0; i < res['proofs'].length; i++) {
-        sigButtons.add(FlatButton(onPressed: () => signatureSelected(i), 
-          child: Text(res['proofs'][i], style: i == signatureIndex ? TextStyle(color: Colors.red) : null)));
+        var button = FlatButton(onPressed: () => signatureSelect(i), 
+          child: Text(res['proofs'][i], style: i == signatureIndex ? TextStyle(color: Colors.red) : null));
+        var tile = ListTile(key: Key('$i'), title: Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+          Text('$i', style: TextStyle(color: Colors.grey, fontSize: 10)), button,
+          FlatButton(onPressed: () => signatureDelete(i), child: Icon(Icons.close)),
+          DragTarget<int>(
+            builder: (context, candidateData, rejectedData) {
+              return Draggable(
+                data: i,
+                child: Icon(Icons.reorder),
+                childWhenDragging: Icon(Icons.reorder, color: Colors.grey),
+                feedback: Icon(Icons.reorder, color: Colors.red, size: 30),
+              );
+            },
+            onWillAccept: (data) => true,
+            onAccept: (data) => signatureSwap(data, i),
+          )
+        ]));
+        sigs.add(tile);
       }
     }
     return Column(
-      children: sigButtons
+      children: sigs
     );
   }
 }
@@ -52,20 +71,63 @@ class _MultisigState extends State<MultisigScreen> {
 
   _MultisigState();
 
-  void _signatureIndexSelected(int index) {
+  String jsonEncodePretty(Object obj) {
+    return JsonEncoder.withIndent('    ').convert(obj);
+  }
+
+  void _signatureSelect(int index) {
     setState(() {
-      print(index);
       _signatureIndex = index;
     });
   }
 
+  void _signatureSwap(int index1, int index2) {
+    var jsn = json.decode(_fileData);
+    var proofs = jsn['proofs'] as List<dynamic>;
+    var temp = proofs[index1];
+    proofs[index1] = proofs[index2];
+    proofs[index2] = temp;
+    setState(() {
+      _fileData = jsonEncodePretty(jsn);
+    });
+  }
+
+  void _signatureDelete(int index) {
+    var jsn = json.decode(_fileData);
+    (jsn['proofs'] as List<dynamic>).removeAt(index);
+    setState(() {
+      _fileData = jsonEncodePretty(jsn);
+    });
+  }
+
+  String _mergeData(String fileData, String fileDataToMerge) {
+    var json1 = json.decode(fileData) as Map<String, dynamic>;
+    var json2 = json.decode(fileDataToMerge) as Map<String, dynamic>;
+    for (var key in json1.keys) {
+      if (key == 'proofs')
+        continue;
+      if (json1[key] != json2[key]) {
+        flushbarMsg(context, 'file did not match', category: MessageCategory.Warning);
+        return fileData;
+      }
+    }
+    var proofs1 = json1['proofs'] as List<dynamic>;
+    var proofs2 = json2['proofs'] as List<dynamic>;
+    for (var proof in proofs2)
+      proofs1.add(proof);
+    json1['proofs'] = proofs1;
+    return jsonEncodePretty(json1);
+  }
+
   void _loadFile() async {
-    _filePath = await FilePicker.getFilePath(type: FileType.custom, allowedExtensions: ['json']);
+    _filePath = await FilePicker.getFilePath(type: FileType.custom, allowedExtensions: ['json', 'json_signed']);
     if (_filePath == null) {
       return;
     }
     var file = File(_filePath);
     var fileData = await file.readAsString();
+    if (_fileData != null)
+      fileData = _mergeData(fileData, _fileData);
     setState(() {
       _fileData = fileData;
       _signatureIndex = null;
@@ -115,7 +177,7 @@ class _MultisigState extends State<MultisigScreen> {
     }
     res['proofs'][_signatureIndex] = base58encode(sig.signature.toList());
     setState(() {
-      _fileData = JsonEncoder.withIndent('    ').convert(res);
+      _fileData = jsonEncodePretty(res);
     });
   }
 
@@ -132,6 +194,7 @@ class _MultisigState extends State<MultisigScreen> {
     var fileName = path.basename(filePath);
     FlutterShare.shareFile(
       title: fileName,
+      text: _fileData,
       filePath: filePath,
     );
   }
@@ -159,7 +222,7 @@ class _MultisigState extends State<MultisigScreen> {
       body: Center(
         child: Column( 
           children: <Widget>[
-            SignaturePicker(_signatureIndexSelected, _fileData, _signatureIndex),
+            SignaturePicker(_signatureSelect, _signatureSwap, _signatureDelete, _fileData, _signatureIndex),
             RaisedButton(onPressed: _loadFile, child: Text("Load File")),
             RaisedButton(onPressed: _fileData != null && !_serializing ? _signFile : null, child: Text(_serializing ? "Serializing..." : "Sign")),
             // disabled util https://github.com/miguelpruivo/flutter_file_picker/issues/234 is resolved
