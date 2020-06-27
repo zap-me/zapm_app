@@ -247,7 +247,7 @@ class _SettingsState extends State<SettingsScreen> {
     if (_titleTaps > 10) {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => HiddenScreen()),
+        MaterialPageRoute(builder: (context) => HiddenScreen(_testnet)),
       );
     }
   }

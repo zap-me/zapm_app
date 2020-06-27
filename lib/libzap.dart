@@ -15,14 +15,14 @@ void copyInto(Pointer<Uint8> buf, int offset, Iterable<int> data) {
     buf.elementAt(offset + n++).value = byte;
 }
 
-  /// Read the buffer from C memory into Dart.
-  List<int> toIntList(Pointer<Uint8> buf, int len) {
-    if (buf == nullptr) return null;
-    List<int> data = List(len);
-    for (int i = 0; i < len; ++i)
-      data[i] = buf.elementAt(i).value;
-    return data;
-  }
+/// Read the buffer from C memory into Dart.
+List<int> toIntList(Pointer<Uint8> buf, int len) {
+  if (buf == nullptr) return null;
+  List<int> data = List(len);
+  for (int i = 0; i < len; ++i)
+    data[i] = buf.elementAt(i).value;
+  return data;
+}
 
 class IntResult {
   bool success;
@@ -197,6 +197,30 @@ class SpendTx {
   }
 }
 
+class Signature {
+  static final int32FieldSize = 4;
+  static final sigFieldSize = 64;
+  static final totalSize = int32FieldSize + sigFieldSize;
+  
+  bool success;
+  Iterable<int> signature;
+
+  Signature(this.success, this.signature);
+
+  static Signature fromBuffer(Pointer<Uint8> buf) {
+    var ints = toIntList(buf, totalSize);
+
+    var success = Int8List.fromList(ints).buffer.asByteData().getInt32(0, Endian.little);
+    var sig = ints.skip(int32FieldSize).take(sigFieldSize);
+
+    return Signature(success != 0, sig);
+  }
+
+  static Pointer<Uint8> allocateMem() {
+    return allocate<Uint8>(count: totalSize);
+  }
+}
+
 //
 // native libzap definitions
 //
@@ -225,7 +249,7 @@ struct waves_payment_request_t
   uint64_t amount;
 };
 */
-class WavesPaymentRequest extends Struct {
+class WavesPaymentRequestNative extends Struct {
   //TODO
 }
 
@@ -271,6 +295,10 @@ typedef lzap_transaction_create_ns_t = int Function(Pointer<Utf8> seed, Pointer<
 //TODO: ns version of transaction broadcast!!!
 typedef lzap_transaction_broadcast_ns_native_t = Int32 Function(Pointer<Uint8> spendTx, Pointer<Uint8> broadcastTxOut);
 typedef lzap_transaction_broadcast_ns_t = int Function(Pointer<Uint8> spendTx, Pointer<Uint8> broadcastTxOut);
+
+//TODO: ns version of transaction broadcast!!!
+typedef lzap_message_sign_ns_native_t = Int32 Function(Pointer<Utf8> seed, Pointer<Uint8> message, Int32 message_sz, Pointer<Uint8> signatureOut);
+typedef lzap_message_sign_ns_t = int Function(Pointer<Utf8> seed, Pointer<Uint8> message, int message_sz, Pointer<Uint8> signatureOut);
 
 //
 // helper functions
@@ -404,6 +432,9 @@ class LibZap {
     lzapTransactionBroadcast = libzap
         .lookup<NativeFunction<lzap_transaction_broadcast_ns_native_t>>("lzap_transaction_broadcast_ns")
         .asFunction();
+    lzapMessageSign = libzap
+        .lookup<NativeFunction<lzap_message_sign_ns_native_t>>("lzap_message_sign_ns")
+        .asFunction();
   }
 
   static const String TESTNET_ASSET_ID = "CgUrFtinLXEbJwJVjwwcppk4Vpz1nMmR3H5cQaDcUcfe";
@@ -423,6 +454,7 @@ class LibZap {
   lzap_transaction_Fee_ns_t lzapTransactionFee;
   lzap_transaction_create_ns_t lzapTransactionCreate;
   lzap_transaction_broadcast_ns_t lzapTransactionBroadcast;
+  lzap_message_sign_ns_t lzapMessageSign;
 
   static String paymentUri(bool testnet, String address, int amount, String deviceName) {
     var uri = "waves://$address?asset=${testnet ? TESTNET_ASSET_ID : MAINNET_ASSET_ID}";
@@ -546,5 +578,18 @@ class LibZap {
 
   static Future<Tx> transactionBroadcast(SpendTx spendTx) {
     return compute(transactionBroadcastFromIsolate, spendTx);
+  }
+
+  Signature messageSign(String seed, Iterable<int> message) {
+    var seedC = Utf8.toUtf8(seed);
+    var messageC = allocate<Uint8>(count: message.length);
+    copyInto(messageC, 0, message);
+    var outputC = Signature.allocateMem();
+    lzapMessageSign(seedC, messageC, message.length, outputC);
+    var signature = Signature.fromBuffer(outputC);
+    free(outputC);
+    free(messageC);
+    free(seedC);
+    return signature;
   }
 }

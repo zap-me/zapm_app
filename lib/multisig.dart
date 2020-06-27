@@ -1,7 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:ZapMerchant/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter_share/flutter_share.dart';
+import 'package:path/path.dart' as path;
+import 'package:http/http.dart' as http;
 
 import 'widgets.dart';
 import 'libzap.dart';
@@ -31,8 +35,9 @@ class SignaturePicker extends StatelessWidget {
 }
 
 class MultisigScreen extends StatefulWidget {
+  final bool testnet;
   
-  MultisigScreen() : super();
+  MultisigScreen(this.testnet) : super();
 
   @override
   _MultisigState createState() => _MultisigState();
@@ -42,6 +47,7 @@ class _MultisigState extends State<MultisigScreen> {
   String _filePath;
   String _fileData;
   int _signatureIndex;
+  bool _serializing = false;
 
   _MultisigState();
 
@@ -54,6 +60,9 @@ class _MultisigState extends State<MultisigScreen> {
 
   void _loadFile() async {
     _filePath = await FilePicker.getFilePath(type: FileType.custom, allowedExtensions: ['json']);
+    if (_filePath == null) {
+      return;
+    }
     var file = File(_filePath);
     var fileData = await file.readAsString();
     setState(() {
@@ -70,6 +79,25 @@ class _MultisigState extends State<MultisigScreen> {
       flushbarMsg(context, 'signature index not chosen', category: MessageCategory.Warning);
       return;
     }
+    // serialize tx
+    setState(() {
+      _serializing = true;
+    });
+    var url = "https://zap-asset.herokuapp.com/tx_serialize";
+    var body = jsonEncode({"testnet": widget.testnet, "tx": _fileData});
+    var response = await http.post(url, headers: {"Content-Type": "application/json"}, body: body);
+    if (response.statusCode != 200) {
+      setState(() {
+        _serializing = false;
+      });
+      flushbarMsg(context, 'failed request to "$url"', category: MessageCategory.Warning);
+      return;
+    }
+    var jsnObj = json.decode(response.body);
+    var txNonWitnessBytes = base64.decode(jsnObj['bytes']);
+    setState(() {
+      _serializing = false;
+    });
     // get mnemonic
     var libzap = LibZap();
     var mnemonic = await Navigator.push<String>(context,
@@ -78,18 +106,33 @@ class _MultisigState extends State<MultisigScreen> {
       flushbarMsg(context, 'recovery words not valid', category: MessageCategory.Warning);
       return;
     }
-    //TODO: sign tx
-    res['proofs'][_signatureIndex] = "XXX TODO XXX";
+    //sign tx
+    var sig = libzap.messageSign(mnemonic, txNonWitnessBytes);
+    if (!sig.success) {
+      flushbarMsg(context, 'transaction signing failed', category: MessageCategory.Warning);
+      return;
+    }
+    res['proofs'][_signatureIndex] = base58encode(sig.signature.toList());
     setState(() {
-      _fileData = json.encode(res);
+      _fileData = JsonEncoder.withIndent('    ').convert(res);
     });
   }
 
-  void _saveFile() {
+  String _saveFile() {
     var filePath = '${_filePath}_signed';
     var file = File(filePath);
     file.writeAsStringSync(_fileData);
     flushbarMsg(context, 'saved "$filePath');
+    return filePath;
+  }
+
+  void _share() {
+    var filePath = _saveFile();
+    var fileName = path.basename(filePath);
+    FlutterShare.shareFile(
+      title: fileName,
+      filePath: filePath,
+    );
   }
 
   @override
@@ -104,8 +147,10 @@ class _MultisigState extends State<MultisigScreen> {
           children: <Widget>[
             SignaturePicker(_signatureIndexSelected, _fileData, _signatureIndex),
             RaisedButton(onPressed: _loadFile, child: Text("Load File")),
-            RaisedButton(onPressed: _fileData != null ? _signFile : null, child: Text("Sign")),
-            RaisedButton(onPressed: _fileData != null ? _saveFile : null, child: Text("Save File")),
+            RaisedButton(onPressed: _fileData != null && !_serializing ? _signFile : null, child: Text(_serializing ? "Serializing..." : "Sign")),
+            // disabled util https://github.com/miguelpruivo/flutter_file_picker/issues/234 is resolved
+            RaisedButton(/*onPressed: _fileData != null ? _saveFile : null,*/ child: Text("Save File")),
+            RaisedButton(onPressed: _fileData != null ? _share : null, child: Text("Share File")),
           ],
         ),
       )

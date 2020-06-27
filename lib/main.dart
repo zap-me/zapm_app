@@ -1,4 +1,3 @@
-import 'package:ZapMerchant/recovery_form.dart';
 import 'package:flutter/foundation.dart'
     show debugDefaultTargetPlatformOverride;
 import 'dart:io' show Platform;
@@ -23,6 +22,7 @@ import 'new_mnemonic_form.dart';
 import 'transactions.dart';
 import 'merchant.dart';
 import 'widgets.dart';
+import 'recovery_form.dart';
 
 void main() {
   // See https://github.com/flutter/flutter/wiki/Desktop-shells#target-platform-override
@@ -134,7 +134,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     }
     // decode attachment
     if (attachment != null && attachment.isNotEmpty)
-        attachment = base58decode(attachment);
+        attachment = base58decodeString(attachment);
     // show user overview of new tx
     showDialog(
       context: context,

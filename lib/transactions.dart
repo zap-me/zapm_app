@@ -73,7 +73,7 @@ class _TransactionsState extends State<TransactionsScreen> {
           continue;
         // decode attachment
         if (tx.attachment != null && tx.attachment.isNotEmpty)
-          tx.attachment = base58decode(tx.attachment);
+          tx.attachment = base58decodeString(tx.attachment);
         // check device name
         var deviceName = '';
         try {

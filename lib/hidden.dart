@@ -5,8 +5,9 @@ import 'tests.dart';
 import 'multisig.dart';
 
 class HiddenScreen extends StatefulWidget {
+  final bool testnet;
   
-  HiddenScreen() : super();
+  HiddenScreen(this.testnet) : super();
 
   @override
   _HiddenState createState() => _HiddenState();
@@ -28,7 +29,7 @@ class _HiddenState extends State<HiddenScreen> {
           children: <Widget>[
             RaisedButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => TestsScreen())),
               child: Text("Tests")),
-            RaisedButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => MultisigScreen())),
+            RaisedButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => MultisigScreen(widget.testnet))),
               child: Text("Multisig")),
           ],
         ),

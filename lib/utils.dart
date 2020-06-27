@@ -460,12 +460,17 @@ String decryptMnemonic(String encryptedMnemonicBase64, String ivBase64, String p
   }
 }
 
-const String _bitcoinAlphabet =
-    "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-String base58decode(String input) {
+const String _bitcoinAlphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+List<int> base58decode(String input) {
   Base58Codec codec = const Base58Codec(_bitcoinAlphabet);
-  var decoded = codec.decode(input);
-  return String.fromCharCodes(decoded);
+  return codec.decode(input);
+}
+String base58decodeString(String input) {
+  return String.fromCharCodes(base58decode(input));
+}
+String base58encode(List<int> input) {
+  Base58Codec codec = const Base58Codec(_bitcoinAlphabet);
+  return codec.encode(input);
 }
 
 Future<bool> pinExists() async {
