@@ -48,6 +48,7 @@ class _MultisigState extends State<MultisigScreen> {
   String _fileData;
   int _signatureIndex;
   bool _serializing = false;
+  String _broadcastResponse;
 
   _MultisigState();
 
@@ -126,13 +127,26 @@ class _MultisigState extends State<MultisigScreen> {
     return filePath;
   }
 
-  void _share() {
+  void _shareFile() {
     var filePath = _saveFile();
     var fileName = path.basename(filePath);
     FlutterShare.shareFile(
       title: fileName,
       filePath: filePath,
     );
+  }
+
+  void _broadcastFile() async {
+    var node = LibZap().nodeGet();
+    var url = '$node/assets/broadcast/transfer';
+    var response = await http.post(url, headers: {"Content-Type": "application/json"}, body: _fileData);
+    if (response.statusCode != 200)
+      flushbarMsg(context, 'failed request to "$url"', category: MessageCategory.Warning);
+    else
+      flushbarMsg(context, 'successful request to "$url"');
+    setState(() {
+      _broadcastResponse = response.body;
+    });
   }
 
   @override
@@ -150,7 +164,9 @@ class _MultisigState extends State<MultisigScreen> {
             RaisedButton(onPressed: _fileData != null && !_serializing ? _signFile : null, child: Text(_serializing ? "Serializing..." : "Sign")),
             // disabled util https://github.com/miguelpruivo/flutter_file_picker/issues/234 is resolved
             RaisedButton(/*onPressed: _fileData != null ? _saveFile : null,*/ child: Text("Save File")),
-            RaisedButton(onPressed: _fileData != null ? _share : null, child: Text("Share File")),
+            RaisedButton(onPressed: _fileData != null ? _shareFile : null, child: Text("Share File")),
+            RaisedButton(onPressed: _fileData != null ? _broadcastFile : null, child: Text("Broadcast File")),
+            Text(_broadcastResponse != null ? _broadcastResponse : '')
           ],
         ),
       )

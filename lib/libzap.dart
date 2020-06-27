@@ -256,6 +256,7 @@ class WavesPaymentRequestNative extends Struct {
 typedef lzap_version_native_t = Int32 Function();
 typedef lzap_version_t = int Function();
 
+typedef lzap_node_get_t = Pointer<Utf8> Function();
 typedef lzap_network_get_native_t = Int8 Function();
 typedef lzap_network_get_t = int Function();
 typedef lzap_network_set_native_t = Int8 Function(Int8 networkByte);
@@ -395,6 +396,9 @@ class LibZap {
     lzapVersion = libzap
         .lookup<NativeFunction<lzap_version_native_t>>("lzap_version")
         .asFunction();
+    lzapNodeGet = libzap
+        .lookup<NativeFunction<lzap_node_get_t>>("lzap_node_get")
+        .asFunction();
     lzapNetworkGet = libzap
         .lookup<NativeFunction<lzap_network_get_native_t>>("lzap_network_get")
         .asFunction();
@@ -442,6 +446,7 @@ class LibZap {
 
   DynamicLibrary libzap;
   lzap_version_t lzapVersion;
+  lzap_node_get_t lzapNodeGet;
   lzap_network_get_t lzapNetworkGet;
   lzap_network_set_t lzapNetworkSet;
   lzap_mnemonic_create_t lzapMnemonicCreate;
@@ -480,6 +485,10 @@ class LibZap {
 
   int version() {
     return lzapVersion();
+  }
+
+  String nodeGet() {
+    return Utf8.fromUtf8(lzapNodeGet());
   }
 
   bool testnetGet() {
