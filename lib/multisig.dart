@@ -26,11 +26,13 @@ class SignaturePicker extends StatelessWidget {
     if (fileData != null) {
       var res = json.decode(fileData);
       for (var i = 0; i < res['proofs'].length; i++) {
-        var button = FlatButton(onPressed: () => signatureSelect(i), 
-          child: Text(res['proofs'][i], style: i == signatureIndex ? TextStyle(color: Colors.red) : null));
-        var tile = ListTile(key: Key('$i'), title: Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
-          Text('$i', style: TextStyle(color: Colors.grey, fontSize: 10)), button,
-          FlatButton(onPressed: () => signatureDelete(i), child: Icon(Icons.close)),
+        var sig = FlatButton(onPressed: () => signatureSelect(i), 
+          child: //Flexible(child:
+            Text(res['proofs'][i], overflow: TextOverflow.ellipsis,
+            style: i == signatureIndex ? TextStyle(color: Colors.red) : null)
+          //)
+        );
+        var trail = Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
           DragTarget<int>(
             builder: (context, candidateData, rejectedData) {
               return Draggable(
@@ -41,9 +43,14 @@ class SignaturePicker extends StatelessWidget {
               );
             },
             onWillAccept: (data) => true,
-            onAccept: (data) => signatureSwap(data, i),
-          )
-        ]));
+            onAccept: (data) => signatureSwap(data, i)),
+          IconButton(onPressed: () => signatureDelete(i), icon: Icon(Icons.close))]
+        );
+        var tile = ListTile(key: Key('$i'),
+          leading: Text('$i', style: TextStyle(color: Colors.grey, fontSize: 10)),
+          title: sig,
+          trailing: trail,
+        );
         sigs.add(tile);
       }
     }
