@@ -208,7 +208,7 @@ class _MultisigState extends State<MultisigScreen> {
 
   void _broadcastFile() async {
     var node = LibZap().nodeGet();
-    var url = '$node/assets/broadcast/transfer';
+    var url = '$node/transactions/broadcast';
     var response = await http.post(url, headers: {"Content-Type": "application/json"}, body: _fileData);
     if (response.statusCode != 200)
       flushbarMsg(context, 'failed request to "$url"', category: MessageCategory.Warning);
