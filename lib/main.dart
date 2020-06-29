@@ -575,7 +575,13 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: _alerts.length > 0 ? IconButton(onPressed: _toggleAlerts, icon: Icon(Icons.warning, color: _showAlerts ? Colors.grey : zapwarning)) : null,
+        leading: Visibility(
+          child: IconButton(onPressed: _toggleAlerts, icon: Icon(Icons.warning, color: _showAlerts ? Colors.grey : zapwarning)),
+          maintainSize: true, 
+          maintainAnimation: true,
+          maintainState: true,
+          visible: _alerts.length > 0, 
+        ),
         title: Center(child: Image.asset('assets/icon.png', height: 30)),
         actions: <Widget>[
           IconButton(icon: Icon(Icons.settings, color: zapblue), onPressed: _showSettings),
