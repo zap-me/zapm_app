@@ -87,7 +87,7 @@ class PrefHelper {
 class Prefs {
   static Future<bool> testnetGet() async {
     final prefs = PrefHelper();
-    return await prefs.getBool("testnet", true);
+    return await prefs.getBool("testnet", false);
   }
 
   static void testnetSet(bool value) async {
