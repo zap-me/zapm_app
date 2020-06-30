@@ -20,6 +20,7 @@ class ReceiveForm extends StatefulWidget {
   }
 }
 
+const String RATES_LOADING = '...';
 const String RATES_FAILED = 'rates failed';
 const String NO_API_KEY = 'no API KEY';
 
@@ -32,6 +33,10 @@ class ReceiveFormState extends State<ReceiveForm> {
   bool _validAmount = true;
   StreamSubscription<String> _uriSub;
   Rates _rates;
+
+  bool validQrData() {
+    return _uri != null && _uri != RATES_LOADING && _uri != RATES_FAILED && _uri != NO_API_KEY;
+  }
 
   Future<String> makeUri() async {
     if (_rates == null) {
@@ -58,7 +63,7 @@ class ReceiveFormState extends State<ReceiveForm> {
 
   void updateUriUi() {
     setState(() {
-      _uri = "...";
+      _uri = RATES_LOADING;
       _uriController.text = _uri;
     });
     
@@ -102,7 +107,7 @@ class ReceiveFormState extends State<ReceiveForm> {
               Center(heightFactor: 5, child: Text('scan QR code', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold), textAlign: TextAlign.center)),
               Center(child: Card(
                 margin: EdgeInsets.all(20),
-                child: _uri != RATES_FAILED && _uri != NO_API_KEY && _validAmount ? QrWidget(_uri, size: 240, version: 10) : Container(width: 240, height: 240))
+                child: validQrData() && _validAmount ? QrWidget(_uri, size: 240, version: 10) : Container(width: 240, height: 240, padding: EdgeInsets.all(100), child: CircularProgressIndicator()))
               ),
               TextFormField(
                 controller: _uriController,
