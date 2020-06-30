@@ -141,7 +141,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
       barrierDismissible: false, // dialog is dismissible with a tap on the barrier
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("received ${amount.toStringAsFixed(2)} zap"),
+          title: Text("received $amountString"),
           content: Container(
             width: double.maxFinite,
             child: ListView(
