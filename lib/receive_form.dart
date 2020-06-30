@@ -126,7 +126,7 @@ class ReceiveFormState extends State<ReceiveForm> {
                         if (_amountType == 'zap')
                           _amountType = 'nzd';
                         else
-                          _amountType = 'zap';                
+                          _amountType = 'zap';
                       });
                       updateUriUi();
                     },

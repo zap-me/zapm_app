@@ -2,11 +2,11 @@ import 'dart:math';
 import 'dart:convert';
 import "package:hex/hex.dart";
 import 'package:decimal/decimal.dart';
-import 'package:http/http.dart' as http;
 import 'package:crypto/crypto.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 
 import 'prefs.dart';
+import 'utils.dart';
 
 class ClaimCode {
   final Decimal amount;
@@ -100,7 +100,7 @@ Future<ClaimCode> merchantRegister(Decimal amount, int amountInt) async {
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce, "token": claimCode.token, "amount": amountInt});
   var sig = createHmacSig(apisecret, body);
-  var response = await http.post(url, headers: {"X-Signature": sig, "Content-Type": "application/json"}, body: body);
+  var response = await post(url, body, extraHeaders: {"X-Signature": sig});
   if (response.statusCode == 200) {
     return claimCode;
   }
@@ -116,7 +116,7 @@ Future<String> merchantCheck(ClaimCode claimCode) async {
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce, "token": claimCode.token});
   var sig = createHmacSig(apisecret, body);
-  var response = await http.post(url, headers: {"X-Signature": sig, "Content-Type": "application/json"}, body: body);
+  var response = await post(url, body, extraHeaders: {"X-Signature": sig});
   if (response.statusCode == 200) {
     return claimCode.getAddressIfJsonMatches(json.decode(response.body));
   }
@@ -127,7 +127,7 @@ Future<bool> merchantClaim(ClaimCode claimCode, String address) async {
   var baseUrl = await Prefs.apiserverGet();
   var url = baseUrl + "claim";
   var body = jsonEncode({"token": claimCode.token, "secret": claimCode.secret, "address": address});
-  var response = await http.post(url, headers: {"Content-Type": "application/json"}, body: body);
+  var response = await post(url, body);
   if (response.statusCode == 200) {
     return true;
   }
@@ -143,7 +143,7 @@ Future<bool> merchantWatch(String address) async {
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce, "address": address});
   var sig = createHmacSig(apisecret, body);
-  var response = await http.post(url, headers: {"X-Signature": sig, "Content-Type": "application/json"}, body: body);
+  var response = await post(url, body, extraHeaders: {"X-Signature": sig});
   if (response.statusCode == 200) {
     return true;
   }
@@ -159,7 +159,7 @@ Future<bool> merchantWalletAddress(String address) async {
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce, "address": address});
   var sig = createHmacSig(apisecret, body);
-  var response = await http.post(url, headers: {"X-Signature": sig, "Content-Type": "application/json"}, body: body);
+  var response = await post(url, body, extraHeaders: {"X-Signature": sig});
   if (response.statusCode == 200) {
     return true;
   }
@@ -175,7 +175,7 @@ Future<bool> merchantTx() async {
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce,});
   var sig = createHmacSig(apisecret, body);
-  var response = await http.post(url, headers: {"X-Signature": sig, "Content-Type": "application/json"}, body: body);
+  var response = await post(url, body, extraHeaders: {"X-Signature": sig});
   if (response.statusCode == 200) {
     return true;
   }
@@ -191,7 +191,7 @@ Future<Rates> merchantRates() async {
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce});
   var sig = createHmacSig(apisecret, body);
-  var response = await http.post(url, headers: {"X-Signature": sig, "Content-Type": "application/json"}, body: body);
+  var response = await post(url, body, extraHeaders: {"X-Signature": sig});
   if (response.statusCode == 200) {
     var jsnObj = json.decode(response.body);
     return Rates(customerRate: Decimal.parse(jsnObj["customer"]), merchantRate: Decimal.parse(jsnObj["merchant"]), settlementAddress: jsnObj["settlement_address"]);
@@ -208,7 +208,7 @@ Future<List<Bank>> merchantBanks() async {
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce});
   var sig = createHmacSig(apisecret, body);
-  var response = await http.post(url, headers: {"X-Signature": sig, "Content-Type": "application/json"}, body: body);
+  var response = await post(url, body, extraHeaders: {"X-Signature": sig});
   if (response.statusCode == 200) {
     var jsnObj = json.decode(response.body);
     var banks = List<Bank>();
@@ -231,7 +231,7 @@ Future<SettlementResult> merchantSettlement(Decimal amount, String bankToken) as
   var d100 = Decimal.fromInt(100);
   var body = jsonEncode({"api_key": apikey, "nonce": nonce, "bank": bankToken, "amount": (amount * d100).toInt()});
   var sig = createHmacSig(apisecret, body);
-  var response = await http.post(url, headers: {"X-Signature": sig, "Content-Type": "application/json"}, body: body);
+  var response = await post(url, body, extraHeaders: {"X-Signature": sig});
   if (response.statusCode == 200) {
     var jsnObj = json.decode(response.body);
     return SettlementResult(
@@ -251,7 +251,7 @@ Future<SettlementResult> merchantSettlementUpdate(String token, String txid) asy
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce, "token": token, "txid": txid});
   var sig = createHmacSig(apisecret, body);
-  var response = await http.post(url, headers: {"X-Signature": sig, "Content-Type": "application/json"}, body: body);
+  var response = await post(url, body, extraHeaders: {"X-Signature": sig});
   if (response.statusCode == 200) {
     var jsnObj = json.decode(response.body);
     var d100 = Decimal.fromInt(100);

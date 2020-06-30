@@ -1,6 +1,7 @@
-import 'package:decimal/decimal.dart';
 import 'dart:convert' as convert;
-import 'package:http/http.dart' as http;
+import 'package:decimal/decimal.dart';
+
+import 'utils.dart';
 
 var baseUrl = "https://test.bronze.exchange/api/v1/";
 
@@ -44,7 +45,7 @@ class MarketDepth {
 Future<Decimal> equivalentZapForNzd(Decimal nzdReqOrProvided, Side zapSide) async {
   var url = baseUrl + "MarketDepth";
   var body = convert.jsonEncode({"market": "ZAPNZD", "merge": "0.01"});
-  var response = await http.post(url, headers: {"Content-Type": "application/json"}, body: body);
+  var response = await post(url, body);
   if (response.statusCode == 200) {
     var marketDepth = MarketDepth.fromJson(convert.json.decode(response.body));
     var amountZap = Decimal.fromInt(0);

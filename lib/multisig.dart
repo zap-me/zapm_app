@@ -5,11 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_share/flutter_share.dart';
 import 'package:path/path.dart' as path;
-import 'package:http/http.dart' as http;
 
 import 'widgets.dart';
 import 'libzap.dart';
 import 'recovery_form.dart';
+import 'utils.dart';
 
 class SignaturePicker extends StatelessWidget {
   final void Function(int) signatureSelect;
@@ -155,7 +155,7 @@ class _MultisigState extends State<MultisigScreen> {
     });
     var url = "https://zap-asset.herokuapp.com/tx_serialize";
     var body = jsonEncode({"testnet": widget.testnet, "tx": _fileData});
-    var response = await http.post(url, headers: {"Content-Type": "application/json"}, body: body);
+    var response = await post(url, body);
     if (response.statusCode != 200) {
       setState(() {
         _serializing = false;
@@ -209,7 +209,7 @@ class _MultisigState extends State<MultisigScreen> {
   void _broadcastFile() async {
     var node = LibZap().nodeGet();
     var url = '$node/transactions/broadcast';
-    var response = await http.post(url, headers: {"Content-Type": "application/json"}, body: _fileData);
+    var response = await post(url, _fileData);
     if (response.statusCode != 200)
       flushbarMsg(context, 'failed request to "$url"', category: MessageCategory.Warning);
     else

@@ -1,10 +1,14 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:math';
+import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart' hide Key;
 import 'package:decimal/decimal.dart';
 import 'package:encrypt/encrypt.dart';
 import 'package:base58check/base58.dart';
+import 'package:retry/retry.dart';
+import 'package:http/http.dart' as http;
 
 import 'libzap.dart';
 import 'merchant.dart';
@@ -507,4 +511,17 @@ String toNZDAmount(Decimal amount, Rates merchantRates) {
     return "${amountNZD.toStringAsFixed(2)} NZD";
   }
   return "";
+}
+
+Future<http.Response> post(String url, String body, {Map<String, String> extraHeaders}) async {
+  var headers = {"Content-Type": "application/json"};
+  if (extraHeaders != null)
+    for (var key in extraHeaders.keys) {
+      headers[key] = extraHeaders[key];
+    }
+  var r = RetryOptions(maxAttempts: 4);
+  return await r.retry(
+    () => http.post(url, headers: headers, body: body),
+    retryIf: (e) => e is SocketException || e is TimeoutException,
+  );
 }
