@@ -102,6 +102,7 @@ class _SettingsState extends State<SettingsScreen> {
     setState(() {
       _testnet = !_testnet;
     });
+    _initSettings();
   }
 
   void _addPin() async {

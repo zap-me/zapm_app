@@ -85,6 +85,24 @@ class PrefHelper {
 }
 
 class Prefs {
+  static Future<String> getKeyNetworkSpecific(String key) async {
+    var testnet = await testnetGet();
+    if (!testnet)
+      key = '${key}_mainnet';
+    return key;
+  }
+
+  static Future<String> getStringNetworkSpecific(String key, String defaultValue) async {
+    final prefs = PrefHelper();
+    return prefs.getString(await getKeyNetworkSpecific(key), defaultValue);
+  }
+
+  static Future<bool> setStringNetworkSpecific(String key, String value) async {
+    final prefs = PrefHelper();
+    prefs.setString(await getKeyNetworkSpecific(key), value);
+    return true;
+  }
+
   static Future<bool> testnetGet() async {
     final prefs = PrefHelper();
     return await prefs.getBool("testnet", false);
@@ -110,13 +128,11 @@ class Prefs {
   }
 
   static Future<String> addressGet() async {
-    final prefs = PrefHelper();
-    return await prefs.getString("address", null);
+    return await getStringNetworkSpecific("address", null);
   }
 
   static Future<bool> addressSet(String value) async {
-    final prefs = PrefHelper();
-    await prefs.setString("address", value);
+    await setStringNetworkSpecific("address", value);
     return true;
   }
 
@@ -148,49 +164,41 @@ class Prefs {
   }
 
   static Future<String> deviceNameGet() async {
-    final prefs = PrefHelper();
-    return await prefs.getString("deviceName", null);
+    return await getStringNetworkSpecific("deviceName", null);
   }
 
   static Future<bool> deviceNameSet(String value) async {
-    final prefs = PrefHelper();
-    await prefs.setString("deviceName", value);
+    await setStringNetworkSpecific("deviceName", value);
     return true;
   }
 
   static Future<String> apikeyGet() async {
-    final prefs = PrefHelper();
-    return await prefs.getString("apikey", null);
+    return await getStringNetworkSpecific("apikey", null);
   }
 
   static Future<bool> apikeySet(String value) async {
-    final prefs = PrefHelper();
-    await prefs.setString("apikey", value);
+    await setStringNetworkSpecific("apikey", value);
     return true;
   }
 
   static Future<String> apisecretGet() async {
-    final prefs = PrefHelper();
-    return await prefs.getString("apisecret", null);
+    return await getStringNetworkSpecific("apisecret", null);
   }
 
   static Future<bool> apisecretSet(String value) async {
-    final prefs = PrefHelper();
-    await prefs.setString("apisecret", value);
+    await setStringNetworkSpecific("apisecret", value);
     return true;
   }
 
   static Future<String> apiserverGet() async {
-    final prefs = PrefHelper();
-    var server = await prefs.getString("apiserver", null);
+    var server = await getStringNetworkSpecific("apiserver", null);
     if (server == null || server.isEmpty)
-      server = "https://merchant-zap.herokuapp.com/";
+      server = "https://merchant.map.me/";
     return server;
   }
 
   static Future<bool> apiserverSet(String value) async {
-    final prefs = PrefHelper();
-    await prefs.setString("apiserver", value);
+    await setStringNetworkSpecific("apiserver", value);
     return true;
   }
 }
