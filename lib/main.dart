@@ -321,14 +321,14 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         await alert(context, "Recovery words saved", ":)");
         // update wallet details now we have a mnemonic
         _setWalletDetails();
-        break;        
+        break;
       }
       if (address != null && address.isNotEmpty) {
         await Prefs.addressSet(address);
         await alert(context, "Address saved", ":)");
         // update wallet details now we have an address
         _setWalletDetails();
-        break;        
+        break;
       }
     }
   }

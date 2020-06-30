@@ -29,7 +29,7 @@ class _HiddenState extends State<HiddenScreen> {
           children: <Widget>[
             RaisedButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => TestsScreen())),
               child: Text("Tests")),
-            RaisedButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => MultisigScreen(widget.testnet))),
+            RaisedButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => MultisigScreen())),
               child: Text("Multisig")),
           ],
         ),

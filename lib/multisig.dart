@@ -61,9 +61,7 @@ class SignaturePicker extends StatelessWidget {
 }
 
 class MultisigScreen extends StatefulWidget {
-  final bool testnet;
-  
-  MultisigScreen(this.testnet) : super();
+  MultisigScreen() : super();
 
   @override
   _MultisigState createState() => _MultisigState();
@@ -75,6 +73,7 @@ class _MultisigState extends State<MultisigScreen> {
   int _signatureIndex;
   bool _serializing = false;
   String _broadcastResponse;
+  bool _testnet = false;
 
   _MultisigState();
 
@@ -154,7 +153,7 @@ class _MultisigState extends State<MultisigScreen> {
       _serializing = true;
     });
     var url = "https://zap-asset.herokuapp.com/tx_serialize";
-    var body = jsonEncode({"testnet": widget.testnet, "tx": _fileData});
+    var body = jsonEncode({"testnet": _testnet, "tx": _fileData});
     var response = await post(url, body);
     if (response.statusCode != 200) {
       setState(() {
@@ -231,6 +230,15 @@ class _MultisigState extends State<MultisigScreen> {
           children: <Widget>[
             SignaturePicker(_signatureSelect, _signatureSwap, _signatureDelete, _fileData, _signatureIndex),
             RaisedButton(onPressed: _loadFile, child: Text("Load File")),
+            SwitchListTile(
+              value: !_testnet,
+              title: Text("Signing for mainnet?"),
+              onChanged: (value) {
+                setState(() {
+                  _testnet = !_testnet;
+                });
+              },
+            ),
             RaisedButton(onPressed: _fileData != null && !_serializing ? _signFile : null, child: Text(_serializing ? "Serializing..." : "Sign")),
             // disabled util https://github.com/miguelpruivo/flutter_file_picker/issues/234 is resolved
             RaisedButton(/*onPressed: _fileData != null ? _saveFile : null,*/ child: Text("Save File")),
