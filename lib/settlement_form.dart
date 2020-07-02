@@ -49,7 +49,9 @@ class SettlementFormState extends State<SettlementForm> {
             return SimpleDialog(
               title: Column(children: <Widget>[
                 Text('confirm ZAP settlement amount', style: TextStyle(fontSize: 16)),
-                Text('receiving ${amountReceive.toStringAsFixed(2)} NZD', style: TextStyle(fontSize: 16, color: zapblue))
+                Text('sending ${amountDec.toStringAsFixed(2)} ZAP', style: TextStyle(fontSize: 16, color: zapyellow)),
+                Text('receiving ${amountReceive.toStringAsFixed(2)} NZD', style: TextStyle(fontSize: 16, color: zapgreen)),
+                Text('admin fee ${(amountReceive - amountDec).toStringAsFixed(2)} NZD', style: TextStyle(fontSize: 16, color: zapyellow)),
               ]),
               children: <Widget>[
                 SimpleDialogOption(
@@ -170,7 +172,8 @@ class SettlementFormState extends State<SettlementForm> {
           TextFormField(
             controller: _amountController,
             keyboardType: TextInputType.numberWithOptions(decimal: true),
-            decoration: new InputDecoration(labelText: 'amount'),
+            decoration: InputDecoration(labelText: 'ZAP amount',
+              suffixIcon: FlatButton(onPressed: () => _amountController.text = '${widget._max - widget._fee}', child: Text('max', style: TextStyle(color: zapyellow)))),
             validator: (value) {
               if (value.isEmpty) {
                 return 'Please enter a value';
@@ -183,7 +186,7 @@ class SettlementFormState extends State<SettlementForm> {
                 return 'Please enter a value greater then zero';
               }
               return null;
-            },
+            }, 
           ),
           DropdownButton<String>(
             hint: Text('bank account'),
