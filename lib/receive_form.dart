@@ -39,22 +39,22 @@ class ReceiveFormState extends State<ReceiveForm> {
   }
 
   Future<String> makeUri() async {
-    if (_rates == null) {
-      try {
-        _rates = await merchantRates();
-      } on NoApiKeyException {
-        return NO_API_KEY;
-      } 
-    }
-    if (_rates == null) {
-      return RATES_FAILED;
-    }
     var amount = Decimal.fromInt(0);
     try {
       amount = Decimal.parse(_amountController.text);
     }
     catch (e) {}
     if (_amountType == 'nzd') {
+      if (_rates == null) {
+        try {
+          _rates = await merchantRates();
+        } on NoApiKeyException {
+          return NO_API_KEY;
+        } 
+      }
+      if (_rates == null) {
+        return RATES_FAILED;
+      }
       amount = equivalentCustomerZapForNzd(amount, _rates);
     }
     var deviceName = await Prefs.deviceNameGet();
