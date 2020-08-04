@@ -153,7 +153,7 @@ class SendFormState extends State<SendForm> {
           TextFormField(
             controller: _amountController,
             keyboardType: TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(labelText: 'amount',
+            decoration: InputDecoration(labelText: 'ZAP amount',
               suffixIcon: FlatButton(onPressed: () => _amountController.text = '${widget._max - widget._fee}', child: Text('max', style: TextStyle(color: zapyellow)))),
             validator: (value) {
               if (value.isEmpty) {
