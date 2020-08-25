@@ -214,7 +214,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
                 onPressed: () {
                   Navigator.pop(context, NoWalletAction.ScanMerchantApiKey);
                 },
-                child: const Text("Scan merchant api key"),
+                child: const Text("Scan retailer api key"),
               ),
             ],
           );
