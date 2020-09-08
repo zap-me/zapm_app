@@ -193,7 +193,7 @@ class Prefs {
   static Future<String> apiserverGet() async {
     var server = await getStringNetworkSpecific("apiserver", null);
     if (server == null || server.isEmpty)
-      server = "https://merchant.map.me/";
+      server = "https://retail.zap.me/";
     return server;
   }
 

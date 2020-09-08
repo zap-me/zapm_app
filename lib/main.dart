@@ -59,7 +59,8 @@ class MyApp extends StatelessWidget {
         }
       },
       child: MaterialApp(
-        title: 'Zap Merchant',
+        //debugShowCheckedModeBanner: false,
+        title: 'Zap Retailer',
         theme: ThemeData(
           brightness: Brightness.light,
           primaryColor: Colors.white,
@@ -68,7 +69,7 @@ class MyApp extends StatelessWidget {
             Theme.of(context).textTheme,
           ),
         ),
-        home: ZapHomePage(title: 'Zap Merchant'),
+        home: ZapHomePage(title: 'Zap Retailer'),
       )
     );
   }
@@ -308,6 +309,8 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
               await Prefs.deviceNameSet(result.deviceName);
               await Prefs.apikeySet(result.apikey);
               await Prefs.apisecretSet(result.apisecret);
+              if (result.apiserver != null || result.apiserver.isNotEmpty)
+                await Prefs.apiserverSet(result.apiserver);
               flushbarMsg(context, 'API KEY set');
               address = result.walletAddress;
             }
