@@ -1,6 +1,6 @@
 name: ZapMerchant
 description: zap.me retailer app
-version: 1.2.13+38
+version: 1.2.14+39
 
 dependencies:
   flutter:
@@ -86,7 +86,7 @@ flutter:
     - assets/
     # add pubspec so we can read the version on desktop
     - pubspec.yaml
-    - native-libraries/windows/
+    #- native-libraries/windows/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
