@@ -5,9 +5,8 @@ import 'settlement_form.dart';
 import 'widgets.dart';
 
 class SettlementScreen extends StatelessWidget {
-  SettlementScreen(this._testnet, this._seed, this._fee, this._max) : super();
+  SettlementScreen(this._seed, this._fee, this._max) : super();
 
-  final bool _testnet;
   final String _seed;
   final Decimal _fee;
   final Decimal _max;
@@ -27,7 +26,7 @@ class SettlementScreen extends StatelessWidget {
             width: MediaQuery.of(context).size.width, 
             height: MediaQuery.of(context).size.height,
             padding: EdgeInsets.all(20),
-            child: SettlementForm(_testnet, _seed, _fee, _max)
+            child: SettlementForm(_seed, _fee, _max)
           ) 
         )
     );

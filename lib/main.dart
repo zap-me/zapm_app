@@ -534,7 +534,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     var sentFunds = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-          builder: (context) => SettlementScreen(_testnet, _wallet.mnemonic, _fee, _balance)),
+          builder: (context) => SettlementScreen(_wallet.mnemonic, _fee, _balance)),
     );
     if (sentFunds)
       _updateBalance();

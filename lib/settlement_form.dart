@@ -8,12 +8,11 @@ import 'widgets.dart';
 import 'prefs.dart';
 
 class SettlementForm extends StatefulWidget {
-  final bool _testnet;
   final String _seed;
   final Decimal _fee;
   final Decimal _max;
 
-  SettlementForm(this._testnet, this._seed, this._fee, this._max) : super();
+  SettlementForm(this._seed, this._fee, this._max) : super();
 
   @override
   SettlementFormState createState() {
@@ -41,7 +40,13 @@ class SettlementFormState extends State<SettlementForm> {
         return false;
       }
       // get amount to receive
-      var amountReceive = amountDec / (Decimal.fromInt(1) + _rates.merchantRate);
+      showAlertDialog(context, 'calculating...');
+      var calc = await merchantSettlementCalc(amountDec);
+      Navigator.pop(context);
+      if (calc.amountReceive == null) {
+        flushbarMsg(context, 'unable to calculate settlement', category: MessageCategory.Warning);
+        return false;
+      }
       // double check with user
       if (await showDialog<bool>(
           context: context,
@@ -50,8 +55,8 @@ class SettlementFormState extends State<SettlementForm> {
               title: Column(children: <Widget>[
                 Text('confirm ZAP settlement amount', style: TextStyle(fontSize: 16)),
                 Text('sending ${amountDec.toStringAsFixed(2)} ZAP', style: TextStyle(fontSize: 16, color: zapyellow)),
-                Text('receiving ${amountReceive.toStringAsFixed(2)} NZD', style: TextStyle(fontSize: 16, color: zapgreen)),
-                Text('admin fee ${(amountReceive - amountDec).toStringAsFixed(2)} NZD', style: TextStyle(fontSize: 16, color: zapyellow)),
+                Text('receiving ${calc.amountReceive.toStringAsFixed(2)} NZD', style: TextStyle(fontSize: 16, color: zapgreen)),
+                Text('admin fee ${(calc.amountReceive - amountDec).toStringAsFixed(2)} NZD', style: TextStyle(fontSize: 16, color: zapyellow)),
               ]),
               children: <Widget>[
                 SimpleDialogOption(

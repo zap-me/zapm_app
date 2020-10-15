@@ -31,11 +31,12 @@ class ClaimCode {
 }
 
 class Rates {
+  final Decimal settlementFee;
   final Decimal merchantRate;
   final Decimal customerRate;
   final String settlementAddress;
 
-  Rates({this.merchantRate, this.customerRate, this.settlementAddress});
+  Rates({this.settlementFee, this.merchantRate, this.customerRate, this.settlementAddress});
 }
 
 class Bank {
@@ -55,6 +56,14 @@ class Settlement {
   final String status;
 
   Settlement({this.token, this.amount, this.amountReceive, this.bankAccount, this.txid, this.status});
+}
+
+class SettlementCalcResult {
+  final Decimal amount;
+  final Decimal amountReceive;
+  final String error;
+
+  SettlementCalcResult(this.amount, this.amountReceive, this.error);
 }
 
 class SettlementResult {
@@ -194,7 +203,7 @@ Future<Rates> merchantRates() async {
   var response = await post(url, body, extraHeaders: {"X-Signature": sig});
   if (response.statusCode == 200) {
     var jsnObj = json.decode(response.body);
-    return Rates(customerRate: Decimal.parse(jsnObj["customer"]), merchantRate: Decimal.parse(jsnObj["merchant"]), settlementAddress: jsnObj["settlement_address"]);
+    return Rates(settlementFee: Decimal.parse(jsnObj["settlement_fee"]), customerRate: Decimal.parse(jsnObj["customer"]), merchantRate: Decimal.parse(jsnObj["merchant"]), settlementAddress: jsnObj["settlement_address"]);
   }
   return null;
 }
@@ -219,6 +228,25 @@ Future<List<Bank>> merchantBanks() async {
     return banks;  
   }
   return null;
+}
+
+Future<SettlementCalcResult> merchantSettlementCalc(Decimal amount) async {
+  var baseUrl = await Prefs.apiserverGet();
+  var url = baseUrl + "settlement_calc";
+  var apikey = await Prefs.apikeyGet();
+  var apisecret = await Prefs.apisecretGet();
+  checkApiKey(apikey, apisecret);
+  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
+  var d100 = Decimal.fromInt(100);
+  var body = jsonEncode({"api_key": apikey, "nonce": nonce, "amount": (amount * d100).toInt()});
+  var sig = createHmacSig(apisecret, body);
+  var response = await post(url, body, extraHeaders: {"X-Signature": sig});
+  if (response.statusCode == 200) {
+    var jsnObj = json.decode(response.body);
+    return SettlementCalcResult(Decimal.fromInt(jsnObj["amount"]) / d100, Decimal.fromInt(jsnObj["amount_receive"]) / d100, null);
+  }
+  var jsnObj = json.decode(response.body);
+  return SettlementCalcResult(null, null, jsnObj["message"]);
 }
 
 Future<SettlementResult> merchantSettlement(Decimal amount, String bankToken) async {
