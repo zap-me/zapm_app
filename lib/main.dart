@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart'
     show debugDefaultTargetPlatformOverride;
-import 'dart:io' show Platform;
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qrcode_reader/qrcode_reader.dart';
@@ -27,6 +27,14 @@ import 'recovery_form.dart';
 void main() {
   // See https://github.com/flutter/flutter/wiki/Desktop-shells#target-platform-override
   _setTargetPlatformForDesktop();  
+
+  // print flutter errors to console
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.dumpErrorToConsole(details);
+    const bool kReleaseMode = bool.fromEnvironment('dart.vm.product', defaultValue: false);
+    if (kReleaseMode)
+      exit(1);
+  };
 
   runApp(MyApp());
 }

@@ -26,9 +26,10 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsState extends State<SettingsScreen> {
+  bool _secondary = true;
   bool _pinProtected;
   bool _showMnemonic = false;
-  bool _mnemonicPasswordProtected;
+  bool _mnemonicPasswordProtected = true;
   String _appVersion;
   String _buildNumber;
   int _libzapVersion = -1;
@@ -95,8 +96,15 @@ class _SettingsState extends State<SettingsScreen> {
     return libzap.seedAddress(_mnemonic);
   }
 
+  @override
+  void initState() {
+    super.initState();
+    // set secondary
+    _secondary = widget._mnemonic == null;
+  }
+
   void _toggleTestnet() async {
-    if (widget._mnemonic == null)
+    if (_secondary)
       return;
     Prefs.testnetSet(!_testnet);
     setState(() {
@@ -276,7 +284,7 @@ class _SettingsState extends State<SettingsScreen> {
               ),
             ),
             Visibility(
-              visible: widget._mnemonic != null,
+              visible: !_secondary,
               child:  Column(
                 children: <Widget>[
                   Container(
@@ -322,7 +330,7 @@ class _SettingsState extends State<SettingsScreen> {
                       padding: const EdgeInsets.only(top: 18.0),
                       child: ListTile(
                         title: Text("Recovery words"),
-                        subtitle: widget._mnemonic != null ? Bip39Words.fromString(widget._mnemonic) : Text('n/a'),
+                        subtitle: !_secondary ? Bip39Words.fromString(widget._mnemonic) : Text('n/a'),
                         trailing: _mnemonicPasswordProtected ? Icon(Icons.lock) : Icon(Icons.lock_open),),
                     )
                   ),
@@ -340,13 +348,13 @@ class _SettingsState extends State<SettingsScreen> {
             Container(
               padding: const EdgeInsets.only(top: 18.0),
               child: ListTile(
-                title: RaisedButton.icon(label: Text("Scan Api Key"), icon: Icon(MaterialCommunityIcons.qrcode_scan), onPressed: _scanApikey),
+                title: RaisedButton.icon(label: Text("Scan Api Key"), icon: Icon(MaterialCommunityIcons.qrcode_scan), onPressed: !_secondary ? _scanApikey : null),
               ),
             ),
-            ListTile(title: Text("Device Name"), subtitle: Text("$_deviceName"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: _editDeviceName),),
-            ListTile(title: Text("Api Key"), subtitle: Text("$_apikey"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: _editApikey),),
-            ListTile(title: Text("Api Secret"), subtitle: Text("$_apisecret"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: _editApisecret),),
-            ListTile(title: Text("Api Server"), subtitle: Text("$_apiserver"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: _editApiserver),),
+            ListTile(title: Text("Device Name"), subtitle: Text("$_deviceName"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: !_secondary ? _editDeviceName : null),),
+            ListTile(title: Text("Api Key"), subtitle: Text("$_apikey"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: !_secondary ? _editApikey : null),),
+            ListTile(title: Text("Api Secret"), subtitle: Text("$_apisecret"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: !_secondary ? _editApisecret : null),),
+            ListTile(title: Text("Api Server"), subtitle: Text("$_apiserver"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: !_secondary ? _editApiserver : null),),
             ],
           ),
         )
