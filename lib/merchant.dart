@@ -41,10 +41,11 @@ class Rates {
 
 class Bank {
   final String token;
+  final String accountName;
   final String accountNumber;
   final bool defaultAccount;
 
-  Bank({this.token, this.accountNumber, this.defaultAccount});
+  Bank({this.token, this.accountName, this.accountNumber, this.defaultAccount});
 }
 
 class Settlement {
@@ -222,7 +223,7 @@ Future<List<Bank>> merchantBanks() async {
     var jsnObj = json.decode(response.body);
     var banks = List<Bank>();
     for (var jsnObjBank in jsnObj) {
-      var bank = Bank(token: jsnObjBank["token"], accountNumber: jsnObjBank["account_number"], defaultAccount: jsnObjBank["default_account"]);
+      var bank = Bank(token: jsnObjBank["token"], accountName: jsnObjBank["account_name"], accountNumber: jsnObjBank["account_number"], defaultAccount: jsnObjBank["default_account"]);
       banks.add(bank);
     }
     return banks;  

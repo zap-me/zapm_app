@@ -194,9 +194,10 @@ class SettlementFormState extends State<SettlementForm> {
             }, 
           ),
           DropdownButton<String>(
+            isExpanded: true,
             hint: Text('bank account'),
             value: _bankAccount,
-            items: _banks == null ? null : _banks.map((e) => DropdownMenuItem(child: Text(e.accountNumber), value: e.accountNumber,)).toList(),
+            items: _banks == null ? null : _banks.map((e) => DropdownMenuItem(child: Text('${e.accountName} - ${e.accountNumber}'), value: e.accountNumber,)).toList(),
             onChanged: (e) {
               setState(() {
                 _bankAccount = e;
