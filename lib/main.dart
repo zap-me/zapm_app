@@ -138,8 +138,8 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     var amountString = "${amount.toStringAsFixed(2)} ZAP";
     // convert amount to NZD
     if (_merchantRates != null) {
-      var amountNZD = amount / (1.0 + _merchantRates.merchantRate.toDouble());
-      amountString += " / ${amountNZD.toStringAsFixed(2)} NZD";
+      var amountDec = Decimal.parse(amount.toString());
+      amountString += " / ${toNZDAmount(amountDec, _merchantRates)}";
     }
     // decode attachment
     if (attachment != null && attachment.isNotEmpty)

@@ -505,12 +505,24 @@ Future<bool> hasApiKey() async {
   return true;
 }
 
-String toNZDAmount(Decimal amount, Rates merchantRates) {
+String toNZDAmount(Decimal amount, Rates rates) {
   if (merchantRates != null) {
-    var amountNZD = amount / (Decimal.fromInt(1) + merchantRates.merchantRate);
+    var fee = (amount - (amount / (Decimal.fromInt(1) + rates.merchantRate))) * (Decimal.fromInt(1) + rates.salesTax);
+    var amountNZD = amount - fee;
     return "${amountNZD.toStringAsFixed(2)} NZD";
   }
   return "";
+}
+
+Decimal equivalentCustomerZapForNzd(Decimal nzdRequired, Rates rates) {
+  print('nzdRequired: $nzdRequired');
+  var merchantFee = (nzdRequired * (Decimal.fromInt(1) + rates.customerRate)) - nzdRequired;
+  print('merchantFee: $merchantFee');
+  merchantFee = merchantFee * (Decimal.fromInt(1) + rates.salesTax);
+  print('merchantFee (inc tax): $merchantFee');
+  var amountZap = nzdRequired + merchantFee;
+  print('amountZap: $amountZap');
+  return amountZap;
 }
 
 Future<http.Response> post(String url, String body, {Map<String, String> extraHeaders}) async {

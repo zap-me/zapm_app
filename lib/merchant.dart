@@ -31,12 +31,13 @@ class ClaimCode {
 }
 
 class Rates {
+  final Decimal salesTax;
   final Decimal settlementFee;
   final Decimal merchantRate;
   final Decimal customerRate;
   final String settlementAddress;
 
-  Rates({this.settlementFee, this.merchantRate, this.customerRate, this.settlementAddress});
+  Rates({this.salesTax, this.settlementFee, this.merchantRate, this.customerRate, this.settlementAddress});
 }
 
 class Bank {
@@ -204,7 +205,7 @@ Future<Rates> merchantRates() async {
   var response = await post(url, body, extraHeaders: {"X-Signature": sig});
   if (response.statusCode == 200) {
     var jsnObj = json.decode(response.body);
-    return Rates(settlementFee: Decimal.parse(jsnObj["settlement_fee"]), customerRate: Decimal.parse(jsnObj["customer"]), merchantRate: Decimal.parse(jsnObj["merchant"]), settlementAddress: jsnObj["settlement_address"]);
+    return Rates(salesTax: Decimal.parse(jsnObj["sales_tax"]), settlementFee: Decimal.parse(jsnObj["settlement_fee"]), customerRate: Decimal.parse(jsnObj["customer"]), merchantRate: Decimal.parse(jsnObj["merchant"]), settlementAddress: jsnObj["settlement_address"]);
   }
   return null;
 }
@@ -331,8 +332,4 @@ Future<Socket> merchantSocket(TxNotificationCallback txNotificationCallback) asy
   });
  
   return socket;
-}
-
-Decimal equivalentCustomerZapForNzd(Decimal nzdReqOrProvided, Rates rates) {
-  return nzdReqOrProvided * (Decimal.fromInt(1) + rates.customerRate);
 }

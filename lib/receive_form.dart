@@ -7,6 +7,7 @@ import 'qrwidget.dart';
 import 'libzap.dart';
 import 'merchant.dart';
 import 'widgets.dart';
+import 'utils.dart';
 
 class ReceiveForm extends StatefulWidget {
   final bool _testnet;
