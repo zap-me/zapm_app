@@ -1,6 +1,6 @@
 name: ZapMerchant
 description: zap.me retailer app
-version: 1.2.15+40
+version: 1.2.16+41
 
 dependencies:
   flutter:
