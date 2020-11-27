@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
 
 import 'merchant.dart';
-import 'libzap.dart';
-import 'utils.dart';
-import 'widgets.dart';
+import 'zapdart/libzap.dart';
+import 'zapdart/utils.dart';
+import 'zapdart/widgets.dart';
 import 'prefs.dart';
 
 class SettlementForm extends StatefulWidget {
@@ -72,7 +72,7 @@ class SettlementFormState extends State<SettlementForm> {
           }
       )) {
         // check pin
-        if (!await pinCheck(context)) {
+        if (!await pinCheck(context, await Prefs.pinGet())) {
           return false;
         }
         // create settlement

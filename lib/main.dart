@@ -10,18 +10,18 @@ import 'package:socket_io_client/socket_io_client.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'qrwidget.dart';
+import 'zapdart/qrwidget.dart';
 import 'send_receive.dart';
 import 'reward.dart';
 import 'settlement.dart';
 import 'settings.dart';
-import 'utils.dart';
-import 'libzap.dart';
+import 'zapdart/utils.dart';
+import 'zapdart/libzap.dart';
 import 'prefs.dart';
 import 'new_mnemonic_form.dart';
 import 'transactions.dart';
 import 'merchant.dart';
-import 'widgets.dart';
+import 'zapdart/widgets.dart';
 import 'recovery_form.dart';
 
 void main() {
@@ -517,8 +517,8 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   }
 
   void _showSettings() async {
-    var _pinExists = await pinExists();
-    if (!await pinCheck(context)) {
+    var _pinExists = await Prefs.pinExists();
+    if (!await pinCheck(context, await Prefs.pinGet())) {
       return;
     }
     await Navigator.push(

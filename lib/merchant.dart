@@ -1,12 +1,16 @@
 import 'dart:math';
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import "package:hex/hex.dart";
 import 'package:decimal/decimal.dart';
 import 'package:crypto/crypto.dart';
 import 'package:socket_io_client/socket_io_client.dart';
+import 'package:flutter_icons/flutter_icons.dart';
+import 'package:intl/intl.dart';
 
 import 'prefs.dart';
-import 'utils.dart';
+import 'zapdart/utils.dart';
+import 'zapdart/widgets.dart';
 
 class ClaimCode {
   final Decimal amount;
@@ -28,6 +32,36 @@ class ClaimCode {
       secret: HEX.encode(secureRandom(count: 16))
     );
   }
+}
+
+class ClaimCodeResult {
+  final ClaimCode code;
+  final int error;
+
+  ClaimCodeResult(this.code, this.error);
+}
+
+ClaimCodeResult parseClaimCodeUri(String uri) {
+  var token = '';
+  var secret = '';
+  var amount = Decimal.fromInt(0);
+  int error = NO_ERROR;
+  if (uri.length > 10 && uri.substring(0, 10).toLowerCase() == 'claimcode:') {
+    var parts = uri.substring(10).split('?');
+    if (parts.length == 2) {
+      token = parts[0];
+      parts = parts[1].split('&');
+      for (var part in parts) {
+        var res = parseUriParameter(part, 'secret');
+        if (res != null) secret = res;
+        res = parseUriParameter(part, 'amount');
+        if (res != null) amount = Decimal.parse(res) / Decimal.fromInt(100);
+      }
+    }
+  }
+  else
+    error = INVALID_CLAIMCODE_URI;
+  return ClaimCodeResult(ClaimCode(amount: amount, token: token, secret: secret), error);
 }
 
 class Rates {
@@ -332,4 +366,77 @@ Future<Socket> merchantSocket(TxNotificationCallback txNotificationCallback) asy
   });
  
   return socket;
+}
+
+String toNZDAmount(Decimal amount, Rates rates) {
+  if (rates != null) {
+    var fee = (amount - (amount / (Decimal.fromInt(1) + rates.merchantRate))) * (Decimal.fromInt(1) + rates.salesTax);
+    var amountNZD = amount - fee;
+    return "${amountNZD.toStringAsFixed(2)} NZD";
+  }
+  return "";
+}
+
+Decimal equivalentCustomerZapForNzd(Decimal nzdRequired, Rates rates) {
+  print('nzdRequired: $nzdRequired');
+  var merchantFee = (nzdRequired * (Decimal.fromInt(1) + rates.customerRate)) - nzdRequired;
+  print('merchantFee: $merchantFee');
+  merchantFee = merchantFee * (Decimal.fromInt(1) + rates.salesTax);
+  print('merchantFee (inc tax): $merchantFee');
+  var amountZap = nzdRequired + merchantFee;
+  print('amountZap: $amountZap');
+  return amountZap;
+}
+
+class ListTx extends StatelessWidget {
+  ListTx(this.onPressed, this.date, this.txid, this.amount, this.merchantRates, this.outgoing, {this.last = false}) : super();
+
+  final VoidCallback onPressed;
+  final DateTime date;
+  final String txid;
+  final Decimal amount;
+  final Rates merchantRates;
+  final bool outgoing;
+  final bool last;
+
+  @override
+  Widget build(BuildContext context) {
+    var color = outgoing ? zapyellow : zapgreen;
+    var tsLeft = TextStyle(fontSize: 12, color: zapblacklight);
+    var tsRight = TextStyle(fontSize: 12, color: color);
+    var amountText = '${amount.toStringAsFixed(2)} ZAP';
+    Widget amountWidget = Text(amountText, style: tsRight);
+    if (merchantRates != null) {
+      var amountNZD = Text(toNZDAmount(amount, merchantRates), style: tsRight);
+      amountWidget = Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+        amountWidget,
+        amountNZD
+      ]);
+    }
+    var icon = outgoing ? MaterialCommunityIcons.chevron_double_up : MaterialCommunityIcons.chevron_double_down;
+    return Column(
+      children: <Widget>[
+        Divider(),
+        ListTile(
+          onTap: onPressed,
+          dense: true,
+          contentPadding: EdgeInsets.symmetric(horizontal: 8),
+          leading: Column(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+            Text(DateFormat('d MMM').format(date).toUpperCase(), style: tsLeft),
+            Text(DateFormat('yyyy').format(date), style: tsLeft),
+          ]),
+          title: Text(txid),
+          trailing: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+            Text(outgoing ? '- ' : '+ ', style: tsRight),
+            amountWidget, 
+            Icon(icon, color: color, size: 14)]
+          )
+        ),
+        Visibility(
+          visible: last,
+          child: Divider()
+        )
+      ]
+    );
+  }
 }

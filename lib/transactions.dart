@@ -6,9 +6,9 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:path_provider/path_provider.dart';
 
-import 'libzap.dart';
-import 'utils.dart';
-import 'widgets.dart';
+import 'zapdart/libzap.dart';
+import 'zapdart/utils.dart';
+import 'zapdart/widgets.dart';
 import 'merchant.dart';
 
 class TransactionsScreen extends StatefulWidget {

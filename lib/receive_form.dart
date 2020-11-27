@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
 
 import 'prefs.dart';
-import 'qrwidget.dart';
-import 'libzap.dart';
+import 'zapdart/qrwidget.dart';
+import 'zapdart/libzap.dart';
 import 'merchant.dart';
-import 'widgets.dart';
-import 'utils.dart';
+import 'zapdart/widgets.dart';
+import 'zapdart/utils.dart';
 
 class ReceiveForm extends StatefulWidget {
   final bool _testnet;

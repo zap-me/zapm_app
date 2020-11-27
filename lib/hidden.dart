@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'widgets.dart';
+import 'zapdart/widgets.dart';
 import 'tests.dart';
 import 'multisig.dart';
 

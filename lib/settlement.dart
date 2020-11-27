@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
 
 import 'settlement_form.dart';
-import 'widgets.dart';
+import 'zapdart/widgets.dart';
 
 class SettlementScreen extends StatelessWidget {
   SettlementScreen(this._seed, this._fee, this._max) : super();

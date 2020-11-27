@@ -1,0 +1,3 @@
+[submodule "lib/zapdart"]
+	path = lib/zapdart
+	url = https://github.com/zap-me/zapdart.git

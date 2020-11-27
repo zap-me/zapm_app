@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ini/ini.dart';
 
-import 'libzap.dart';
+import 'zapdart/libzap.dart';
 
 class Wallet {
   final String mnemonic;
@@ -127,6 +127,11 @@ class Prefs {
     return true;
   }
 
+  static Future<bool> pinExists() async {
+  var pin = await Prefs.pinGet();
+  return pin != null && pin != '';
+  }
+
   static Future<String> addressGet() async {
     return await getStringNetworkSpecific("address", null);
   }
@@ -201,4 +206,14 @@ class Prefs {
     await setStringNetworkSpecific("apiserver", value);
     return true;
   }
+}
+
+Future<bool> hasApiKey() async {
+  var apikey = await Prefs.apikeyGet();
+  if (apikey == null || apikey.isEmpty)
+    return false;
+  var apisecret = await Prefs.apisecretGet();
+  if (apisecret == null || apisecret.isEmpty)
+    return false;  
+  return true;
 }

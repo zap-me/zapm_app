@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
 
 import 'claiming_form.dart';
-import 'utils.dart';
-import 'widgets.dart';
+import 'zapdart/utils.dart';
+import 'zapdart/widgets.dart';
+import 'prefs.dart';
 
 class RewardForm extends StatefulWidget {
   final bool _testnet;
@@ -52,7 +53,7 @@ class RewardFormState extends State<RewardForm> {
           }
       )) {
         // check pin
-        if (!await pinCheck(context)) {
+        if (!await pinCheck(context, await Prefs.pinGet())) {
           return;
         }
         // start claim process

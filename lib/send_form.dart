@@ -4,10 +4,10 @@ import 'package:decimal/decimal.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:qrcode_reader/qrcode_reader.dart';
 
-import 'utils.dart';
-import 'libzap.dart';
+import 'zapdart/utils.dart';
+import 'zapdart/libzap.dart';
 import 'sending_form.dart';
-import 'widgets.dart';
+import 'zapdart/widgets.dart';
 import 'prefs.dart';
 
 class SendForm extends StatefulWidget {
@@ -85,7 +85,7 @@ class SendFormState extends State<SendForm> {
           }
       )) {
         // check pin
-        if (!await pinCheck(context)) {
+        if (!await pinCheck(context, await Prefs.pinGet())) {
           return;
         }
         // create tx

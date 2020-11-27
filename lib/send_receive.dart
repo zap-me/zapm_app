@@ -3,7 +3,7 @@ import 'package:decimal/decimal.dart';
 
 import 'send_form.dart';
 import 'receive_form.dart';
-import 'widgets.dart';
+import 'zapdart/widgets.dart';
 
 class SendScreen extends StatelessWidget {
   SendScreen(this._testnet, this._seed, this._fee, this._recipientOrUri, this._max) : super();

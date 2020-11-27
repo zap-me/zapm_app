@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'libzap.dart';
-import 'widgets.dart';
+import 'zapdart/libzap.dart';
+import 'zapdart/widgets.dart';
 import 'merchant.dart';
 
 

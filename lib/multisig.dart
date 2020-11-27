@@ -1,15 +1,14 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:ZapMerchant/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_share/flutter_share.dart';
 import 'package:path/path.dart' as path;
 
-import 'widgets.dart';
-import 'libzap.dart';
+import 'zapdart/widgets.dart';
+import 'zapdart/libzap.dart';
 import 'recovery_form.dart';
-import 'utils.dart';
+import 'zapdart/utils.dart';
 
 class SignaturePicker extends StatelessWidget {
   final void Function(int) signatureSelect;
