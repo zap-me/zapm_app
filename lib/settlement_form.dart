@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
 
+import 'config.dart';
 import 'merchant.dart';
 import 'zapdart/libzap.dart';
 import 'zapdart/utils.dart';
 import 'zapdart/widgets.dart';
+import 'zapdart/colors.dart';
 import 'prefs.dart';
 
 class SettlementForm extends StatefulWidget {
@@ -53,19 +55,19 @@ class SettlementFormState extends State<SettlementForm> {
           builder: (BuildContext context) {
             return SimpleDialog(
               title: Column(children: <Widget>[
-                Text('confirm ZAP settlement amount', style: TextStyle(fontSize: 16)),
-                Text('sending ${amountDec.toStringAsFixed(2)} ZAP', style: TextStyle(fontSize: 16, color: zapyellow)),
-                Text('receiving ${calc.amountReceive.toStringAsFixed(2)} NZD', style: TextStyle(fontSize: 16, color: zapgreen)),
-                Text('admin fee ${(calc.amountReceive - amountDec).toStringAsFixed(2)} NZD', style: TextStyle(fontSize: 16, color: zapyellow)),
+                Text('confirm $AssetShortNameUpper settlement amount', style: TextStyle(fontSize: 16)),
+                Text('sending ${amountDec.toStringAsFixed(2)} $AssetShortNameUpper', style: TextStyle(fontSize: 16, color: ZapYellow)),
+                Text('receiving ${calc.amountReceive.toStringAsFixed(2)} NZD', style: TextStyle(fontSize: 16, color: ZapGreen)),
+                Text('admin fee ${(calc.amountReceive - amountDec).toStringAsFixed(2)} NZD', style: TextStyle(fontSize: 16, color: ZapYellow)),
               ]),
               children: <Widget>[
                 SimpleDialogOption(
                   padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: RoundedButton(() => Navigator.pop(context, true), Colors.white, zapblue, 'yes send ${amountDec.toStringAsFixed(2)} zap'),
+                  child: RoundedButton(() => Navigator.pop(context, true), ZapWhite, ZapBlue, 'yes send ${amountDec.toStringAsFixed(2)} $AssetShortNameLower'),
                 ),
                 SimpleDialogOption(
                   padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: RoundedButton(() => Navigator.pop(context, false), zapblue, Colors.white, 'cancel', borderColor: zapblue),
+                  child: RoundedButton(() => Navigator.pop(context, false), ZapBlue, ZapWhite, 'cancel', borderColor: ZapBlue),
                 )
               ],
             );
@@ -173,12 +175,12 @@ class SettlementFormState extends State<SettlementForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
-          Center(heightFactor: 3, child: Text('make settlement\n  ', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold), textAlign: TextAlign.center)),
+          Center(heightFactor: 3, child: Text('make settlement\n  ', style: TextStyle(color: ZapWhite, fontWeight: FontWeight.bold), textAlign: TextAlign.center)),
           TextFormField(
             controller: _amountController,
             keyboardType: TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(labelText: 'ZAP amount',
-              suffixIcon: FlatButton(onPressed: () => _amountController.text = '${widget._max - widget._fee}', child: Text('max', style: TextStyle(color: zapyellow)))),
+            decoration: InputDecoration(labelText: '$AssetShortNameUpper amount',
+              suffixIcon: FlatButton(onPressed: () => _amountController.text = '${widget._max - widget._fee}', child: Text('max', style: TextStyle(color: ZapYellow)))),
             validator: (value) {
               if (value.isEmpty) {
                 return 'Please enter a value';
@@ -213,9 +215,9 @@ class SettlementFormState extends State<SettlementForm> {
                 Navigator.pop(context, true);
                 flushbarMsg(context, 'settlement created');
               }
-            }, Colors.white, zapblue, 'submit', minWidth: MediaQuery.of(context).size.width / 2, holePunch: true)
+            }, ZapWhite, ZapBlue, 'submit', minWidth: MediaQuery.of(context).size.width / 2, holePunch: true)
           ),
-          RoundedButton(() => Navigator.pop(context, false), zapblue, Colors.white, 'cancel', borderColor: zapblue, minWidth: MediaQuery.of(context).size.width / 2),
+          RoundedButton(() => Navigator.pop(context, false), ZapBlue, ZapWhite, 'cancel', borderColor: ZapBlue, minWidth: MediaQuery.of(context).size.width / 2),
         ],
       ),
     );

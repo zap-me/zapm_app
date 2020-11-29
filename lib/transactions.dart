@@ -6,9 +6,11 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:path_provider/path_provider.dart';
 
+import 'config.dart';
 import 'zapdart/libzap.dart';
 import 'zapdart/utils.dart';
 import 'zapdart/widgets.dart';
+import 'zapdart/colors.dart';
 import 'merchant.dart';
 
 class TransactionsScreen extends StatefulWidget {
@@ -153,13 +155,13 @@ class _TransactionsState extends State<TransactionsScreen> {
     var tx = _txsFiltered[offsetIndex];
     var outgoing = tx.sender == widget._address;
     var amount = Decimal.fromInt(tx.amount) / Decimal.fromInt(100);
-    var amountText = "${amount.toStringAsFixed(2)} ZAP";
+    var amountText = "${amount.toStringAsFixed(2)} $AssetShortNameUpper";
     if (widget._merchantRates != null)
       amountText = "$amountText / ${toNZDAmount(amount, widget._merchantRates)}";
     amountText = outgoing ? '- $amountText' : '+ $amountText';
     var fee = Decimal.fromInt(tx.fee) / Decimal.fromInt(100);
     var feeText = fee.toStringAsFixed(2);
-    var color = outgoing ? zapyellow : zapgreen;
+    var color = outgoing ? ZapYellow : ZapGreen;
     var date = new DateTime.fromMillisecondsSinceEpoch(tx.timestamp);
     var dateStrLong = DateFormat('yyyy-MM-dd HH:mm').format(date);
     var link = widget._testnet ? 'https://wavesexplorer.com/testnet/tx/${tx.id}' : 'https://wavesexplorer.com/tx/${tx.id}';
@@ -171,18 +173,18 @@ class _TransactionsState extends State<TransactionsScreen> {
           pageBuilder: (BuildContext context, __, ___) {
             return new Scaffold(
               appBar: AppBar(
-                leading: backButton(context, color: zapblue),
-                title: Text('transaction', style: TextStyle(color: zapblue)),
+                leading: backButton(context, color: ZapBlue),
+                title: Text('transaction', style: TextStyle(color: ZapBlue)),
               ),
               body: Container(
-                color: Colors.white,
+                color: ZapWhite,
                 child: Column(
                   children: <Widget>[
                     Container(
                       padding: const EdgeInsets.only(top: 5.0),
                       child: ListTile(title: Text('transaction ID'),
                           subtitle: InkWell(
-                            child: Text(tx.id, style: new TextStyle(color: zapblue, decoration: TextDecoration.underline))),
+                            child: Text(tx.id, style: new TextStyle(color: ZapBlue, decoration: TextDecoration.underline))),
                             onTap: () => launch(link),
                           ),
                     ),
@@ -190,7 +192,7 @@ class _TransactionsState extends State<TransactionsScreen> {
                     ListTile(title: Text('sender'), subtitle: Text(tx.sender)),
                     ListTile(title: Text('recipient'), subtitle: Text(tx.recipient)),
                     ListTile(title: Text('amount'), subtitle: Text(amountText, style: TextStyle(color: color),)),
-                    ListTile(title: Text('fee'), subtitle: Text('$feeText ZAP',)),
+                    ListTile(title: Text('fee'), subtitle: Text('$feeText $AssetShortNameUpper',)),
                     Visibility(
                       visible: tx.attachment != null && tx.attachment.isNotEmpty,
                       child:
@@ -198,7 +200,7 @@ class _TransactionsState extends State<TransactionsScreen> {
                     ),
                     Container(
                       padding: const EdgeInsets.only(top: 5.0),
-                      child: RoundedButton(() => Navigator.pop(context), zapblue, Colors.white, 'close', borderColor: zapblue)
+                      child: RoundedButton(() => Navigator.pop(context), ZapBlue, ZapWhite, 'close', borderColor: ZapBlue)
                     ),
                   ],
                 ),
@@ -249,11 +251,11 @@ class _TransactionsState extends State<TransactionsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: backButton(context, color: zapblue),
-        title: Text("transactions", style: TextStyle(color: zapblue)),
+        leading: backButton(context, color: ZapBlue),
+        title: Text("transactions", style: TextStyle(color: ZapBlue)),
         actions: <Widget>[
           PopupMenuButton<Choice>(
-            icon: Icon(Icons.more_vert, color: zapblue),
+            icon: Icon(Icons.more_vert, color: ZapBlue),
             onSelected: _select,
             enabled: !_loading,
             itemBuilder: (BuildContext context) {
@@ -289,13 +291,13 @@ class _TransactionsState extends State<TransactionsScreen> {
                     visible: !_loading && _less,
                     child: Container(
                         padding: const EdgeInsets.all(5),
-                        child: RoundedButton(() => _loadTxs(LoadDirection.Previous), zapblue, Colors.white, 'prev', icon: Icons.navigate_before, borderColor: zapblue)
+                        child: RoundedButton(() => _loadTxs(LoadDirection.Previous), ZapBlue, ZapWhite, 'prev', icon: Icons.navigate_before, borderColor: ZapBlue)
                     )),
                 Visibility(
                     visible: !_loading && _more,
                     child: Container(
                         padding: const EdgeInsets.all(5),
-                        child: RoundedButton(() => _loadTxs(LoadDirection.Next), zapblue, Colors.white, 'next', icon: Icons.navigate_next, borderColor: zapblue)
+                        child: RoundedButton(() => _loadTxs(LoadDirection.Next), ZapBlue, ZapWhite, 'next', icon: Icons.navigate_next, borderColor: ZapBlue)
                     )),
 
               ],

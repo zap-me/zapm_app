@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'zapdart/widgets.dart';
+import 'zapdart/colors.dart';
 import 'tests.dart';
 import 'multisig.dart';
 
@@ -21,7 +22,7 @@ class _HiddenState extends State<HiddenScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: backButton(context, color: Colors.black),
+        leading: backButton(context, color: ZapBlack),
         title: Text("Hidden"),
       ),
       body: Center(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
 
 import 'settlement_form.dart';
+import 'zapdart/colors.dart';
 import 'zapdart/widgets.dart';
 
 class SettlementScreen extends StatelessWidget {
@@ -16,12 +17,12 @@ class SettlementScreen extends StatelessWidget {
     return Scaffold(
         appBar: AppBar(
           leading: backButton(context),
-          title: Text('settlement', style: TextStyle(color: Colors.white)),
-          backgroundColor: zapblue,
+          title: Text('settlement', style: TextStyle(color: ZapWhite)),
+          backgroundColor: ZapBlue,
 
         ),
         body: CustomPaint(
-          painter: CustomCurve(zapblue, 110, 170),
+          painter: CustomCurve(ZapBlue, 110, 170),
           child: Container(
             width: MediaQuery.of(context).size.width, 
             height: MediaQuery.of(context).size.height,

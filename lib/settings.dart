@@ -6,12 +6,14 @@ import 'package:package_info/package_info.dart';
 import 'package:yaml/yaml.dart';
 import 'package:qrcode_reader/qrcode_reader.dart';
 
+import 'config.dart';
 import 'merchant.dart';
 import 'zapdart/libzap.dart';
 import 'prefs.dart';
 import 'zapdart/utils.dart';
 import 'zapdart/pinentry.dart';
 import 'zapdart/widgets.dart';
+import 'zapdart/colors.dart';
 import 'zapdart/bip39widget.dart';
 import 'hidden.dart';
 
@@ -265,7 +267,7 @@ class _SettingsState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: backButton(context, color: Colors.black),
+        leading: backButton(context, color: ZapBlack),
         title: GestureDetector(onTap: _titleTap, child: Text("Settings")),
       ),
       body: Center(
@@ -345,17 +347,21 @@ class _SettingsState extends State<SettingsScreen> {
                 ],
               )
             ),
-            Container(
-              padding: const EdgeInsets.only(top: 18.0),
-              child: ListTile(
-                title: RaisedButton.icon(label: Text("Scan Api Key"), icon: Icon(MaterialCommunityIcons.qrcode_scan), onPressed: !_secondary ? _scanApikey : null),
-              ),
-            ),
-            ListTile(title: Text("Device Name"), subtitle: Text("$_deviceName"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: !_secondary ? _editDeviceName : null),),
-            ListTile(title: Text("Api Key"), subtitle: Text("$_apikey"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: !_secondary ? _editApikey : null),),
-            ListTile(title: Text("Api Secret"), subtitle: Text("$_apisecret"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: !_secondary ? _editApisecret : null),),
-            ListTile(title: Text("Api Server"), subtitle: Text("$_apiserver"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: !_secondary ? _editApiserver : null),),
-            ],
+            Visibility(
+              visible: UseMerchantApi,
+              child: Column(children: <Widget>[
+                Container(
+                  padding: const EdgeInsets.only(top: 18.0),
+                  child: ListTile(
+                    title: RaisedButton.icon(label: Text("Scan Api Key"), icon: Icon(MaterialCommunityIcons.qrcode_scan), onPressed: !_secondary ? _scanApikey : null),
+                  ),
+                ),
+                ListTile(title: Text("Device Name"), subtitle: Text("$_deviceName"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: !_secondary ? _editDeviceName : null),),
+                ListTile(title: Text("Api Key"), subtitle: Text("$_apikey"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: !_secondary ? _editApikey : null),),
+                ListTile(title: Text("Api Secret"), subtitle: Text("$_apisecret"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: !_secondary ? _editApisecret : null),),
+                ListTile(title: Text("Api Server"), subtitle: Text("$_apiserver"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: !_secondary ? _editApiserver : null),),
+              ])
+            )],
           ),
         )
     );

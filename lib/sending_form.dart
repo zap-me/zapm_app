@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'zapdart/libzap.dart';
 import 'zapdart/widgets.dart';
+import 'zapdart/colors.dart';
 import 'merchant.dart';
-
 
 class SendingForm extends StatefulWidget {
   final SpendTx _spendTx;
@@ -61,7 +61,7 @@ class SendingFormState extends State<SendingForm> {
               ),
               Visibility(
                 visible: !_sending && _tx != null,
-                child: Text("broadcast complete (${_tx?.id})", style: TextStyle(color: zapblue)),
+                child: Text("broadcast complete (${_tx?.id})", style: TextStyle(color: ZapBlue)),
               ),
               Visibility(
                 visible: !_sending && _tx == null,
@@ -70,7 +70,7 @@ class SendingFormState extends State<SendingForm> {
               Visibility(visible: !_sending, child: Container(padding: const EdgeInsets.only(top: 20.0))),
               Visibility(
                   visible: !_sending,
-                  child: RoundedButton(() => Navigator.pop(context, _tx != null), zapblue, Colors.white, 'close', borderColor: zapblue)
+                  child: RoundedButton(() => Navigator.pop(context, _tx != null), ZapBlue, ZapWhite, 'close', borderColor: ZapBlue)
               ),
           ],
         ),

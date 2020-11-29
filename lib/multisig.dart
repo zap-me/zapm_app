@@ -9,6 +9,7 @@ import 'zapdart/widgets.dart';
 import 'zapdart/libzap.dart';
 import 'recovery_form.dart';
 import 'zapdart/utils.dart';
+import 'zapdart/colors.dart';
 
 class SignaturePicker extends StatelessWidget {
   final void Function(int) signatureSelect;
@@ -28,7 +29,7 @@ class SignaturePicker extends StatelessWidget {
         var sig = FlatButton(onPressed: () => signatureSelect(i), 
           child: //Flexible(child:
             Text(res['proofs'][i], overflow: TextOverflow.ellipsis,
-            style: i == signatureIndex ? TextStyle(color: Colors.red) : null)
+            style: i == signatureIndex ? TextStyle(color: ZapRed) : null)
           //)
         );
         var trail = Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
@@ -37,8 +38,8 @@ class SignaturePicker extends StatelessWidget {
               return Draggable(
                 data: i,
                 child: Icon(Icons.reorder),
-                childWhenDragging: Icon(Icons.reorder, color: Colors.grey),
-                feedback: Icon(Icons.reorder, color: Colors.red, size: 30),
+                childWhenDragging: Icon(Icons.reorder, color: ZapGrey),
+                feedback: Icon(Icons.reorder, color: ZapRed, size: 30),
               );
             },
             onWillAccept: (data) => true,
@@ -46,7 +47,7 @@ class SignaturePicker extends StatelessWidget {
           IconButton(onPressed: () => signatureDelete(i), icon: Icon(Icons.close))]
         );
         var tile = ListTile(key: Key('$i'),
-          leading: Text('$i', style: TextStyle(color: Colors.grey, fontSize: 10)),
+          leading: Text('$i', style: TextStyle(color: ZapGrey, fontSize: 10)),
           title: sig,
           trailing: trail,
         );
@@ -221,7 +222,7 @@ class _MultisigState extends State<MultisigScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: backButton(context, color: Colors.black),
+        leading: backButton(context, color: ZapBlack),
         title: Text("Multisig"),
       ),
       body: Center(

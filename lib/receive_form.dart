@@ -2,12 +2,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
 
+import 'config.dart';
 import 'prefs.dart';
 import 'zapdart/qrwidget.dart';
 import 'zapdart/libzap.dart';
 import 'merchant.dart';
 import 'zapdart/widgets.dart';
-import 'zapdart/utils.dart';
+import 'zapdart/colors.dart';
 
 class ReceiveForm extends StatefulWidget {
   final bool _testnet;
@@ -30,7 +31,7 @@ class ReceiveFormState extends State<ReceiveForm> {
   final _amountController = TextEditingController();
   final _uriController = TextEditingController();
   String _uri;
-  String _amountType = 'nzd';
+  String _amountType = UseMerchantApi ? 'nzd' : AssetShortNameLower;
   bool _validAmount = true;
   StreamSubscription<String> _uriSub;
   Rates _rates;
@@ -105,7 +106,7 @@ class ReceiveFormState extends State<ReceiveForm> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-              Center(heightFactor: 5, child: Text('scan QR code', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold), textAlign: TextAlign.center)),
+              Center(heightFactor: 5, child: Text('scan QR code', style: TextStyle(color: ZapWhite, fontWeight: FontWeight.bold), textAlign: TextAlign.center)),
               Center(child: Card(
                 margin: EdgeInsets.all(20),
                 child: validQrData() && _validAmount ? QrWidget(_uri, size: 240, version: 10) : Container(width: 240, height: 240, padding: EdgeInsets.all(100), child: CircularProgressIndicator()))
@@ -123,17 +124,19 @@ class ReceiveFormState extends State<ReceiveForm> {
                 decoration: InputDecoration(labelText: 'amount',
                   suffixIcon: FlatButton(
                     onPressed: () {
+                      if (!UseMerchantApi)
+                        return;
                       setState(() {
-                        if (_amountType == 'zap')
+                        if (_amountType == AssetShortNameLower)
                           _amountType = 'nzd';
                         else
-                          _amountType = 'zap';
+                          _amountType = AssetShortNameLower;
                       });
                       updateUriUi();
                     },
-                    child: Text(_amountType, style: TextStyle(color: zapgreen)))
+                    child: Text(_amountType, style: TextStyle(color: ZapGreen)))
                 ),
-                style: _validAmount ? null : TextStyle(color: Colors.red),
+                style: _validAmount ? null : TextStyle(color: ZapRed),
                 validator: (value) {
                   if (value.isEmpty) {
                     return 'Please enter a value';
@@ -159,7 +162,7 @@ class ReceiveFormState extends State<ReceiveForm> {
               ),
               Padding(
                 padding: const EdgeInsets.only(top: 24.0),
-                child: RoundedButton(() => Navigator.pop(context), zapblue, Colors.white, 'cancel', borderColor: zapblue, minWidth: MediaQuery.of(context).size.width / 2),
+                child: RoundedButton(() => Navigator.pop(context), ZapBlue, ZapWhite, 'cancel', borderColor: ZapBlue, minWidth: MediaQuery.of(context).size.width / 2),
               ),
             ],
           ),

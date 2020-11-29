@@ -8,9 +8,10 @@ import 'package:socket_io_client/socket_io_client.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:intl/intl.dart';
 
+import 'config.dart';
 import 'prefs.dart';
 import 'zapdart/utils.dart';
-import 'zapdart/widgets.dart';
+import 'zapdart/colors.dart';
 
 class ClaimCode {
   final Decimal amount;
@@ -401,10 +402,10 @@ class ListTx extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var color = outgoing ? zapyellow : zapgreen;
-    var tsLeft = TextStyle(fontSize: 12, color: zapblacklight);
+    var color = outgoing ? ZapYellow : ZapGreen;
+    var tsLeft = TextStyle(fontSize: 12, color: ZapBlackLight);
     var tsRight = TextStyle(fontSize: 12, color: color);
-    var amountText = '${amount.toStringAsFixed(2)} ZAP';
+    var amountText = '${amount.toStringAsFixed(2)} $AssetShortNameUpper';
     Widget amountWidget = Text(amountText, style: tsRight);
     if (merchantRates != null) {
       var amountNZD = Text(toNZDAmount(amount, merchantRates), style: tsRight);

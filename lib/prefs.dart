@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ini/ini.dart';
 
+import 'config.dart';
 import 'zapdart/libzap.dart';
 
 class Wallet {
@@ -113,7 +114,7 @@ class Prefs {
     await prefs.setBool("testnet", value);
 
     // set libzap
-    LibZap().testnetSet(value);
+    LibZap().networkParamsSet(AssetIdMainnet, AssetIdTestnet, value);
   }
 
   static Future<String> pinGet() async {

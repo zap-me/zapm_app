@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'config.dart';
 import 'zapdart/bip39widget.dart';
 
 class NewMnemonicForm extends StatefulWidget {
@@ -26,7 +27,7 @@ class NewMnemonicFormState extends State<NewMnemonicForm> {
           children: <Widget>[
             Container(
               padding: const EdgeInsets.only(top: 18.0),
-              child: ListTile(title: Text("New recovery words"), subtitle: Text("You need to take care of your recovery words, if you lose them you could lose your ZAP")),
+              child: ListTile(title: Text("New recovery words"), subtitle: Text("You need to take care of your recovery words, if you lose them you could lose your $AssetShortNameUpper")),
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),

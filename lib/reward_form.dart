@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
 
+import 'config.dart';
 import 'claiming_form.dart';
 import 'zapdart/utils.dart';
 import 'zapdart/widgets.dart';
@@ -38,11 +39,11 @@ class RewardFormState extends State<RewardForm> {
           context: context,
           builder: (BuildContext context) {
             return SimpleDialog(
-              title: const Text("Confirm Zap Reward Amount"),
+              title: const Text("Confirm $AssetShortName Reward Amount"),
               children: <Widget>[
                 SimpleDialogOption(
                   onPressed: () { Navigator.pop(context, true); },
-                  child: Text("Yes send $amountText ZAP"),
+                  child: Text("Yes send $amountText $AssetShortNameUpper"),
                 ),
                 SimpleDialogOption(
                   onPressed: () { Navigator.pop(context, false); },

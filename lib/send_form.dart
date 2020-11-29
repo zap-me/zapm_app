@@ -4,10 +4,12 @@ import 'package:decimal/decimal.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:qrcode_reader/qrcode_reader.dart';
 
+import 'config.dart';
 import 'zapdart/utils.dart';
 import 'zapdart/libzap.dart';
 import 'sending_form.dart';
 import 'zapdart/widgets.dart';
+import 'zapdart/colors.dart';
 import 'prefs.dart';
 
 class SendForm extends StatefulWidget {
@@ -74,11 +76,11 @@ class SendFormState extends State<SendForm> {
               children: <Widget>[
                 SimpleDialogOption(
                   padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: RoundedButton(() => Navigator.pop(context, true), Colors.white, zapyellow, 'yes send ${amountDec.toStringAsFixed(2)} zap'),
+                  child: RoundedButton(() => Navigator.pop(context, true), ZapWhite, ZapYellow, 'yes send ${amountDec.toStringAsFixed(2)} $AssetShortNameLower'),
                 ),
                 SimpleDialogOption(
                   padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: RoundedButton(() => Navigator.pop(context, false), zapblue, Colors.white, 'cancel', borderColor: zapblue),
+                  child: RoundedButton(() => Navigator.pop(context, false), ZapBlue, ZapWhite, 'cancel', borderColor: ZapBlue),
                 ),
               ],
             );
@@ -121,7 +123,7 @@ class SendFormState extends State<SendForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
-          Center(heightFactor: 3, child: Text('send zap\n  ', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold), textAlign: TextAlign.center)),
+          Center(heightFactor: 3, child: Text('send $AssetShortNameLower\n  ', style: TextStyle(color: ZapWhite, fontWeight: FontWeight.bold), textAlign: TextAlign.center)),
           TextFormField(
             controller: _addressController,
             keyboardType: TextInputType.text,
@@ -134,8 +136,8 @@ class SendFormState extends State<SendForm> {
                       flushbarMsg(context, 'invalid QR code', category: MessageCategory.Warning);
                   });
                 },
-                icon: Icon(MaterialCommunityIcons.qrcode_scan, size: 14, color: zapyellow),
-                label: Text('scan', style: TextStyle(color: zapyellow))
+                icon: Icon(MaterialCommunityIcons.qrcode_scan, size: 14, color: ZapYellow),
+                label: Text('scan', style: TextStyle(color: ZapYellow))
               )
             ),
             validator: (value) {
@@ -153,8 +155,8 @@ class SendFormState extends State<SendForm> {
           TextFormField(
             controller: _amountController,
             keyboardType: TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(labelText: 'ZAP amount',
-              suffixIcon: FlatButton(onPressed: () => _amountController.text = '${widget._max - widget._fee}', child: Text('max', style: TextStyle(color: zapyellow)))),
+            decoration: InputDecoration(labelText: '$AssetShortNameUpper amount',
+              suffixIcon: FlatButton(onPressed: () => _amountController.text = '${widget._max - widget._fee}', child: Text('max', style: TextStyle(color: ZapYellow)))),
             validator: (value) {
               if (value.isEmpty) {
                 return 'Please enter a value';
@@ -175,12 +177,12 @@ class SendFormState extends State<SendForm> {
             decoration: InputDecoration(labelText: 'message'),
             onChanged: updateAttachment,
           ),
-          Text(_attachment != null ? _attachment : '', style: TextStyle(color: zapblacklight)),
+          Text(_attachment != null ? _attachment : '', style: TextStyle(color: ZapBlackLight)),
           Padding(
             padding: const EdgeInsets.only(top: 24.0),
-            child: RoundedButton(send, Colors.white, zapyellow, 'send zap', minWidth: MediaQuery.of(context).size.width / 2, holePunch: true),
+            child: RoundedButton(send, ZapWhite, ZapYellow, 'send $AssetShortNameLower', minWidth: MediaQuery.of(context).size.width / 2, holePunch: true),
           ),
-          RoundedButton(() => Navigator.pop(context, false), zapblue, Colors.white, 'cancel', borderColor: zapblue, minWidth: MediaQuery.of(context).size.width / 2),
+          RoundedButton(() => Navigator.pop(context, false), ZapBlue, ZapWhite, 'cancel', borderColor: ZapBlue, minWidth: MediaQuery.of(context).size.width / 2),
         ],
       ),
     );

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
 
+import 'config.dart';
 import 'send_form.dart';
 import 'receive_form.dart';
 import 'zapdart/widgets.dart';
+import 'zapdart/colors.dart';
 
 class SendScreen extends StatelessWidget {
   SendScreen(this._testnet, this._seed, this._fee, this._recipientOrUri, this._max) : super();
@@ -19,11 +21,11 @@ class SendScreen extends StatelessWidget {
     return Scaffold(
         appBar: AppBar(
           leading: backButton(context),
-          title: Text('send zap', style: TextStyle(color: Colors.white)),
-          backgroundColor: zapyellow,
+          title: Text('send $AssetShortNameLower', style: TextStyle(color: ZapWhite)),
+          backgroundColor: ZapYellow,
         ),
         body: CustomPaint(
-          painter: CustomCurve(zapyellow, 110, 170),
+          painter: CustomCurve(ZapYellow, 110, 170),
           child: Container(
             width: MediaQuery.of(context).size.width, 
             height: MediaQuery.of(context).size.height,
@@ -46,11 +48,11 @@ class ReceiveScreen extends StatelessWidget {
     return Scaffold(
         appBar: AppBar(
           leading: backButton(context),
-          title: Text("receive zap", style: TextStyle(color: Colors.white)),
-          backgroundColor: zapgreen,
+          title: Text("receive $AssetShortNameLower", style: TextStyle(color: ZapWhite)),
+          backgroundColor: ZapGreen,
         ),
         body: CustomPaint(
-          painter: CustomCurve(zapgreen, 150, 250),
+          painter: CustomCurve(ZapGreen, 150, 250),
           child: Container(
             width: MediaQuery.of(context).size.width, 
             height: MediaQuery.of(context).size.height,

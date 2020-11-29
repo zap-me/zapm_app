@@ -1,0 +1,39 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import 'zapdart/colors.dart';
+
+// the app title
+const AppTitle = 'Zap Retailer';
+// all instances where the asset short name has the first letter capitalized
+const AssetShortName = 'Zap';
+// all instances where the asset short name is lower case
+const AssetShortNameLower = 'zap';
+// all instances where the asset short name is upper case
+const AssetShortNameUpper = 'ZAP';
+// the 'zap' icon on the header of the home page
+const AssetHeaderIconPng = 'assets/icon.png';
+// the lightning icon on the home page balance widget
+const AssetBalanceIconSvg = 'assets/icon-bolt.svg';
+// enable/disable settlement UI/feature
+const UseSettlement = true;
+// enable/disable merchant api (including all references/conversions to NZD)
+const UseMerchantApi = true;
+// set these two to use a different mainnet/testnet asset id pair then the defualt zap asset ids.
+const String AssetIdMainnet = null;
+const String AssetIdTestnet = null;
+
+void initConfig() {
+  overrideTheme();
+  // example
+  /*overrideTheme(
+    zapWhite: Colors.lightBlue[50],
+    zapYellow: Colors.teal[100],
+    zapWarning: Colors.yellow,
+    zapWarningLight: Colors.yellow[100],
+    zapBlue: Colors.pink[200],
+    zapGreen: Colors.blueGrey[300],
+    zapTextThemer: GoogleFonts.sansitaTextTheme);
+    */
+}
+

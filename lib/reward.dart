@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
 
+import 'config.dart';
 import 'reward_form.dart';
 
 class RewardScreen extends StatelessWidget {
@@ -15,7 +16,7 @@ class RewardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: Text("Zap Reward"),
+          title: Text("$AssetShortName Reward"),
         ),
         body: new Container(
             padding: new EdgeInsets.all(20.0),

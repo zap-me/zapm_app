@@ -8,8 +8,9 @@ import 'package:decimal/decimal.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import 'config.dart';
+import 'zapdart/colors.dart';
 import 'zapdart/qrwidget.dart';
 import 'send_receive.dart';
 import 'reward.dart';
@@ -35,6 +36,9 @@ void main() {
     if (kReleaseMode)
       exit(1);
   };
+
+  // initialize any config functions
+  initConfig();
 
   runApp(MyApp());
 }
@@ -68,16 +72,15 @@ class MyApp extends StatelessWidget {
       },
       child: MaterialApp(
         //debugShowCheckedModeBanner: false,
-        title: 'Zap Retailer',
+        title: AppTitle,
         theme: ThemeData(
-          brightness: Brightness.light,
-          primaryColor: Colors.white,
-          accentColor: zapblue,
-          textTheme: GoogleFonts.oxygenTextTheme(
-            Theme.of(context).textTheme,
-          ),
+          brightness: ZapBrightness,
+          primaryColor: ZapWhite,
+          accentColor: ZapBlue,
+          textTheme: ZapTextThemer(Theme.of(context).textTheme),
+          primaryTextTheme: ZapTextThemer(Theme.of(context).textTheme),
         ),
-        home: ZapHomePage(title: 'Zap Retailer'),
+        home: ZapHomePage(title: AppTitle),
       )
     );
   }
@@ -135,7 +138,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   }
 
   void _txNotification(String txid, String sender, String recipient, double amount, String attachment) {
-    var amountString = "${amount.toStringAsFixed(2)} ZAP";
+    var amountString = "${amount.toStringAsFixed(2)} $AssetShortNameUpper";
     // convert amount to NZD
     if (_merchantRates != null) {
       var amountDec = Decimal.parse(amount.toString());
@@ -164,7 +167,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
             ),
           ),
           actions: <Widget>[
-            RoundedButton(() => Navigator.pop(context), zapblue, Colors.white, 'ok', borderColor: zapblue),
+            RoundedButton(() => Navigator.pop(context), ZapBlue, ZapWhite, 'ok', borderColor: ZapBlue),
           ],
         );
       }
@@ -219,11 +222,14 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
                 },
                 child: const Text("Recover using a raw seed string (advanced use only)"),
               ),
-              SimpleDialogOption(
-                onPressed: () {
-                  Navigator.pop(context, NoWalletAction.ScanMerchantApiKey);
-                },
-                child: const Text("Scan retailer api key"),
+              Visibility(
+                visible: UseMerchantApi,
+                child: SimpleDialogOption(
+                  onPressed: () {
+                    Navigator.pop(context, NoWalletAction.ScanMerchantApiKey);
+                  },
+                  child: const Text("Scan retailer api key")
+                )
               ),
             ],
           );
@@ -390,7 +396,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   Future<bool> _setWalletDetails() async {
     _alerts.clear();
     // check apikey
-    if (!await hasApiKey())
+    if (UseMerchantApi && !await hasApiKey())
       setState(() => _alerts.add('No API KEY set'));
     // check mnemonic
     if (_wallet == null) {
@@ -555,11 +561,11 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   Future<bool> _setTestnet(String address, bool haveMnemonic) async {
     var testnet = await Prefs.testnetGet();
     var libzap = LibZap();
-    libzap.testnetSet(testnet);
+    libzap.networkParamsSet(AssetIdMainnet, AssetIdTestnet, testnet);
     if (!haveMnemonic) {
       if (!libzap.addressCheck(address)) {
         testnet = !testnet;
-        libzap.testnetSet(testnet);
+        libzap.networkParamsSet(AssetIdMainnet, AssetIdTestnet, testnet);
         await Prefs.testnetSet(testnet);
       }
     }
@@ -573,7 +579,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   void _init() async  {
     // set libzap to initial testnet value so we can devrive address from mnemonic
     var testnet = await Prefs.testnetGet();
-    LibZap().testnetSet(testnet);
+    LibZap().networkParamsSet(AssetIdMainnet, AssetIdTestnet, testnet);
     // init wallet
     var hasWallet = await _setWalletDetails();
     if (!hasWallet) {
@@ -587,15 +593,15 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     return Scaffold(
       appBar: AppBar(
         leading: Visibility(
-          child: IconButton(onPressed: _toggleAlerts, icon: Icon(Icons.warning, color: _showAlerts ? Colors.grey : zapwarning)),
+          child: IconButton(onPressed: _toggleAlerts, icon: Icon(Icons.warning, color: _showAlerts ? ZapGrey : ZapWarning)),
           maintainSize: true, 
           maintainAnimation: true,
           maintainState: true,
           visible: _alerts.length > 0, 
         ),
-        title: Center(child: Image.asset('assets/icon.png', height: 30)),
+        title: Center(child: Image.asset(AssetHeaderIconPng, height: 30)),
         actions: <Widget>[
-          IconButton(icon: Icon(Icons.settings, color: zapblue), onPressed: _showSettings),
+          IconButton(icon: Icon(Icons.settings, color: ZapBlue), onPressed: _showSettings),
         ],
       ),
       body: RefreshIndicator(
@@ -611,7 +617,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
               child: Column(children: <Widget>[
                 Container(
                   padding: const EdgeInsets.only(top: 28.0),
-                  child: Text('my balance:',  style: TextStyle(color: zapblackmed, fontWeight: FontWeight.w700), textAlign: TextAlign.center,),
+                  child: Text('my balance:',  style: TextStyle(color: ZapBlackMed, fontWeight: FontWeight.w700), textAlign: TextAlign.center,),
                 ),
                 Container(
                   height: 100,
@@ -630,9 +636,9 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: <Widget>[
-                                Text(_balanceText, style: TextStyle(color: zapblue, fontSize: 28)),
+                                Text(_balanceText, style: TextStyle(color: ZapBlue, fontSize: 28)),
                                 SizedBox.fromSize(size: Size(4, 1)),
-                                SvgPicture.asset('assets/icon-bolt.svg', height: 20)
+                                SvgPicture.asset(AssetBalanceIconSvg, height: 20)
                               ],
                             )
                           )
@@ -649,19 +655,19 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
             ),
             Container(
               padding: const EdgeInsets.only(top: 28.0),
-              child: Text('wallet address:', style: TextStyle(color: zapblackmed, fontWeight: FontWeight.w700), textAlign: TextAlign.center),
+              child: Text('wallet address:', style: TextStyle(color: ZapBlackMed, fontWeight: FontWeight.w700), textAlign: TextAlign.center),
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),
-              child: Text(_wallet != null ? _wallet.address : '...', style: TextStyle(color: zapblacklight), textAlign: TextAlign.center),
+              child: Text(_wallet != null ? _wallet.address : '...', style: TextStyle(color: ZapBlackLight), textAlign: TextAlign.center),
             ),
             Divider(),
             Container(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  RoundedButton(_showQrCode, zapblue, Colors.white, 'view QR code', icon: MaterialCommunityIcons.qrcode_scan, minWidth: MediaQuery.of(context).size.width / 2 - 20),
-                  RoundedButton(_copyAddress, Colors.white, zapblue, 'copy wallet address', minWidth: MediaQuery.of(context).size.width / 2 - 20),
+                  RoundedButton(_showQrCode, ZapBlue, ZapWhite, 'view QR code', icon: MaterialCommunityIcons.qrcode_scan, minWidth: MediaQuery.of(context).size.width / 2 - 20),
+                  RoundedButton(_copyAddress, ZapWhite, ZapBlue, 'copy wallet address', minWidth: MediaQuery.of(context).size.width / 2 - 20),
                 ]
               )
             ),
@@ -669,22 +675,22 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
               //height: 300, ???
               margin: const EdgeInsets.only(top: 40),
               padding: const EdgeInsets.only(top: 20),
-              color: Colors.white,
+              color: ZapWhite,
               child: Column(
                 children: <Widget>[
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: <Widget>[
-                      _haveSeed() ? SquareButton(_send, MaterialCommunityIcons.chevron_double_up, zapyellow, 'SEND ZAP') : null,
-                      _haveSeed() ? SquareButton(_scanQrCode, MaterialCommunityIcons.qrcode_scan, zapblue, 'SCAN QR CODE') : null,
-                      SquareButton(_receive, MaterialCommunityIcons.chevron_double_down, zapgreen, 'RECEIVE ZAP'),
+                      _haveSeed() ? SquareButton(_send, MaterialCommunityIcons.chevron_double_up, ZapYellow, 'SEND $AssetShortNameUpper') : null,
+                      _haveSeed() ? SquareButton(_scanQrCode, MaterialCommunityIcons.qrcode_scan, ZapBlue, 'SCAN QR CODE') : null,
+                      SquareButton(_receive, MaterialCommunityIcons.chevron_double_down, ZapGreen, 'RECEIVE $AssetShortNameUpper'),
                     ].where((child) => child != null).toList(),
                   ),
                   SizedBox.fromSize(size: Size(1, 10)),
                   ListButton(_transactions, 'transactions', !_haveSeed()),
-                  //ListButton(_zapRewards, 'zap rewards', false),
+                  //ListButton(_zapRewards, '$AssetShortNameLower rewards', false),
                   Visibility(
-                    visible: _haveSeed(),
+                    visible: _haveSeed() && UseSettlement,
                     child: 
                       ListButton(_settlement, 'make settlement', _haveSeed()),
                  ),
