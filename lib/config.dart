@@ -10,17 +10,17 @@ enum TokenType { Waves, PayDB }
 // the default testnet value
 const TestnetDefault = false;
 // the app title
-const AppTitle = 'Zap Retailer';
+const AppTitle = 'Whitelabel Demo';
 // all instances where the asset short name has the first letter capitalized
-const AssetShortName = 'Zap';
+const AssetShortName = 'Paz';
 // all instances where the asset short name is lower case
-const AssetShortNameLower = 'zap';
+const AssetShortNameLower = 'paz';
 // all instances where the asset short name is upper case
-const AssetShortNameUpper = 'ZAP';
+const AssetShortNameUpper = 'PAZ';
 // the 'zap' icon on the header of the home page
 const AssetHeaderIconPng = 'assets/icon.png';
 // the lightning icon on the home page balance widget
-const AssetBalanceIcon = 'assets/icon-bolt.svg';
+const AssetBalanceIcon = 'assets/paz.svg';
 // whether to disable some repeated/redundant titles
 const DontRepeatTitles = true;
 // enable/disable reward UI/feature
@@ -89,9 +89,7 @@ const String PremioPayPrefix = '$PremioPayScheme://';
 const String PremioStageLinkScheme = 'premiostagelink';
 
 void initConfig() {
-  overrideTheme();
-  // example
-  /*overrideTheme(
+  overrideTheme(
     zapWhite: Colors.lightBlue[50],
     zapYellow: Colors.teal[100],
     zapWarning: Colors.yellow,
@@ -103,5 +101,4 @@ void initConfig() {
     zapOutgoingFunds: Colors.red,
     zapIncomingFunds: Colors.green,
     zapTextThemer: GoogleFonts.sansitaTextTheme);
-    */
 }
