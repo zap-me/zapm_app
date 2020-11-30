@@ -4,7 +4,14 @@
 
 zap.me test app
 
-## Getting Started
+## Configuring features
 
-For help getting started with Flutter, view our online
-[documentation](https://flutter.io/).
+See `config.dart`
+
+## Changing bundle-id/app-id/application-name
+
+See https://pub.dev/packages/rename
+
+## Changing package icons
+
+See https://pub.dev/packages/flutter_launcher_icons
