@@ -11,9 +11,10 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <application
-        android:label="Zap Retailer"
+        android:name=".Application"
+        android:label="Frankie"
         android:requestLegacyExternalStorage="true"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/launcher_icon">
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
@@ -38,26 +39,19 @@
             </intent-filter>
 
             <!-- Deep Links -->
-            <intent-filter> <!-- TODO: remove waves or paydb -->
+            <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
-                android:scheme="waves" />
-            </intent-filter>
-            <intent-filter> <!-- TODO: remove waves or paydb -->
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data
-                android:scheme="premiopay" />
+                android:scheme="premiofrankiepoints" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
-                android:scheme="premiostagelink" />
+                android:scheme="premiostagefrankiepoints" />
             </intent-filter>
 
             <!-- Push Notifications -->
