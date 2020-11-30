@@ -202,7 +202,9 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         barrierDismissible: true,
         builder: (BuildContext context) {
           return SimpleDialog(
-            title: const Text("You do not have recovery words or an address saved, what would you like to do?"),
+            title: const Text(UseMerchantApi ?
+              "You do not have recovery words or an address saved, what would you like to do?" :
+              "You do not have recovery words saved, what would you like to do?"),
             children: <Widget>[
               SimpleDialogOption(
                 onPressed: () {
