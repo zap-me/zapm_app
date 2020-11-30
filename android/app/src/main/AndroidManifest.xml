@@ -9,9 +9,9 @@
 
     <application
         android:name=".Application"
-        android:label="Zap Retailer"
+        android:label="Whitelabel Demo"
         android:requestLegacyExternalStorage="true"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/launcher_icon">
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
