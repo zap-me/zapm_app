@@ -6,23 +6,23 @@ import 'package:zapdart/colors.dart';
 // the default testnet value
 const TestnetDefault = false;
 // the app title
-const AppTitle = 'Zap Retailer';
+const AppTitle = 'Whitelabel Demo';
 // all instances where the asset short name has the first letter capitalized
-const AssetShortName = 'Zap';
+const AssetShortName = 'Paz';
 // all instances where the asset short name is lower case
-const AssetShortNameLower = 'zap';
+const AssetShortNameLower = 'paz';
 // all instances where the asset short name is upper case
-const AssetShortNameUpper = 'ZAP';
+const AssetShortNameUpper = 'PAZ';
 // the 'zap' icon on the header of the home page
 const AssetHeaderIconPng = 'assets/icon.png';
 // the lightning icon on the home page balance widget
-const AssetBalanceIconSvg = 'assets/icon-bolt.svg';
+const AssetBalanceIconSvg = 'assets/paz.svg';
 // enable/disable reward UI/feature
 const UseReward = false;
 // enable/disable settlement UI/feature
-const UseSettlement = true;
+const UseSettlement = false;
 // enable/disable merchant api (including all references/conversions to NZD)
-const UseMerchantApi = true;
+const UseMerchantApi = false;
 // enable/disable a webview homepage (null = disabled)
 const String WebviewURL = null;
 // set these two to use a different mainnet/testnet asset id pair then the defualt zap asset ids.
@@ -33,9 +33,7 @@ const String PremioStageIndexUrl = null;
 const String PremioStageName = null;
 
 void initConfig() {
-  overrideTheme();
-  // example
-  /*overrideTheme(
+  overrideTheme(
     zapWhite: Colors.lightBlue[50],
     zapYellow: Colors.teal[100],
     zapWarning: Colors.yellow,
@@ -43,6 +41,4 @@ void initConfig() {
     zapBlue: Colors.pink[200],
     zapGreen: Colors.blueGrey[300],
     zapTextThemer: GoogleFonts.sansitaTextTheme);
-    */
 }
-
