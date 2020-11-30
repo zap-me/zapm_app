@@ -1,5 +1,5 @@
-name: ZapMerchant
-description: zap.me retailer app
+name: WhitelabelDemo
+description: zap.me whitelabel demo
 version: 1.3.1+43
 
 dependencies:
