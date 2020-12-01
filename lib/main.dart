@@ -690,8 +690,11 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
                   ),
                   SizedBox.fromSize(size: Size(1, 10)),
                   ListButton(_transactions, 'transactions', !_haveSeed()),
-                  //ListButton(_zapRewards, '$AssetShortNameLower rewards', false),
                   Visibility(
+                    visible: _haveSeed() && UseReward,
+                    child: 
+                      ListButton(_zapReward, '$AssetShortNameLower rewards', false),
+                  ),Visibility(
                     visible: _haveSeed() && UseSettlement,
                     child: 
                       ListButton(_settlement, 'make settlement', _haveSeed()),

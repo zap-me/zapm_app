@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'zapdart/colors.dart';
 
+// the default testnet value
+const TestnetDefault = false;
 // the app title
 const AppTitle = 'Zap Retailer';
 // all instances where the asset short name has the first letter capitalized
@@ -15,6 +17,8 @@ const AssetShortNameUpper = 'ZAP';
 const AssetHeaderIconPng = 'assets/icon.png';
 // the lightning icon on the home page balance widget
 const AssetBalanceIconSvg = 'assets/icon-bolt.svg';
+// enable/disable reward UI/feature
+const UseReward = false;
 // enable/disable settlement UI/feature
 const UseSettlement = true;
 // enable/disable merchant api (including all references/conversions to NZD)

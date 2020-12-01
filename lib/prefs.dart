@@ -106,7 +106,7 @@ class Prefs {
 
   static Future<bool> testnetGet() async {
     final prefs = PrefHelper();
-    return await prefs.getBool("testnet", false);
+    return await prefs.getBool("testnet", TestnetDefault);
   }
 
   static void testnetSet(bool value) async {
