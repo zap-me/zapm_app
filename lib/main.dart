@@ -8,6 +8,7 @@ import 'package:decimal/decimal.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 import 'config.dart';
 import 'zapdart/colors.dart';
@@ -556,6 +557,22 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
       _updateBalance();
   }
 
+  void _homepage() {
+    if (WebviewURL != null) {
+      var webview = WebView(
+        initialUrl: WebviewURL,
+        javascriptMode: JavascriptMode.unrestricted,
+        gestureNavigationEnabled: true,
+      );
+      Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+            builder: (context) => _appScaffold(webview, isSecondary: true)
+        )
+      );
+    }
+  }
+
   bool _haveSeed() {
     return _wallet != null && _wallet.isMnemonic;
   }
@@ -588,10 +605,11 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
       _noWallet();
       _setWalletDetails();
     }
+    // webview
+    _homepage();
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _appScaffold(Widget body, {bool isSecondary = false}) {
     return Scaffold(
       appBar: AppBar(
         leading: Visibility(
@@ -599,14 +617,25 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
           maintainSize: true, 
           maintainAnimation: true,
           maintainState: true,
-          visible: _alerts.length > 0, 
+          visible: _alerts.length > 0 && !isSecondary, 
         ),
-        title: Center(child: Image.asset(AssetHeaderIconPng, height: 30)),
+        title: GestureDetector(
+          child: Center(child: Image.asset(AssetHeaderIconPng, height: 30)),
+          onTap: () => isSecondary ? Navigator.of(context).pop() : _homepage(),
+        ),
         actions: <Widget>[
-          IconButton(icon: Icon(Icons.settings, color: ZapBlue), onPressed: _showSettings),
+          isSecondary ? IconButton(icon: Icon(Icons.account_balance_wallet, color: ZapBlue), onPressed: () => Navigator.of(context).pop()) :
+            IconButton(icon: Icon(Icons.settings, color: ZapBlue), onPressed: _showSettings),
         ],
       ),
-      body: RefreshIndicator(
+      body: body
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _appScaffold(
+      RefreshIndicator(
         onRefresh: _updateBalance,
         child: ListView(
           children: <Widget>[
@@ -689,16 +718,18 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
                     ].where((child) => child != null).toList(),
                   ),
                   SizedBox.fromSize(size: Size(1, 10)),
-                  ListButton(_transactions, 'transactions', !_haveSeed()),
+                  ListButton(_transactions, 'transactions'),
                   Visibility(
                     visible: _haveSeed() && UseReward,
                     child: 
-                      ListButton(_zapReward, '$AssetShortNameLower rewards', false),
-                  ),Visibility(
+                      ListButton(_zapReward, '$AssetShortNameLower rewards'),
+                  ),
+                  Visibility(
                     visible: _haveSeed() && UseSettlement,
                     child: 
-                      ListButton(_settlement, 'make settlement', _haveSeed()),
-                 ),
+                      ListButton(_settlement, 'make settlement'),
+                  ),
+                  ListButtonEnd()
                 ],
               )
             ),      

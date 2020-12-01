@@ -23,6 +23,8 @@ const UseReward = false;
 const UseSettlement = true;
 // enable/disable merchant api (including all references/conversions to NZD)
 const UseMerchantApi = true;
+// enable/disable a webview homepage (null = disabled)
+const String WebviewURL = null;
 // set these two to use a different mainnet/testnet asset id pair then the defualt zap asset ids.
 const String AssetIdMainnet = null;
 const String AssetIdTestnet = null;
