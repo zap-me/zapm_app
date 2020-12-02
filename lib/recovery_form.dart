@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'zapdart/bip39widget.dart';
+import 'package:zapdart/bip39widget.dart';
 
 
 class RecoveryForm extends StatefulWidget {

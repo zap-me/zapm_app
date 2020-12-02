@@ -5,11 +5,12 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter_share/flutter_share.dart';
 import 'package:path/path.dart' as path;
 
-import 'zapdart/widgets.dart';
-import 'zapdart/libzap.dart';
+import 'package:zapdart/widgets.dart';
+import 'package:zapdart/libzap.dart';
+import 'package:zapdart/utils.dart';
+import 'package:zapdart/colors.dart';
+
 import 'recovery_form.dart';
-import 'zapdart/utils.dart';
-import 'zapdart/colors.dart';
 
 class SignaturePicker extends StatelessWidget {
   final void Function(int) signatureSelect;

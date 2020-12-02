@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'package:zapdart/bip39widget.dart';
+
 import 'config.dart';
-import 'zapdart/bip39widget.dart';
 
 class NewMnemonicForm extends StatefulWidget {
   final String _mnemonic;

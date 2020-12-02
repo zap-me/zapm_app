@@ -6,15 +6,16 @@ import 'package:package_info/package_info.dart';
 import 'package:yaml/yaml.dart';
 import 'package:qrcode_reader/qrcode_reader.dart';
 
+import 'package:zapdart/libzap.dart';
+import 'package:zapdart/utils.dart';
+import 'package:zapdart/pinentry.dart';
+import 'package:zapdart/widgets.dart';
+import 'package:zapdart/colors.dart';
+import 'package:zapdart/bip39widget.dart';
+
 import 'config.dart';
 import 'merchant.dart';
-import 'zapdart/libzap.dart';
 import 'prefs.dart';
-import 'zapdart/utils.dart';
-import 'zapdart/pinentry.dart';
-import 'zapdart/widgets.dart';
-import 'zapdart/colors.dart';
-import 'zapdart/bip39widget.dart';
 import 'hidden.dart';
 
 class SettingsScreen extends StatefulWidget {

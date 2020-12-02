@@ -2,8 +2,8 @@ import 'dart:collection';
 import 'dart:isolate';
 import 'package:flutter/material.dart';
 
-import 'zapdart/widgets.dart';
-import 'zapdart/libzap.dart';
+import 'package:zapdart/widgets.dart';
+import 'package:zapdart/libzap.dart';
 
 class WorkStatus extends StatefulWidget {
   final String workName;

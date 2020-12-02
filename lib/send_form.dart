@@ -4,12 +4,13 @@ import 'package:decimal/decimal.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:qrcode_reader/qrcode_reader.dart';
 
+import 'package:zapdart/utils.dart';
+import 'package:zapdart/libzap.dart';
+import 'package:zapdart/widgets.dart';
+import 'package:zapdart/colors.dart';
+
 import 'config.dart';
-import 'zapdart/utils.dart';
-import 'zapdart/libzap.dart';
 import 'sending_form.dart';
-import 'zapdart/widgets.dart';
-import 'zapdart/colors.dart';
 import 'prefs.dart';
 
 class SendForm extends StatefulWidget {

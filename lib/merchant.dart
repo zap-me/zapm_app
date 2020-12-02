@@ -8,10 +8,11 @@ import 'package:socket_io_client/socket_io_client.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:intl/intl.dart';
 
+import 'package:zapdart/utils.dart';
+import 'package:zapdart/colors.dart';
+
 import 'config.dart';
 import 'prefs.dart';
-import 'zapdart/utils.dart';
-import 'zapdart/colors.dart';
 
 class ClaimCode {
   final Decimal amount;

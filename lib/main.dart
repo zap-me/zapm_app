@@ -10,20 +10,21 @@ import 'package:socket_io_client/socket_io_client.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import 'package:zapdart/colors.dart';
+import 'package:zapdart/qrwidget.dart';
+import 'package:zapdart/widgets.dart';
+import 'package:zapdart/utils.dart';
+import 'package:zapdart/libzap.dart';
+
 import 'config.dart';
-import 'zapdart/colors.dart';
-import 'zapdart/qrwidget.dart';
 import 'send_receive.dart';
 import 'reward.dart';
 import 'settlement.dart';
 import 'settings.dart';
-import 'zapdart/utils.dart';
-import 'zapdart/libzap.dart';
 import 'prefs.dart';
 import 'new_mnemonic_form.dart';
 import 'transactions.dart';
 import 'merchant.dart';
-import 'zapdart/widgets.dart';
 import 'recovery_form.dart';
 
 void main() {

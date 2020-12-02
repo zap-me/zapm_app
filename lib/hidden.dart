@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'zapdart/widgets.dart';
-import 'zapdart/colors.dart';
+import 'package:zapdart/widgets.dart';
+import 'package:zapdart/colors.dart';
+
 import 'tests.dart';
 import 'multisig.dart';
 

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
-import 'zapdart/libzap.dart';
-import 'zapdart/widgets.dart';
-import 'zapdart/colors.dart';
+import 'package:zapdart/libzap.dart';
+import 'package:zapdart/widgets.dart';
+import 'package:zapdart/colors.dart';
+
 import 'merchant.dart';
 
 class SendingForm extends StatefulWidget {

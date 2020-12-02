@@ -2,12 +2,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
 
-import 'zapdart/libzap.dart';
-import 'zapdart/qrwidget.dart';
+import 'package:zapdart/qrwidget.dart';
+import 'package:zapdart/widgets.dart';
+import 'package:zapdart/utils.dart';
+import 'package:zapdart/libzap.dart';
+
 import 'merchant.dart';
 import 'sending_form.dart';
-import 'zapdart/widgets.dart';
-import 'zapdart/utils.dart';
 import 'prefs.dart';
 
 class ClaimingForm extends StatefulWidget {

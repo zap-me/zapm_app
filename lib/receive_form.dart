@@ -2,13 +2,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
 
+import 'package:zapdart/qrwidget.dart';
+import 'package:zapdart/libzap.dart';
+import 'package:zapdart/widgets.dart';
+import 'package:zapdart/colors.dart';
+
 import 'config.dart';
 import 'prefs.dart';
-import 'zapdart/qrwidget.dart';
-import 'zapdart/libzap.dart';
 import 'merchant.dart';
-import 'zapdart/widgets.dart';
-import 'zapdart/colors.dart';
 
 class ReceiveForm extends StatefulWidget {
   final bool _testnet;

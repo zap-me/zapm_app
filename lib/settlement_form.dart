@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
 
+import 'package:zapdart/libzap.dart';
+import 'package:zapdart/utils.dart';
+import 'package:zapdart/widgets.dart';
+import 'package:zapdart/colors.dart';
+
 import 'config.dart';
 import 'merchant.dart';
-import 'zapdart/libzap.dart';
-import 'zapdart/utils.dart';
-import 'zapdart/widgets.dart';
-import 'zapdart/colors.dart';
 import 'prefs.dart';
 
 class SettlementForm extends StatefulWidget {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'zapdart/colors.dart';
+import 'package:zapdart/colors.dart';
 
 // the default testnet value
 const TestnetDefault = false;

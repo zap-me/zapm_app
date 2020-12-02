@@ -2,8 +2,9 @@ import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ini/ini.dart';
 
+import 'package:zapdart/libzap.dart';
+
 import 'config.dart';
-import 'zapdart/libzap.dart';
 
 class Wallet {
   final String mnemonic;
