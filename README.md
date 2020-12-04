@@ -15,3 +15,7 @@ See https://pub.dev/packages/rename
 ## Changing package icons
 
 See https://pub.dev/packages/flutter_launcher_icons
+
+## Changing App Links / Deep Links (Android) and/or Universal Links / Custom URL Schemes (iOS)
+
+See https://pub.dev/packages/uni_links

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart'
     show debugDefaultTargetPlatformOverride;
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qrcode_reader/qrcode_reader.dart';
@@ -9,6 +10,8 @@ import 'package:flutter_icons/flutter_icons.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:uni_links/uni_links.dart';
+import 'package:synchronized/synchronized.dart';
 
 import 'package:zapdart/colors.dart';
 import 'package:zapdart/qrwidget.dart';
@@ -100,7 +103,8 @@ class ZapHomePage extends StatefulWidget {
 enum NoWalletAction { CreateMnemonic, RecoverMnemonic, RecoverRaw, ScanMerchantApiKey }
 
 class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
-  Socket _socket;
+  Socket _merchantSocket; // merchant portal websocket
+  StreamSubscription _uniLinksSub; // uni links subscription
   
   bool _testnet = true;
   Wallet _wallet;
@@ -111,6 +115,8 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   bool _showAlerts = true;
   List<String> _alerts = List<String>();
   Rates _merchantRates;
+  Uri _previousUniUri;
+  Lock _previousUniUriLock = Lock();
 
   _ZapHomePageState();
 
@@ -122,13 +128,89 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     super.initState();
   }
 
+  Future<bool> processUri(Uri uri) async {
+    print('$uri');
+
+    // process premio stage links (scheme parameter is optional - default to 'https')
+    //
+    // premiostagelink://<HOST>/claim_payment/<CLAIM_CODE>[?scheme=<SCHEME>]
+    //
+    if (uri.isScheme('premiostagelink')) {
+      if (uri.pathSegments.length == 2 && uri.pathSegments[0] == 'claim_payment') {
+        var scheme = 'https';
+        if (uri.queryParameters.containsKey('scheme'))
+          scheme = uri.queryParameters['scheme'];
+        var url = uri.replace(scheme: scheme);
+        var contentType = 'application/x-www-form-urlencoded';
+        if (_wallet.address == null)
+          throw FormatException('wallet address must be valid to claim payment');
+        var address = _wallet.address;
+        var assetId = LibZap().assetIdGet();
+        var body = {'recipient': address, 'asset_id': assetId};
+        var resultText = '';
+        var failed = false;
+        showAlertDialog(context, 'claiming payment..');
+        try {
+          var response = await post(url.toString(), body, contentType: contentType);
+          if (response.statusCode == 200)
+            resultText = 'claimed funds to $address';
+        else
+          resultText = 'claim link failed: ${response.statusCode}';
+          failed = true;
+        } catch(e) {
+          resultText = 'claim link failed: $e';
+          failed = true;
+        }
+        Navigator.pop(context);
+        flushbarMsg(context, resultText, category: failed ? MessageCategory.Warning : MessageCategory.Info);
+        return true;
+      }
+    }
+
+    // did not recognize uri
+    return false;
+  }
+
+  Future<Null> initUniLinks() async {
+    // Check if the app was started with a link
+    try {
+      var initialUri = await getInitialUri();
+      if (initialUri != null) {
+        await processUri(initialUri);
+      }
+    } on FormatException {
+      print('intial uri format exception!');
+    } on PlatformException {
+      print('intial uri platform exception!');
+    } catch(e) {
+      print('intial uri exception: $e');
+    }
+
+    // Attach a listener to catch any links when app is running in the background
+    _uniLinksSub = getUriLinksStream().listen((Uri uri) async {
+      await _previousUniUriLock.synchronized(() async {
+        if (_previousUniUri == uri) // this seems to be invoked twice so ignore the second one
+          _previousUniUri = null;   // clear the uri here though so the user can manually invoke twice
+        else {
+          await processUri(uri);
+          _previousUniUri = uri;
+        }
+      });
+    }, onError: (err) {
+      print('uri stream error: $err');
+    });
+  }
+
   @override
   void dispose() {
     // remove WidgetsBindingObserver
     WidgetsBinding.instance.removeObserver(this);
     // close socket
-    if (_socket != null) 
-      _socket.close();
+    if (_merchantSocket != null) 
+      _merchantSocket.close();
+    // close uni links subscription
+    if (_uniLinksSub != null)
+      _uniLinksSub.cancel();
     super.dispose();
   }
 
@@ -193,9 +275,9 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
       return;
     }
     // create socket to receive tx alerts
-    if (_socket != null) 
-      _socket.close();
-    _socket = await merchantSocket(_txNotification);
+    if (_merchantSocket != null) 
+      _merchantSocket.close();
+    _merchantSocket = await merchantSocket(_txNotification);
   }
 
   Future<NoWalletAction> _noWalletDialog(BuildContext context) async {
@@ -495,8 +577,15 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
           else 
             flushbarMsg(context, 'claim failed', category: MessageCategory.Warning);
         }
-        else
-          flushbarMsg(context, 'invalid QR code', category: MessageCategory.Warning);
+        else {
+          try {
+            var uri = Uri.parse(value);
+            if (!await processUri(uri))
+              flushbarMsg(context, 'invalid QR code', category: MessageCategory.Warning);
+          }  on FormatException {
+            flushbarMsg(context, 'invalid QR code', category: MessageCategory.Warning);
+          }
+        }
       }
     }
   }
@@ -608,6 +697,8 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     }
     // webview
     _homepage();
+    // init uni links
+    initUniLinks();
   }
 
   Widget _appScaffold(Widget body, {bool isSecondary = false}) {
