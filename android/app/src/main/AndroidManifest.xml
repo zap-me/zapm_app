@@ -13,7 +13,7 @@
          additional functionality it is fine to subclass or reimplement
          FlutterApplication and put your custom class here. -->
     <application
-        android:name="io.flutter.app.FlutterApplication"
+        android:name=".Application"
         android:label="Zap Retailer"
         android:requestLegacyExternalStorage="true"
         android:icon="@mipmap/ic_launcher">
@@ -43,6 +43,12 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
                 android:scheme="premiostagelink" />
+            </intent-filter>
+
+            <!-- Push Notifications -->
+            <intent-filter>
+                <action android:name="FLUTTER_NOTIFICATION_CLICK" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
         <!-- for flutter_share package -->

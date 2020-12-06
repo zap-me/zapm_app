@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "710131684076",
+    "project_id": "premio-whitelabel-demo",
+    "storage_bucket": "premio-whitelabel-demo.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:710131684076:android:eb166d5aa40109d641cbc9",
+        "android_client_info": {
+          "package_name": "me.zap.merchantapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "710131684076-ul4mmcbg2ss9ocai71snq18lt51klvbg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCDrWHxCVbYHfVnQFW_zGbYwpH_F0tXEnE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "710131684076-ul4mmcbg2ss9ocai71snq18lt51klvbg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

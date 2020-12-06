@@ -1,3 +1,4 @@
+import 'package:ZapMerchant/firebase.dart';
 import 'package:flutter/foundation.dart'
     show debugDefaultTargetPlatformOverride;
 import 'dart:io';
@@ -12,6 +13,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:uni_links/uni_links.dart';
 import 'package:synchronized/synchronized.dart';
+
 
 import 'package:zapdart/colors.dart';
 import 'package:zapdart/qrwidget.dart';
@@ -116,7 +118,8 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   List<String> _alerts = List<String>();
   Rates _merchantRates;
   Uri _previousUniUri;
-  Lock _previousUniUriLock = Lock();
+  final Lock _previousUniUriLock = Lock();
+  FCM _fcm;
 
   _ZapHomePageState();
 
@@ -697,6 +700,8 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     }
     // webview
     _homepage();
+    // init firebase push notifications
+    _fcm = FCM(context);
     // init uni links
     initUniLinks();
   }
