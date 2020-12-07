@@ -58,5 +58,7 @@
 			</array>
 		</dict>
 	</array>
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<string>0</string>
 </dict>
 </plist>

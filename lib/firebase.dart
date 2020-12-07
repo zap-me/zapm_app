@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -40,23 +41,38 @@ class FCM  {
     _firebaseMessaging.requestNotificationPermissions();
     _firebaseMessaging.configure(
       onMessage: (Map<String, dynamic> message) async {
-        print("onMessage: $message");
-        if (message.containsKey('notification')) {
-          var title = message['notification']['title'];
-          var body = message['notification']['body'];
-          alert(context, title, body);
-        }
+        print("initFirebase onMessage: $message");
+        handleMessage(message);
       },
-      onBackgroundMessage: fcmBackgroundMessageHandler,
+      // doesnt work on iOS: https://github.com/FirebaseExtended/flutterfire/issues/116#issuecomment-537516766
+      onBackgroundMessage: Platform.isIOS ? null : fcmBackgroundMessageHandler,
       onLaunch: (Map<String, dynamic> message) async {
-        print("onLaunch: $message");
-        //TODO: _navigateToItemDetail(message);
+        print("initFirebase onLaunch: $message");
+        handleMessage(message);
       },
       onResume: (Map<String, dynamic> message) async {
-        print("onResume: $message");
-        //TODO: _navigateToItemDetail(message);
+        print("initFirebase onResume: $message");
+        handleMessage(message);
       },
     );
+  }
+
+  void handleMessage(Map<String, dynamic> message) {
+    if (message.containsKey('notification')) {
+      var title = message['notification']['title'];
+      var body = message['notification']['body'];
+      if (title != null && body != null)
+        alert(context, title, body);
+    }
+    if (message.containsKey('aps')) {
+      var aps = message['aps'] as Map<dynamic, dynamic>;
+      if (aps.containsKey('alert')) {
+        var title = aps['alert']['title'];
+        var body = aps['alert']['body'];
+        if (title != null && body != null)
+          alert(context, title, body);
+      }
+    }
   }
 
   void setToken(String token) {

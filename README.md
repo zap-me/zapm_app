@@ -19,3 +19,10 @@ See https://pub.dev/packages/flutter_launcher_icons
 ## Changing App Links / Deep Links (Android) and/or Universal Links / Custom URL Schemes (iOS)
 
 See https://pub.dev/packages/uni_links
+
+## Changing Firebase account
+
+See https://firebase.google.com/docs/flutter/setup
+
+Android: change the android/app/google-services.json file
+iOS: change the ios/Runner/GoogleService-Info.plist file

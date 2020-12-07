@@ -64,6 +64,8 @@ target 'Runner' do
   pod 'Flutter', :path => 'Flutter'
 
   # Plugin Pods
+  # add the Firebase pod for Push Notifications
+  pod 'Firebase/Messaging'
 
   # Prepare symlinks folder. We use symlinks to avoid having Podfile.lock
   # referring to absolute paths on developers' machines.
