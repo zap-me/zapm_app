@@ -144,7 +144,6 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         if (uri.queryParameters.containsKey('scheme'))
           scheme = uri.queryParameters['scheme'];
         var url = uri.replace(scheme: scheme);
-        var contentType = 'application/x-www-form-urlencoded';
         if (_wallet.address == null)
           throw FormatException('wallet address must be valid to claim payment');
         var address = _wallet.address;
@@ -154,11 +153,11 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         var failed = false;
         showAlertDialog(context, 'claiming payment..');
         try {
-          var response = await post(url.toString(), body, contentType: contentType);
+          var response = await post(url.toString(), body);
           if (response.statusCode == 200)
             resultText = 'claimed funds to $address';
         else
-          resultText = 'claim link failed: ${response.statusCode}';
+          resultText = 'claim link failed: ${response.statusCode} - ${response.body}';
           failed = true;
         } catch(e) {
           resultText = 'claim link failed: $e';
@@ -192,13 +191,13 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     // Attach a listener to catch any links when app is running in the background
     _uniLinksSub = getUriLinksStream().listen((Uri uri) async {
       await _previousUniUriLock.synchronized(() async {
-        if (_previousUniUri == uri) // this seems to be invoked twice so ignore the second one
-          _previousUniUri = null;   // clear the uri here though so the user can manually invoke twice
-        else {
+        if (_previousUniUri != uri) { // this seems to be invoked twice so ignore the second one
           await processUri(uri);
           _previousUniUri = uri;
         }
       });
+      // clear the uri here so the user can manually invoke twice
+      Future.delayed(const Duration(seconds: 2), () => _previousUniUri = null);
     }, onError: (err) {
       print('uri stream error: $err');
     });
