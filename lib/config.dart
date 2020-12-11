@@ -28,6 +28,9 @@ const String WebviewURL = null;
 // set these two to use a different mainnet/testnet asset id pair then the defualt zap asset ids.
 const String AssetIdMainnet = null;
 const String AssetIdTestnet = null;
+// If set the app will try to register with the premio stage server for push notifications
+const String PremioStageIndexUrl = null;
+const String PremioStageName = null;
 
 void initConfig() {
   overrideTheme();

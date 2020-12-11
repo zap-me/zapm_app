@@ -17,12 +17,14 @@ import 'config.dart';
 import 'merchant.dart';
 import 'prefs.dart';
 import 'hidden.dart';
+import 'firebase.dart';
 
 class SettingsScreen extends StatefulWidget {
   final bool _pinProtectedInitial;
   final String _mnemonic;
+  final FCM _fcm;
 
-  SettingsScreen(this._pinProtectedInitial, this._mnemonic) : super();
+  SettingsScreen(this._pinProtectedInitial, this._mnemonic, this._fcm) : super();
 
   @override
   _SettingsState createState() => new _SettingsState(_pinProtectedInitial);
@@ -259,7 +261,7 @@ class _SettingsState extends State<SettingsScreen> {
     if (_titleTaps > 10) {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => HiddenScreen(_testnet)),
+        MaterialPageRoute(builder: (context) => HiddenScreen(_testnet, widget._fcm.getToken())),
       );
     }
   }

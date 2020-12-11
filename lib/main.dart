@@ -624,7 +624,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     }
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => SettingsScreen(_pinExists, _wallet.mnemonic)),
+      MaterialPageRoute(builder: (context) => SettingsScreen(_pinExists, _wallet.mnemonic, _fcm)),
     );
     _setWalletDetails();
   }
@@ -700,7 +700,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     // webview
     _homepage();
     // init firebase push notifications
-    _fcm = FCM(context);
+    _fcm = FCM(context, PremioStageIndexUrl, PremioStageName);
     // init uni links
     initUniLinks();
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:zapdart/widgets.dart';
 import 'package:zapdart/colors.dart';
@@ -8,8 +9,9 @@ import 'multisig.dart';
 
 class HiddenScreen extends StatefulWidget {
   final bool testnet;
+  final String fcmRegistrationToken;
   
-  HiddenScreen(this.testnet) : super();
+  HiddenScreen(this.testnet, this.fcmRegistrationToken) : super();
 
   @override
   _HiddenState createState() => _HiddenState();
@@ -18,6 +20,12 @@ class HiddenScreen extends StatefulWidget {
 class _HiddenState extends State<HiddenScreen> {
   
   _HiddenState();
+
+  void _copyFCMToken() {
+    Clipboard.setData(ClipboardData(text: widget.fcmRegistrationToken)).then((value) {
+      flushbarMsg(context, 'copied FCM registration token to clipboard');
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +41,8 @@ class _HiddenState extends State<HiddenScreen> {
               child: Text("Tests")),
             RaisedButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => MultisigScreen())),
               child: Text("Multisig")),
+            ListTile(title: Text("FCM Registration Token"), subtitle: Text("${widget.fcmRegistrationToken}")),
+            RaisedButton(onPressed: _copyFCMToken, child: Text("Copy FCM Registration Token"))
           ],
         ),
       )
