@@ -156,9 +156,9 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
           var response = await post(url.toString(), body);
           if (response.statusCode == 200)
             resultText = 'claimed funds to $address';
-        else
-          resultText = 'claim link failed: ${response.statusCode} - ${response.body}';
-          failed = true;
+          else
+            resultText = 'claim link failed: ${response.statusCode} - ${response.body}';
+            failed = true;
         } catch(e) {
           resultText = 'claim link failed: $e';
           failed = true;
@@ -167,6 +167,36 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         flushbarMsg(context, resultText, category: failed ? MessageCategory.Warning : MessageCategory.Info);
         return true;
       }
+    }
+
+    // process centrapay links
+    //
+    // http://app.centrapay.com/pay/<REQUEST_ID>
+    //
+    if (CentrapayApiKey != null &&
+      uri.host.toLowerCase() == 'app.centrapay.com' &&
+      uri.pathSegments.length == 2 && uri.pathSegments[0].toLowerCase() == 'pay') {
+      var requestId = uri.pathSegments[1];
+      var url = 'https://service.centrapay.com/payments/api/requests.info';
+      var body = {'requestId': requestId};
+      var resultText = '';
+      var failed = false;
+      showAlertDialog(context, 'requesting payment info..');
+      try {
+        var headers = {'x-api-key': CentrapayApiKey};
+        var response = await post(url.toString(), body, extraHeaders: headers);
+        if (response.statusCode == 200)
+          resultText = response.body;
+        else
+          resultText = 'request failed: ${response.statusCode} - ${response.body}';
+          failed = true;
+      } catch(e) {
+        resultText = 'request failed: $e';
+        failed = true;
+      }
+      Navigator.pop(context);
+      flushbarMsg(context, resultText, category: failed ? MessageCategory.Warning : MessageCategory.Info);
+      return true;
     }
 
     // did not recognize uri
