@@ -649,7 +649,11 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
       _updateBalance();
   }
 
-  void _homepage() {
+  void _showWallet() {
+    Navigator.pop(context);
+  }
+
+  void _showHomepage() {
     if (WebviewURL != null) {
       var webview = WebView(
         initialUrl: WebviewURL,
@@ -659,7 +663,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
       Navigator.push<bool>(
         context,
         MaterialPageRoute(
-            builder: (context) => _appScaffold(webview, isSecondary: true)
+            builder: (context) => _appScaffold(webview, isHomepage: true)
         )
       );
     }
@@ -698,14 +702,14 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
       _setWalletDetails();
     }
     // webview
-    _homepage();
+    _showHomepage();
     // init firebase push notifications
     _fcm = FCM(context, PremioStageIndexUrl, PremioStageName);
     // init uni links
     initUniLinks();
   }
 
-  Widget _appScaffold(Widget body, {bool isSecondary = false}) {
+  Widget _appScaffold(Widget body, {bool isHomepage = false}) {
     return Scaffold(
       appBar: AppBar(
         leading: Visibility(
@@ -713,15 +717,15 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
           maintainSize: true, 
           maintainAnimation: true,
           maintainState: true,
-          visible: _alerts.length > 0 && !isSecondary, 
+          visible: _alerts.length > 0 && !isHomepage, 
         ),
-        title: GestureDetector(
-          child: Center(child: Image.asset(AssetHeaderIconPng, height: 30)),
-          onTap: () => isSecondary ? Navigator.of(context).pop() : _homepage(),
-        ),
+        title: Center(child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          WebviewURL != null ? IconButton(icon: Icon(isHomepage ? Icons.home : Icons.home_outlined, color: ZapBlue), onPressed: isHomepage ? null : _showHomepage) : Spacer(),
+          Image.asset(AssetHeaderIconPng, height: 30),
+          WebviewURL != null ? IconButton(icon: Icon(isHomepage ? Icons.account_balance_wallet_outlined : Icons.account_balance_wallet, color: ZapBlue), onPressed: isHomepage ? _showWallet : null) : Spacer()
+        ])),
         actions: <Widget>[
-          isSecondary ? IconButton(icon: Icon(Icons.account_balance_wallet, color: ZapBlue), onPressed: () => Navigator.of(context).pop()) :
-            IconButton(icon: Icon(Icons.settings, color: ZapBlue), onPressed: _showSettings),
+          IconButton(icon: Icon(Icons.settings_outlined, color: ZapBlue), onPressed: _showSettings),
         ],
       ),
       body: body
