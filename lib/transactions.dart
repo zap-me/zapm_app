@@ -71,8 +71,9 @@ class _TransactionsState extends State<TransactionsScreen> {
     if (txs != null) {
       for (var tx in txs) {
         // check asset id
-        var zapAssetId = widget._testnet ? LibZap.TESTNET_ASSET_ID : LibZap.MAINNET_ASSET_ID;
-        if (tx.assetId != zapAssetId)
+        var assetId = widget._testnet ? (AssetIdTestnet != null ? AssetIdTestnet : LibZap.TESTNET_ASSET_ID) : 
+                                        (AssetIdMainnet != null ? AssetIdMainnet : LibZap.MAINNET_ASSET_ID);
+        if (tx.assetId != assetId)
           continue;
         // decode attachment
         if (tx.attachment != null && tx.attachment.isNotEmpty)
