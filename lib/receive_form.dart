@@ -23,8 +23,8 @@ class ReceiveForm extends StatefulWidget {
   }
 }
 
-const String RATES_LOADING = '...';
-const String RATES_FAILED = 'rates failed';
+const String API_LOADING = '...';
+const String API_FAILED = 'API failed';
 const String NO_API_KEY = 'no API KEY';
 
 class ReceiveFormState extends State<ReceiveForm> {
@@ -38,7 +38,7 @@ class ReceiveFormState extends State<ReceiveForm> {
   Rates _rates;
 
   bool validQrData() {
-    return _uri != null && _uri != RATES_LOADING && _uri != RATES_FAILED && _uri != NO_API_KEY;
+    return _uri != null && _uri != API_LOADING && _uri != API_FAILED && _uri != NO_API_KEY;
   }
 
   Future<String> makeUri() async {
@@ -48,17 +48,16 @@ class ReceiveFormState extends State<ReceiveForm> {
     }
     catch (e) {}
     if (_amountType == 'nzd') {
-      if (_rates == null) {
-        try {
-          _rates = await merchantRates();
-        } on NoApiKeyException {
-          return NO_API_KEY;
-        } 
+      ZapCalcResult res;
+      try {
+        res = await merchantZapCalc(amount);
+      } on NoApiKeyException {
+        return NO_API_KEY;
+      } 
+      if (res == null) {
+        return API_FAILED;
       }
-      if (_rates == null) {
-        return RATES_FAILED;
-      }
-      amount = equivalentCustomerZapForNzd(amount, _rates);
+      amount = res.zap;
     }
     var deviceName = await Prefs.deviceNameGet();
     return LibZap.paymentUriDec(widget._testnet, widget._address, amount, deviceName);
@@ -66,7 +65,7 @@ class ReceiveFormState extends State<ReceiveForm> {
 
   void updateUriUi() {
     setState(() {
-      _uri = RATES_LOADING;
+      _uri = API_LOADING;
       _uriController.text = _uri;
     });
     
