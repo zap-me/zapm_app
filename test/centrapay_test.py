@@ -38,7 +38,16 @@ def check(response):
         print(response.text)
         sys.exit(EXIT_HTTP_ERROR)
 
-def request_(endpoint, data):
+def curlify(req):
+    command = "curl -X {method} -H {headers} -d '{data}' '{uri}'"
+    method = req.method
+    uri = req.url
+    data = req.body
+    headers = ['"{0}: {1}"'.format(k, v) for k, v in req.headers.items()]
+    headers = " -H ".join(headers)
+    return command.format(method=method, headers=headers, data=data, uri=uri)
+
+def request_(endpoint, data, post=True):
     headers = {'x-api-key': MERCHANT_API_KEY}
     url = CENTRAPAY_BASE_URL + endpoint
     print(':: calling "{}"...'.format(url))
@@ -46,7 +55,11 @@ def request_(endpoint, data):
     print(headers)
     print(':: data:')
     print(data)
-    r = requests.post(url, headers=headers, data=data)
+    if post:
+        r = requests.post(url, headers=headers, data=data)
+    else:
+        r = requests.get(url, headers=headers, params=data)
+    #print(curlify(r.request))
     check(r)
     return r
 
@@ -62,7 +75,7 @@ def request_create(args):
     print(r.json())
     
 def request_status(args):
-    r = request_('/payments/api/requests.info', dict(requestId=args.request_id))
+    r = request_('/payments/api/requests.info', dict(requestId=args.request_id), post=False)
     request_id = r.json()['requestId']
     print_centrapay_qrcode(request_id)
     print(r.json())
