@@ -1,4 +1,3 @@
-import 'package:ZapMerchant/firebase.dart';
 import 'package:flutter/foundation.dart'
     show debugDefaultTargetPlatformOverride;
 import 'dart:io';
@@ -31,6 +30,7 @@ import 'new_mnemonic_form.dart';
 import 'transactions.dart';
 import 'merchant.dart';
 import 'recovery_form.dart';
+import 'firebase.dart';
 
 void main() {
   // See https://github.com/flutter/flutter/wiki/Desktop-shells#target-platform-override
