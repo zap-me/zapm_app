@@ -676,11 +676,11 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   Future<bool> _setTestnet(String address, bool haveMnemonic) async {
     var testnet = await Prefs.testnetGet();
     var libzap = LibZap();
-    libzap.networkParamsSet(AssetIdMainnet, AssetIdTestnet, testnet);
+    libzap.networkParamsSet(AssetIdMainnet, AssetIdTestnet, NodeUrlMainnet, NodeUrlTestnet, testnet);
     if (!haveMnemonic) {
       if (!libzap.addressCheck(address)) {
         testnet = !testnet;
-        libzap.networkParamsSet(AssetIdMainnet, AssetIdTestnet, testnet);
+        libzap.networkParamsSet(AssetIdMainnet, AssetIdTestnet, NodeUrlMainnet, NodeUrlTestnet, testnet);
         await Prefs.testnetSet(testnet);
       }
     }
@@ -694,7 +694,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   void _init() async  {
     // set libzap to initial testnet value so we can devrive address from mnemonic
     var testnet = await Prefs.testnetGet();
-    LibZap().networkParamsSet(AssetIdMainnet, AssetIdTestnet, testnet);
+    LibZap().networkParamsSet(AssetIdMainnet, AssetIdTestnet, NodeUrlMainnet, NodeUrlTestnet, testnet);
     // init wallet
     var hasWallet = await _setWalletDetails();
     if (!hasWallet) {

@@ -44,7 +44,7 @@ dependencies:
   zapdart:
     git:
       url: https://github.com/zap-me/zapdart.git
-      ref: f93fd4f
+      ref: 21c9c52b4d98421e7c5ec19fc8f172a1632cd85c
 
 dev_dependencies:
   flutter_test:

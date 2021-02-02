@@ -115,7 +115,7 @@ class Prefs {
     await prefs.setBool("testnet", value);
 
     // set libzap
-    LibZap().networkParamsSet(AssetIdMainnet, AssetIdTestnet, value);
+    LibZap().networkParamsSet(AssetIdMainnet, AssetIdTestnet, NodeUrlMainnet, NodeUrlTestnet, value);
   }
 
   static Future<String> pinGet() async {
