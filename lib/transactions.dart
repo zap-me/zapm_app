@@ -13,14 +13,28 @@ import 'package:zapdart/colors.dart';
 
 import 'config.dart';
 import 'merchant.dart';
+import 'paydb.dart';
+
+class GenTx {
+  String id;
+  String action;
+  int timestamp;
+  String sender;
+  String recipient;
+  String attachment;
+  int amount;
+  int fee;
+
+  GenTx(this.id, this.action, this.timestamp, this.sender, this.recipient, this.attachment, this.amount, this.fee);
+}
 
 class TransactionsScreen extends StatefulWidget {
-  final String _address;
+  final String _addrOrAccount;
   final bool _testnet;
   final String _deviceName;
   final Rates _merchantRates;
 
-  TransactionsScreen(this._address, this._testnet, this._deviceName, this._merchantRates) : super();
+  TransactionsScreen(this._addrOrAccount, this._testnet, this._deviceName, this._merchantRates) : super();
 
   @override
   _TransactionsState createState() => new _TransactionsState();
@@ -49,12 +63,12 @@ class DownloadResult {
 
 class _TransactionsState extends State<TransactionsScreen> {
   bool _loading = true;
-  var _txsAll = List<Tx>();
-  var _txsFiltered = List<Tx>();
+  var _txsAll = List<GenTx>();
+  var _txsFiltered = List<GenTx>();
   var _offset = 0;
   var _downloadCount = 100;
   var _displayCount = 10;
-  String _after;
+  String _lastTxId;
   var _more = false;
   var _less = false;
   var _foundEnd = false;
@@ -66,31 +80,55 @@ class _TransactionsState extends State<TransactionsScreen> {
   }
 
   Future<DownloadResult> _downloadMoreTxs(int count) async {
-    var txs = await LibZap.addressTransactions(widget._address, count, _after);
-    var txsFiltered = List<Tx>();
+    List<GenTx> txs;
+    List<GenTx> txsFiltered;
+    switch (AppTokenType) {
+      case TokenType.Waves:
+        var wavesTxs = await LibZap.addressTransactions(widget._addrOrAccount, count, _lastTxId);
+        if (wavesTxs != null) {
+          txs = List<GenTx>();
+          txsFiltered = List<GenTx>();
+          for (var tx in wavesTxs) {
+            var genTx = GenTx(tx.id, 'transfer', tx.timestamp, tx.sender, tx.recipient, null, tx.amount, tx.fee);
+            txs.add(genTx);
+            // check asset id
+            var assetId = widget._testnet ? (AssetIdTestnet != null ? AssetIdTestnet : LibZap.TESTNET_ASSET_ID) : 
+                                            (AssetIdMainnet != null ? AssetIdMainnet : LibZap.MAINNET_ASSET_ID);
+            if (tx.assetId != assetId)
+              continue;
+            // decode attachment
+            if (tx.attachment != null && tx.attachment.isNotEmpty)
+              tx.attachment = base58decodeString(tx.attachment);
+            genTx.attachment = tx.attachment;
+            // check device name
+            var deviceName = '';
+            try {
+              deviceName = json.decode(tx.attachment)['device_name'];
+            } catch (_) {}
+            if (widget._deviceName != null && widget._deviceName.isNotEmpty && widget._deviceName != deviceName)
+              continue;
+            txsFiltered.add(genTx);
+          }
+        }
+        break;
+      case TokenType.PayDB:
+        var result = await paydbUserTransactions(_txsAll.length, count);
+        if (result.error == PayDbError.None) {
+          txs = List<GenTx>();
+          txsFiltered = List<GenTx>();
+          for (var tx in result.txs) {
+            var genTx = GenTx(tx.token, tx.action, tx.timestamp * 1000, tx.sender, tx.recipient, tx.attachment, tx.amount, 0);
+            txs.add(genTx);
+            if (tx.action == 'transfer')
+              txsFiltered.add(genTx);
+          }
+        }
+    }
     if (txs != null) {
-      for (var tx in txs) {
-        // check asset id
-        var assetId = widget._testnet ? (AssetIdTestnet != null ? AssetIdTestnet : LibZap.TESTNET_ASSET_ID) : 
-                                        (AssetIdMainnet != null ? AssetIdMainnet : LibZap.MAINNET_ASSET_ID);
-        if (tx.assetId != assetId)
-          continue;
-        // decode attachment
-        if (tx.attachment != null && tx.attachment.isNotEmpty)
-          tx.attachment = base58decodeString(tx.attachment);
-        // check device name
-        var deviceName = '';
-        try {
-          deviceName = json.decode(tx.attachment)['device_name'];
-        } catch (_) {}
-        if (widget._deviceName != null && widget._deviceName.isNotEmpty && widget._deviceName != deviceName)
-          continue;
-        txsFiltered.add(tx);
-      }
       _txsAll += txs;
       _txsFiltered += txsFiltered;
       if (_txsAll.length > 0)
-        _after = _txsAll[_txsAll.length - 1].id;
+        _lastTxId = _txsAll[_txsAll.length - 1].id;
       if (txs.length < count)
         _foundEnd = true;
     }
@@ -155,7 +193,7 @@ class _TransactionsState extends State<TransactionsScreen> {
     if (offsetIndex >= _offset + _displayCount || offsetIndex >= _txsFiltered.length)
       return null;
     var tx = _txsFiltered[offsetIndex];
-    var outgoing = tx.sender == widget._address;
+    var outgoing = tx.sender == widget._addrOrAccount;
     var amount = Decimal.fromInt(tx.amount) / Decimal.fromInt(100);
     var amountText = "${amount.toStringAsFixed(2)} $AssetShortNameUpper";
     if (widget._merchantRates != null)

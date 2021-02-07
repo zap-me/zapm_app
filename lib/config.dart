@@ -3,6 +3,11 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:zapdart/colors.dart';
 
+enum TokenType {
+  Waves,
+  PayDB
+}
+
 // the default testnet value
 const TestnetDefault = false;
 // the app title
@@ -25,12 +30,22 @@ const UseSettlement = true;
 const UseMerchantApi = true;
 // enable/disable a webview homepage (null = disabled)
 const String WebviewURL = null;
+
+// are we using the waves network or a paydb server
+const TokenType AppTokenType = TokenType.Waves;
+
+// Waves settings
 // set these two to use a different mainnet/testnet asset id pair then the default zap asset ids.
 const String AssetIdMainnet = null;
 const String AssetIdTestnet = null;
 // set these two to use a different mainnet/testnet node url pair then the default urls.
 const String NodeUrlMainnet = null;
 const String NodeUrlTestnet = null;
+
+// PayDB settings
+const String PayDBServerMainnet = null;
+const String PayDBServerTestnet = null;
+
 // If set the app will try to register with the premio stage server for push notifications
 const String PremioStageIndexUrl = null;
 const String PremioStageName = null;

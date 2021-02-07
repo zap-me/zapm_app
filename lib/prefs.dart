@@ -6,15 +6,21 @@ import 'package:zapdart/libzap.dart';
 
 import 'config.dart';
 
-class Wallet {
+class WavesWallet {
   final String mnemonic;
   final String address;
 
-  Wallet.mnemonic(this.mnemonic, this.address);
-  Wallet.justAddress(this.address) : mnemonic = null;
+  WavesWallet.mnemonic(this.mnemonic, this.address);
+  WavesWallet.justAddress(this.address) : mnemonic = null;
 
   bool get isMnemonic => mnemonic != null && mnemonic.isNotEmpty;
   bool get isAddress => !isMnemonic && address != null && address.isNotEmpty;
+}
+
+class PayDbAccount {
+  final String email;
+
+  PayDbAccount(this.email);
 }
 
 class PrefHelper {
@@ -179,43 +185,71 @@ class Prefs {
     return true;
   }
 
-  static Future<String> apikeyGet() async {
+  static Future<String> merchantApiKeyGet() async {
     return await getStringNetworkSpecific("apikey", null);
   }
 
-  static Future<bool> apikeySet(String value) async {
+  static Future<bool> merchantApiKeySet(String value) async {
     await setStringNetworkSpecific("apikey", value);
     return true;
   }
 
-  static Future<String> apisecretGet() async {
+  static Future<String> merchantApiSecretGet() async {
     return await getStringNetworkSpecific("apisecret", null);
   }
 
-  static Future<bool> apisecretSet(String value) async {
+  static Future<bool> merchantApiSecretSet(String value) async {
     await setStringNetworkSpecific("apisecret", value);
     return true;
   }
 
-  static Future<String> apiserverGet() async {
+  static Future<String> merchantApiServerGet() async {
     var server = await getStringNetworkSpecific("apiserver", null);
     if (server == null || server.isEmpty)
       server = "https://retail.zap.me/";
     return server;
   }
 
-  static Future<bool> apiserverSet(String value) async {
+  static Future<bool> merchantApiServerSet(String value) async {
     await setStringNetworkSpecific("apiserver", value);
     return true;
   }
-}
 
-Future<bool> hasApiKey() async {
-  var apikey = await Prefs.apikeyGet();
-  if (apikey == null || apikey.isEmpty)
-    return false;
-  var apisecret = await Prefs.apisecretGet();
-  if (apisecret == null || apisecret.isEmpty)
-    return false;  
-  return true;
+  static Future<bool> hasMerchantApiKey() async {
+    var apikey = await merchantApiKeyGet();
+    if (apikey == null || apikey.isEmpty)
+      return false;
+    var apisecret = await merchantApiSecretGet();
+    if (apisecret == null || apisecret.isEmpty)
+      return false;  
+    return true;
+  }
+
+  static Future<String> paydbApiKeyGet() async {
+    return await getStringNetworkSpecific("paydb_apikey", null);
+  }
+
+  static Future<bool> paydbApiKeySet(String value) async {
+    await setStringNetworkSpecific("paydb_apikey", value);
+    return true;
+  }
+
+  static Future<String> paydbApiSecretGet() async {
+    return await getStringNetworkSpecific("paydb_apisecret", null);
+  }
+
+  static Future<bool> paydbApiSecretSet(String value) async {
+    await setStringNetworkSpecific("paydb_apisecret", value);
+    return true;
+  }
+
+  static Future<bool> hasPaydbApiKey() async {
+    var apikey = await Prefs.paydbApiKeyGet();
+    if (apikey == null || apikey.isEmpty)
+      return false;
+    var apisecret = await Prefs.paydbApiSecretGet();
+    if (apisecret == null || apisecret.isEmpty)
+      return false;  
+    return true;
+  }
 }

@@ -132,7 +132,7 @@ class SettlementFormState extends State<SettlementForm> {
   void initState() {
     super.initState();
     () async {
-      if (!await hasApiKey()) {
+      if (!await Prefs.hasMerchantApiKey()) {
         flushbarMsg(context, 'no API KEY', category: MessageCategory.Warning);
         return;
       }

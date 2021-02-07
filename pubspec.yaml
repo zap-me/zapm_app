@@ -22,6 +22,7 @@ dependencies:
       ref: ff0a26b
   url_launcher: ^5.4.2 # has flutter-desktop-go native plugin for desktop
   path_provider: ^1.6.27
+  device_info: ^1.0.0
   
   # for desktop
   ini: ^2.0.1

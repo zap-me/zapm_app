@@ -80,9 +80,9 @@ class _SettingsState extends State<SettingsScreen> {
     });
     // api key
     var deviceName = await Prefs.deviceNameGet();
-    var apikey = await Prefs.apikeyGet();
-    var apisecret = await Prefs.apisecretGet();
-    var apiserver = await Prefs.apiserverGet();
+    var apikey = await Prefs.merchantApiKeyGet();
+    var apisecret = await Prefs.merchantApiSecretGet();
+    var apiserver = await Prefs.merchantApiServerGet();
     setState(() {
       _deviceName = deviceName;
       _apikey = apikey;
@@ -186,10 +186,10 @@ class _SettingsState extends State<SettingsScreen> {
       var result = parseApiKeyUri(value);
       if (result.error == NO_ERROR) {
         await Prefs.deviceNameSet(result.deviceName);
-        await Prefs.apikeySet(result.apikey);
-        await Prefs.apisecretSet(result.apisecret);
+        await Prefs.merchantApiKeySet(result.apikey);
+        await Prefs.merchantApiSecretSet(result.apisecret);
         if (result.apiserver != null || result.apiserver.isNotEmpty)
-          await Prefs.apiserverSet(result.apiserver);
+          await Prefs.merchantApiServerSet(result.apiserver);
         setState(() {
           _deviceName = result.deviceName;
           _apikey = result.apikey;
@@ -229,7 +229,7 @@ class _SettingsState extends State<SettingsScreen> {
   void _editApikey() async {
     var apikey = await askString(context, "Set Api Key", _apikey);
     if (apikey != null) {
-      await Prefs.apikeySet(apikey);
+      await Prefs.merchantApiKeySet(apikey);
       setState(() {
         _apikey = apikey;
       });
@@ -239,7 +239,7 @@ class _SettingsState extends State<SettingsScreen> {
   void _editApisecret() async {
     var apisecret = await askString(context, "Set Api Secret", _apisecret);
     if (apisecret != null) {
-      await Prefs.apisecretSet(apisecret);
+      await Prefs.merchantApiSecretSet(apisecret);
       setState(() {
         _apisecret = apisecret;
       });
@@ -249,7 +249,7 @@ class _SettingsState extends State<SettingsScreen> {
   void _editApiserver() async {
     var apiserver = await askString(context, "Set Api Server", _apiserver);
     if (apiserver != null) {
-      await Prefs.apiserverSet(apiserver);
+      await Prefs.merchantApiServerSet(apiserver);
       setState(() {
         _apiserver = apiserver;
       });

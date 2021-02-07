@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import "package:hex/hex.dart";
 import 'package:decimal/decimal.dart';
-import 'package:crypto/crypto.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:intl/intl.dart';
@@ -11,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:zapdart/utils.dart';
 import 'package:zapdart/colors.dart';
 
+import 'hmac.dart';
 import 'config.dart';
 import 'prefs.dart';
 
@@ -128,29 +128,12 @@ List<int> secureRandom({count: 32}) {
   return List<int>.generate(count, (i) => random.nextInt(256));
 }
 
-String createHmacSig(String secret, String message) {
-  var secretBytes = utf8.encode(secret);
-  var messageBytes = utf8.encode(message);
-  var hmac = Hmac(sha256, secretBytes);
-  var digest = hmac.convert(messageBytes);
-  return base64.encode(digest.bytes);
-}
-
-class NoApiKeyException implements Exception {}
-
-void checkApiKey(String apikey, String apisecret) {
-  if (apikey == null)
-    throw NoApiKeyException();
-  if (apisecret == null)
-    throw NoApiKeyException();
-}
-
 Future<ClaimCode> merchantRegister(Decimal amount, int amountInt) async {
   var claimCode = ClaimCode.generate(amount);
-  var baseUrl = await Prefs.apiserverGet();
+  var baseUrl = await Prefs.merchantApiServerGet();
   var url = baseUrl + "register";
-  var apikey = await Prefs.apikeyGet();
-  var apisecret = await Prefs.apisecretGet();
+  var apikey = await Prefs.merchantApiKeyGet();
+  var apisecret = await Prefs.merchantApiSecretGet();
   checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce, "token": claimCode.token, "amount": amountInt});
@@ -163,10 +146,10 @@ Future<ClaimCode> merchantRegister(Decimal amount, int amountInt) async {
 }
 
 Future<String> merchantCheck(ClaimCode claimCode) async {
-  var baseUrl = await Prefs.apiserverGet();
+  var baseUrl = await Prefs.merchantApiServerGet();
   var url = baseUrl + "check";
-  var apikey = await Prefs.apikeyGet();
-  var apisecret = await Prefs.apisecretGet();
+  var apikey = await Prefs.merchantApiKeyGet();
+  var apisecret = await Prefs.merchantApiSecretGet();
   checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce, "token": claimCode.token});
@@ -179,7 +162,7 @@ Future<String> merchantCheck(ClaimCode claimCode) async {
 }
 
 Future<bool> merchantClaim(ClaimCode claimCode, String address) async {
-  var baseUrl = await Prefs.apiserverGet();
+  var baseUrl = await Prefs.merchantApiServerGet();
   var url = baseUrl + "claim";
   var body = jsonEncode({"token": claimCode.token, "secret": claimCode.secret, "address": address});
   var response = await post(url, body);
@@ -190,10 +173,10 @@ Future<bool> merchantClaim(ClaimCode claimCode, String address) async {
 }
 
 Future<bool> merchantWatch(String address) async {
-  var baseUrl = await Prefs.apiserverGet();
+  var baseUrl = await Prefs.merchantApiServerGet();
   var url = baseUrl + "watch";
-  var apikey = await Prefs.apikeyGet();
-  var apisecret = await Prefs.apisecretGet();
+  var apikey = await Prefs.merchantApiKeyGet();
+  var apisecret = await Prefs.merchantApiSecretGet();
   checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce, "address": address});
@@ -206,10 +189,10 @@ Future<bool> merchantWatch(String address) async {
 }
 
 Future<bool> merchantWalletAddress(String address) async {
-  var baseUrl = await Prefs.apiserverGet();
+  var baseUrl = await Prefs.merchantApiServerGet();
   var url = baseUrl + "wallet_address";
-  var apikey = await Prefs.apikeyGet();
-  var apisecret = await Prefs.apisecretGet();
+  var apikey = await Prefs.merchantApiKeyGet();
+  var apisecret = await Prefs.merchantApiSecretGet();
   checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce, "address": address});
@@ -222,10 +205,10 @@ Future<bool> merchantWalletAddress(String address) async {
 }
 
 Future<bool> merchantTx() async {
-  var baseUrl = await Prefs.apiserverGet();
+  var baseUrl = await Prefs.merchantApiServerGet();
   var url = baseUrl + "merchanttx";
-  var apikey = await Prefs.apikeyGet();
-  var apisecret = await Prefs.apisecretGet();
+  var apikey = await Prefs.merchantApiKeyGet();
+  var apisecret = await Prefs.merchantApiSecretGet();
   checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce,});
@@ -238,10 +221,10 @@ Future<bool> merchantTx() async {
 }
 
 Future<Rates> merchantRates() async {
-  var baseUrl = await Prefs.apiserverGet();
+  var baseUrl = await Prefs.merchantApiServerGet();
   var url = baseUrl + "rates";
-  var apikey = await Prefs.apikeyGet();
-  var apisecret = await Prefs.apisecretGet();
+  var apikey = await Prefs.merchantApiKeyGet();
+  var apisecret = await Prefs.merchantApiSecretGet();
   checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce});
@@ -255,10 +238,10 @@ Future<Rates> merchantRates() async {
 }
 
 Future<List<Bank>> merchantBanks() async {
-  var baseUrl = await Prefs.apiserverGet();
+  var baseUrl = await Prefs.merchantApiServerGet();
   var url = baseUrl + "banks";
-  var apikey = await Prefs.apikeyGet();
-  var apisecret = await Prefs.apisecretGet();
+  var apikey = await Prefs.merchantApiKeyGet();
+  var apisecret = await Prefs.merchantApiSecretGet();
   checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce});
@@ -296,10 +279,10 @@ Future<ZapCalcResult> merchantZapCalc(Decimal nzdRequired) async {
 }
 
 Future<SettlementCalcResult> merchantSettlementCalc(Decimal amount) async {
-  var baseUrl = await Prefs.apiserverGet();
+  var baseUrl = await Prefs.merchantApiServerGet();
   var url = baseUrl + "settlement_calc";
-  var apikey = await Prefs.apikeyGet();
-  var apisecret = await Prefs.apisecretGet();
+  var apikey = await Prefs.merchantApiKeyGet();
+  var apisecret = await Prefs.merchantApiSecretGet();
   checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var d100 = Decimal.fromInt(100);
@@ -315,10 +298,10 @@ Future<SettlementCalcResult> merchantSettlementCalc(Decimal amount) async {
 }
 
 Future<SettlementResult> merchantSettlement(Decimal amount, String bankToken) async {
-  var baseUrl = await Prefs.apiserverGet();
+  var baseUrl = await Prefs.merchantApiServerGet();
   var url = baseUrl + "settlement";
-  var apikey = await Prefs.apikeyGet();
-  var apisecret = await Prefs.apisecretGet();
+  var apikey = await Prefs.merchantApiKeyGet();
+  var apisecret = await Prefs.merchantApiSecretGet();
   checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var d100 = Decimal.fromInt(100);
@@ -336,10 +319,10 @@ Future<SettlementResult> merchantSettlement(Decimal amount, String bankToken) as
 }
 
 Future<SettlementResult> merchantSettlementUpdate(String token, String txid) async {
-  var baseUrl = await Prefs.apiserverGet();
+  var baseUrl = await Prefs.merchantApiServerGet();
   var url = baseUrl + "settlement_set_txid";
-  var apikey = await Prefs.apikeyGet();
-  var apisecret = await Prefs.apisecretGet();
+  var apikey = await Prefs.merchantApiKeyGet();
+  var apisecret = await Prefs.merchantApiSecretGet();
   checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce, "token": token, "txid": txid});
@@ -358,9 +341,9 @@ Future<SettlementResult> merchantSettlementUpdate(String token, String txid) asy
 
 typedef TxNotificationCallback = void Function(String txid, String sender, String recipient, double amount, String attachment);
 Future<Socket> merchantSocket(TxNotificationCallback txNotificationCallback) async {
-  var baseUrl = await Prefs.apiserverGet();
-  var apikey = await Prefs.apikeyGet();
-  var apisecret = await Prefs.apisecretGet();
+  var baseUrl = await Prefs.merchantApiServerGet();
+  var apikey = await Prefs.merchantApiKeyGet();
+  var apisecret = await Prefs.merchantApiSecretGet();
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
  
   var socket = io(baseUrl, <String, dynamic>{

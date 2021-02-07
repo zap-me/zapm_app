@@ -9,6 +9,7 @@ import 'package:zapdart/colors.dart';
 
 import 'config.dart';
 import 'prefs.dart';
+import 'hmac.dart';
 import 'merchant.dart';
 
 class ReceiveForm extends StatefulWidget {
