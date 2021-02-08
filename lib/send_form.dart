@@ -12,15 +12,16 @@ import 'package:zapdart/colors.dart';
 import 'config.dart';
 import 'sending_form.dart';
 import 'prefs.dart';
+import 'paydb.dart';
 
 class SendForm extends StatefulWidget {
   final bool _testnet;
-  final String _seed;
+  final String _mnemonicOrAccount;
   final Decimal _fee;
   final String _recipientOrUri;
   final Decimal _max;
 
-  SendForm(this._testnet, this._seed, this._fee, this._recipientOrUri, this._max) : super();
+  SendForm(this._testnet, this._mnemonicOrAccount, this._fee, this._recipientOrUri, this._max) : super();
 
   @override
   SendFormState createState() {
@@ -30,7 +31,7 @@ class SendForm extends StatefulWidget {
 
 class SendFormState extends State<SendForm> {
   final _formKey = GlobalKey<FormState>();
-  final _addressController = TextEditingController();
+  final _recipientController = TextEditingController();
   final _amountController = TextEditingController();
   final _msgController = TextEditingController();
   String _attachment;
@@ -38,12 +39,12 @@ class SendFormState extends State<SendForm> {
   bool setRecipientOrUri(String recipientOrUri) {
     var result = parseRecipientOrWavesUri(widget._testnet, recipientOrUri);
     if (result == recipientOrUri) {
-      _addressController.text = recipientOrUri;
+      _recipientController.text = recipientOrUri;
       return true;
     }
     else if (result != null) {
       var parts = parseWavesUri(widget._testnet, recipientOrUri);
-      _addressController.text = parts.address;
+      _recipientController.text = parts.address;
       _amountController.text = parts.amount.toString();
       _attachment = Uri.decodeFull(parts.attachment);
       _msgController.text = '';
@@ -63,7 +64,7 @@ class SendFormState extends State<SendForm> {
   void send() async {
     if (_formKey.currentState.validate()) {
       // send parameters
-      var recipient = _addressController.text;
+      var recipient = _recipientController.text;
       var amountText = _amountController.text;
       var amountDec = Decimal.parse(amountText);
       var amount = (amountDec * Decimal.fromInt(100)).toInt();
@@ -91,19 +92,31 @@ class SendFormState extends State<SendForm> {
         if (!await pinCheck(context, await Prefs.pinGet())) {
           return;
         }
-        // create tx
-        var libzap = LibZap();
-        var spendTx = libzap.transactionCreate(widget._seed, recipient, amount, fee, _attachment);
-        if (spendTx.success) {
-          var tx = await Navigator.push<Tx>(
-            context,
-            MaterialPageRoute(builder: (context) => SendingForm(spendTx)),
-          );
-          if (tx != null)
-            Navigator.pop(context, tx);
+        switch (AppTokenType) {
+          case TokenType.Waves:
+            // create tx
+            var libzap = LibZap();
+            var spendTx = libzap.transactionCreate(widget._mnemonicOrAccount, recipient, amount, fee, _attachment);
+            if (spendTx.success) {
+              var tx = await Navigator.push<Tx>(
+                context,
+                MaterialPageRoute(builder: (context) => WavesSendingForm(spendTx)),
+              );
+              if (tx != null)
+                Navigator.pop(context, tx);
+            }
+            else
+              flushbarMsg(context, 'failed to create transaction', category: MessageCategory.Warning);
+            break;
+          case TokenType.PayDB:
+            var tx = await Navigator.push<PayDbTx>(
+              context,
+              MaterialPageRoute(builder: (context) => PayDbSendingForm(recipient, amount, _attachment)),
+            );
+            if (tx != null)
+              Navigator.pop(context, tx);
+            break;
         }
-        else
-          flushbarMsg(context, 'failed to create transaction', category: MessageCategory.Warning);
       }
     }
     else
@@ -126,9 +139,9 @@ class SendFormState extends State<SendForm> {
         children: <Widget>[
           Center(heightFactor: 3, child: Text('send $AssetShortNameLower\n  ', style: TextStyle(color: ZapWhite, fontWeight: FontWeight.bold), textAlign: TextAlign.center)),
           TextFormField(
-            controller: _addressController,
+            controller: _recipientController,
             keyboardType: TextInputType.text,
-            decoration: InputDecoration(labelText: 'recipient address',
+            decoration: InputDecoration(labelText: 'recipient',
               suffixIcon: FlatButton.icon(
                 onPressed: () {
                   var qrCode = QRCodeReader().scan();
@@ -145,10 +158,17 @@ class SendFormState extends State<SendForm> {
               if (value.isEmpty) {
                 return 'Please enter a value';
               }
-              var libzap = LibZap();
-              var res = libzap.addressCheck(value);
-              if (!res) {
-                return 'Invalid address';
+              switch (AppTokenType) {
+                case TokenType.Waves:
+                  if (!LibZap().addressCheck(value)) {
+                    return 'invalid recipient';
+                  }
+                  break;
+                case TokenType.PayDB:
+                  if (!paydbRecipientCheck(value)) {
+                    return 'invalid recipient';
+                  }
+                  break;
               }
               return null;
             },

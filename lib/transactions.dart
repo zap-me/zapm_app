@@ -89,7 +89,7 @@ class _TransactionsState extends State<TransactionsScreen> {
           txs = List<GenTx>();
           txsFiltered = List<GenTx>();
           for (var tx in wavesTxs) {
-            var genTx = GenTx(tx.id, 'transfer', tx.timestamp, tx.sender, tx.recipient, null, tx.amount, tx.fee);
+            var genTx = GenTx(tx.id, ActionTransfer, tx.timestamp, tx.sender, tx.recipient, null, tx.amount, tx.fee);
             txs.add(genTx);
             // check asset id
             var assetId = widget._testnet ? (AssetIdTestnet != null ? AssetIdTestnet : LibZap.TESTNET_ASSET_ID) : 
@@ -119,8 +119,7 @@ class _TransactionsState extends State<TransactionsScreen> {
           for (var tx in result.txs) {
             var genTx = GenTx(tx.token, tx.action, tx.timestamp * 1000, tx.sender, tx.recipient, tx.attachment, tx.amount, 0);
             txs.add(genTx);
-            if (tx.action == 'transfer')
-              txsFiltered.add(genTx);
+            txsFiltered.add(genTx);
           }
         }
     }
@@ -204,7 +203,9 @@ class _TransactionsState extends State<TransactionsScreen> {
     var color = outgoing ? ZapYellow : ZapGreen;
     var date = new DateTime.fromMillisecondsSinceEpoch(tx.timestamp);
     var dateStrLong = DateFormat('yyyy-MM-dd HH:mm').format(date);
-    var link = widget._testnet ? 'https://wavesexplorer.com/testnet/tx/${tx.id}' : 'https://wavesexplorer.com/tx/${tx.id}';
+    String link;
+    if (AppTokenType == TokenType.Waves)
+      link = widget._testnet ? 'https://wavesexplorer.com/testnet/tx/${tx.id}' : 'https://wavesexplorer.com/tx/${tx.id}';
     return ListTx(() {
       Navigator.of(context).push(
         // We will now use PageRouteBuilder
@@ -225,9 +226,10 @@ class _TransactionsState extends State<TransactionsScreen> {
                       child: ListTile(title: Text('transaction ID'),
                           subtitle: InkWell(
                             child: Text(tx.id, style: new TextStyle(color: ZapBlue, decoration: TextDecoration.underline))),
-                            onTap: () => launch(link),
+                            onTap: () => link != null ? launch(link) : print('no link'),
                           ),
                     ),
+                    ListTile(title: Text('action'), subtitle: Text(tx.action)),
                     ListTile(title: Text('date'), subtitle: Text(dateStrLong)),
                     ListTile(title: Text('sender'), subtitle: Text(tx.sender)),
                     ListTile(title: Text('recipient'), subtitle: Text(tx.recipient)),
@@ -236,7 +238,7 @@ class _TransactionsState extends State<TransactionsScreen> {
                     Visibility(
                       visible: tx.attachment != null && tx.attachment.isNotEmpty,
                       child:
-                        ListTile(title: Text("attachment"), subtitle: Text(tx.attachment)),
+                        ListTile(title: Text("attachment"), subtitle: Text('${tx.attachment}')),
                     ),
                     Container(
                       padding: const EdgeInsets.only(top: 5.0),

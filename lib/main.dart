@@ -148,6 +148,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
       case TokenType.PayDB:
         return 'account';
     }
+    return null;
   }
 
   String _addrOrAccountValue() {
@@ -162,6 +163,16 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         break;
     }
     return '...';
+  }
+
+  String _mnemonicOrAccount() {
+    switch (AppTokenType) {
+      case TokenType.Waves:
+        return _wallet.mnemonic;
+      case TokenType.PayDB:
+        return _account.email;
+    }
+    return null;
   }
 
   Future<bool> processUri(Uri uri) async {
@@ -740,7 +751,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     if (AppTokenType == TokenType.Waves)
       _watchAddress();
     // update merchant rates
-    if (await Prefs.hasMerchantApiKey())
+    if (UseMerchantApi && await Prefs.hasMerchantApiKey())
       merchantRates().then((value) => _merchantRates = value);
     return true;
   }
@@ -803,7 +814,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     var tx = await Navigator.push<Tx>(
       context,
       MaterialPageRoute(
-          builder: (context) => SendScreen(_testnet, _wallet.mnemonic, _fee, '', _balance)),
+          builder: (context) => SendScreen(_testnet, _mnemonicOrAccount(), AppTokenType == TokenType.Waves ? _fee : Decimal.fromInt(0), '', _balance)),
     );
     if (tx != null)
       _updateBalance();

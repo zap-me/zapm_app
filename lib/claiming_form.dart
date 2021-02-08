@@ -50,7 +50,7 @@ class ClaimingFormState extends State<ClaimingForm> {
       if (spendTx.success) {
         _sentFunds = await Navigator.push<bool>(
           context,
-          MaterialPageRoute(builder: (context) => SendingForm(spendTx)),
+          MaterialPageRoute(builder: (context) => WavesSendingForm(spendTx)),
         );
       }
       else

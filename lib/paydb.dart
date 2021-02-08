@@ -13,6 +13,10 @@ Future<String> _server() async {
   return testnet ? PayDBServerTestnet : PayDBServerMainnet;
 }
 
+const ActionIssue = 'issue';
+const ActionTransfer = 'transfer';
+const ActionDestroy = 'destroy';
+
 enum PayDbError {
   None, Network, Auth
 }
@@ -63,6 +67,13 @@ class PayDbUserTxsResult {
   final PayDbError error;
 
   PayDbUserTxsResult(this.txs, this.error);
+}
+
+class PayDbTxResult {
+  final PayDbTx tx;
+  final PayDbError error;
+
+  PayDbTxResult(this.tx, this.error);
 }
 
 Future<http.Response> postAndCatch(String url, String body, {Map<String, String> extraHeaders}) async {
@@ -116,6 +127,10 @@ Future<UserInfoResult> paydbUserInfo() async {
   return UserInfoResult(null, PayDbError.Network);
 }
 
+PayDbTx parseTx(dynamic jsn) {
+  return PayDbTx(jsn["token"], jsn["action"], jsn["timestamp"], jsn["sender"], jsn["recipient"], jsn["amount"], jsn["attachment"]);
+}
+
 Future<PayDbUserTxsResult> paydbUserTransactions(int offset, int limit) async {
   var baseUrl = await _server();
   var url = baseUrl + "user_transactions";
@@ -132,12 +147,40 @@ Future<PayDbUserTxsResult> paydbUserTransactions(int offset, int limit) async {
     var jsnObj = json.decode(response.body);
     var txs = List<PayDbTx>();
     for (var tx in jsnObj["txs"]) {
-      var paydbTx = PayDbTx(tx.token, tx.action, tx.timestamp, tx.sender, tx.recipient, tx.amount, tx.attachment);
-      txs.add(paydbTx);
+      txs.add(parseTx(tx));
     }
     return PayDbUserTxsResult(txs, PayDbError.None);
   } else if (response.statusCode == 400)
     return PayDbUserTxsResult(null, PayDbError.Auth);
   print(response.statusCode);
   return PayDbUserTxsResult(null, PayDbError.Network);
+}
+
+bool paydbRecipientCheck(String recipient) {
+  // check valid email address (from https://stackoverflow.com/a/61512807/206529)
+  return RegExp(
+    r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$')
+    .hasMatch(recipient);
+}
+
+Future<PayDbTxResult> paydbTransactionCreate(String action, String recipient, int amount, String attachment) async {
+  var baseUrl = await _server();
+  var url = baseUrl + "transaction_create";
+  var apikey = await Prefs.paydbApiKeyGet();
+  var apisecret = await Prefs.paydbApiSecretGet();
+  checkApiKey(apikey, apisecret);
+  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
+  var body = jsonEncode({"api_key": apikey, "nonce": nonce, "action": action, "recipient": recipient, "amount": amount, "attachment": attachment});
+  var sig = createHmacSig(apisecret, body);
+  var response = await postAndCatch(url, body, extraHeaders: {"X-Signature": sig});
+  if (response == null)
+    return PayDbTxResult(null, PayDbError.Network);
+  if (response.statusCode == 200) {
+    var jsnObj = json.decode(response.body);
+    var tx = parseTx(jsnObj["tx"]);
+    return PayDbTxResult(tx, PayDbError.None);
+  } else if (response.statusCode == 400)
+    return PayDbTxResult(null, PayDbError.Auth);
+  print(response.statusCode);
+  return PayDbTxResult(null, PayDbError.Network);
 }

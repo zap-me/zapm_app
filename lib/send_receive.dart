@@ -9,10 +9,10 @@ import 'send_form.dart';
 import 'receive_form.dart';
 
 class SendScreen extends StatelessWidget {
-  SendScreen(this._testnet, this._seed, this._fee, this._recipientOrUri, this._max) : super();
+  SendScreen(this._testnet, this._mnemonicOrAccount, this._fee, this._recipientOrUri, this._max) : super();
 
   final bool _testnet;
-  final String _seed;
+  final String _mnemonicOrAccount;
   final Decimal _fee;
   final String _recipientOrUri;
   final Decimal _max;
@@ -31,7 +31,7 @@ class SendScreen extends StatelessWidget {
             width: MediaQuery.of(context).size.width, 
             height: MediaQuery.of(context).size.height,
             padding: EdgeInsets.all(20),
-            child: SendForm(_testnet, _seed, _fee, _recipientOrUri, _max)
+            child: SendForm(_testnet, _mnemonicOrAccount, _fee, _recipientOrUri, _max)
           ) 
         )
     );
