@@ -25,14 +25,14 @@ const AssetBalanceIconSvg = 'assets/icon-bolt.svg';
 // enable/disable reward UI/feature
 const UseReward = false;
 // enable/disable settlement UI/feature
-const UseSettlement = true;
+const UseSettlement = false;
 // enable/disable merchant api (including all references/conversions to NZD)
-const UseMerchantApi = true;
+const UseMerchantApi = false;
 // enable/disable a webview homepage (null = disabled)
 const String WebviewURL = null;
 
 // are we using the waves network or a paydb server
-const TokenType AppTokenType = TokenType.Waves;
+const TokenType AppTokenType = TokenType.PayDB;
 
 // Waves settings
 // set these two to use a different mainnet/testnet asset id pair then the default zap asset ids.
@@ -44,7 +44,9 @@ const String NodeUrlTestnet = null;
 
 // PayDB settings
 const String PayDBServerMainnet = null;
-const String PayDBServerTestnet = null;
+//const String PayDBServerTestnet = 'http://192.168.1.9:5000/paydb/';
+//const String PayDBServerTestnet = 'http://10.94.1.158:5000/paydb/';
+const String PayDBServerTestnet = 'https://paydb-test.caprover.acuerdo.dev/paydb/';
 
 // If set the app will try to register with the premio stage server for push notifications
 const String PremioStageIndexUrl = null;
