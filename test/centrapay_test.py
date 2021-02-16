@@ -11,6 +11,8 @@ EXIT_HTTP_ERROR = 2
 CENTRAPAY_PAY_BASE_URI = 'http://app.centrapay.com/pay'
 CENTRAPAY_BASE_URL = 'https://service.centrapay.com'
 
+if os.environ.get('BASE_URL'):
+    CENTRAPAY_BASE_URL = os.environ.get('BASE_URL')
 MERCHANT_ID = os.environ.get('MERCHANT_ID')
 CLIENT_ID = os.environ.get('CLIENT_ID')
 MERCHANT_API_KEY = os.environ.get('MERCHANT_API_KEY')

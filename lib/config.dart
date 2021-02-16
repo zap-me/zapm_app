@@ -34,6 +34,7 @@ const String PremioStageName = null;
 // If set the app will use this api key to get info about centrapay payment requests
 // but why/how do we need an api key just to pay an invoice!!
 const String CentrapayApiKey = null;
+const bool CentrapayDevEnv = false;
 
 void initConfig() {
   overrideTheme();
