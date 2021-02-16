@@ -1,4 +1,3 @@
-import 'package:ZapMerchant/firebase.dart';
 import 'package:flutter/foundation.dart'
     show debugDefaultTargetPlatformOverride;
 import 'dart:io';
@@ -31,6 +30,8 @@ import 'new_mnemonic_form.dart';
 import 'transactions.dart';
 import 'merchant.dart';
 import 'recovery_form.dart';
+import 'centrapay.dart';
+import 'firebase.dart';
 
 void main() {
   // See https://github.com/flutter/flutter/wiki/Desktop-shells#target-platform-override
@@ -593,12 +594,12 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     if (value != null) {
       var result = parseRecipientOrWavesUri(_testnet, value);
       if (result != null) {
-        var sentFunds = await Navigator.push<bool>(
+        var tx = await Navigator.push<Tx>(
           context,
           MaterialPageRoute(
               builder: (context) => SendScreen(_testnet, _wallet.mnemonic, _fee, value, _balance)),
         );
-        if (sentFunds)
+        if (tx != null)
           _updateBalance();
       }
       else {
@@ -610,12 +611,44 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
             flushbarMsg(context, 'claim failed', category: MessageCategory.Warning);
         }
         else {
-          try {
-            var uri = Uri.parse(value);
-            if (!await processUri(uri))
+          var reqId = centrapayParseQrcode(value);
+          if (reqId != null) {
+            var result = await centrapayRequestInfo(reqId);
+            if (result.error == CentrapayError.None) {
+              if (result.request.status == CentrapayRequestStatusNew) {
+                for (var item in result.request.payments)
+                  if (centrapayValidPaymentMethod(item.ledger, _testnet)) {
+                    var res = await centrapayPay(context, _testnet, _wallet.mnemonic, _fee, _balance, result.request, item);
+                    if (res.zapRequired && res.zapTx == null)
+                      flushbarMsg(context, 'failed to send zap', category: MessageCategory.Warning);
+                    switch (res.centrapayResult.error) {
+                      case CentrapayError.None:
+                        flushbarMsg(context, 'completed centrapay payment');
+                        break;
+                      case CentrapayError.Auth:
+                      case CentrapayError.Network:
+                        flushbarMsg(context, 'failed to update centrapay payment', category: MessageCategory.Warning);
+                        break;
+                    }
+                    _updateBalance();
+                    return;
+                  }
+                  flushbarMsg(context, 'no compatible centrapay payment method found', category: MessageCategory.Warning);
+              }
+              else
+                flushbarMsg(context, 'centrapay request status: ${result.request.status}', category: MessageCategory.Warning);
+            }
+            else
+              flushbarMsg(context, 'centrapay request info failed', category: MessageCategory.Warning);
+          }
+          else {
+            try {
+              var uri = Uri.parse(value);
+              if (!await processUri(uri))
+                flushbarMsg(context, 'invalid QR code', category: MessageCategory.Warning);
+            }  on FormatException {
               flushbarMsg(context, 'invalid QR code', category: MessageCategory.Warning);
-          }  on FormatException {
-            flushbarMsg(context, 'invalid QR code', category: MessageCategory.Warning);
+            }
           }
         }
       }
@@ -623,12 +656,12 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   }
 
   void _send() async {
-    var sentFunds = await Navigator.push<bool>(
+    var tx = await Navigator.push<Tx>(
       context,
       MaterialPageRoute(
           builder: (context) => SendScreen(_testnet, _wallet.mnemonic, _fee, '', _balance)),
     );
-    if (sentFunds)
+    if (tx != null)
       _updateBalance();
   }
 

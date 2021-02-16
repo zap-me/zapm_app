@@ -12,6 +12,7 @@ CENTRAPAY_PAY_BASE_URI = 'http://app.centrapay.com/pay'
 CENTRAPAY_BASE_URL = 'https://service.centrapay.com'
 
 MERCHANT_ID = os.environ.get('MERCHANT_ID')
+CLIENT_ID = os.environ.get('CLIENT_ID')
 MERCHANT_API_KEY = os.environ.get('MERCHANT_API_KEY')
 
 def construct_parser():
@@ -25,8 +26,13 @@ def construct_parser():
     parser_req_create.add_argument("amount", metavar="AMOUNT", type=str, help="the request amount")
     parser_req_create.add_argument("asset", metavar="ASSET", type=str, help="the asset")
 
-    parser_req_status = subparsers.add_parser("request_status", help="Check a request request")
-    parser_req_status.add_argument("request_id", metavar="REQUEST_ID", type=str, help="the request id")
+    parser_req_info = subparsers.add_parser("request_info", help="Check a request")
+    parser_req_info.add_argument("request_id", metavar="REQUEST_ID", type=str, help="the request id")
+
+    parser_req_pay = subparsers.add_parser("request_pay", help="Pay a request")
+    parser_req_pay.add_argument("request_id", metavar="REQUEST_ID", type=str, help="the id of the request to pay")
+    parser_req_pay.add_argument("ledger", metavar="LEDGER", type=str, help="the selected payment option to use")
+    parser_req_pay.add_argument("authorization", metavar="AUTHORIZATION", type=str, help="an identifier that can be used to pay or verify payment")
 
     return parser
 
@@ -59,7 +65,7 @@ def request_(endpoint, data, post=True):
         r = requests.post(url, headers=headers, data=data)
     else:
         r = requests.get(url, headers=headers, params=data)
-    #print(curlify(r.request))
+    print(curlify(r.request))
     check(r)
     return r
 
@@ -69,15 +75,19 @@ def print_centrapay_qrcode(request_id):
     qr.print_ascii(tty=True)
 
 def request_create(args):
-    r = request_('/payments/api/requests.create', dict(merchantId=MERCHANT_ID, amount=args.amount, asset=args.asset))
+    r = request_('/payments/api/requests.create', dict(merchantId=MERCHANT_ID, clientId=CLIENT_ID, amount=args.amount, asset=args.asset))
     request_id = r.json()['requestId']
     print_centrapay_qrcode(request_id)
     print(r.json())
     
-def request_status(args):
+def request_info(args):
     r = request_('/payments/api/requests.info', dict(requestId=args.request_id), post=False)
     request_id = r.json()['requestId']
     print_centrapay_qrcode(request_id)
+    print(r.json())
+
+def request_pay(args):
+    r = request_('/payments/api/requests.pay', dict(requestId=args.request_id, ledger=args.ledger, authorization=args.authorization))
     print(r.json())
 
 if __name__ == "__main__":
@@ -89,8 +99,10 @@ if __name__ == "__main__":
     function = None
     if args.command == "request_create":
         function = request_create
-    elif args.command == "request_status":
-        function = request_status
+    elif args.command == "request_info":
+        function = request_info
+    elif args.command == "request_pay":
+        function = request_pay
     else:
         parser.print_help()
         sys.exit(EXIT_NO_COMMAND)
