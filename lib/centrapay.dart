@@ -13,7 +13,8 @@ import 'package:zapdart/colors.dart';
 import 'send_receive.dart';
 import 'config.dart';
 
-const CENTRAPAY_PAY_BASE_URI = 'http://app.centrapay.com/pay';
+const CENTRAPAY_QR_BASE_URI = 'http://app.centrapay.com/pay';
+const CENTRAPAY_DEV_QR_BASE_URI = 'http://app.cp42.click/pay';
 const CENTRAPAY_BASE_URL = 'https://service.centrapay.com';
 const CENTRAPAY_DEV_BASE_URL = 'https://service.cp42.click';
 
@@ -22,15 +23,21 @@ const CentrapayPaymentMethodZapMain = 'zap.main';
 const CentrapayPaymentMethodZapTest = 'zap.test'; // TODO: doesnt exist, yet?
 const CentrapayPaymentMethodTestUplink = 'g.test.testUplink';
 
-String centrapayBaseUrl() {
-  return CentrapayDevEnv ? CENTRAPAY_DEV_BASE_URL : CENTRAPAY_BASE_URL;
+class CentrapayQr {
+  final String reqId;
+  final String baseUrl;
+
+  CentrapayQr(this.reqId, this.baseUrl);
 }
 
-String centrapayParseQrcode(String data) {
+CentrapayQr centrapayParseQrcode(String data) {
   if (data != null && data.isNotEmpty) {
-    if (data.indexOf(CENTRAPAY_PAY_BASE_URI) == 0)
+    if (data.indexOf(CENTRAPAY_QR_BASE_URI) == 0)
       // return requestId part of url
-      return data.split('/').last;
+      return CentrapayQr(data.split('/').last, CENTRAPAY_BASE_URL);
+    if (data.indexOf(CENTRAPAY_DEV_QR_BASE_URI) == 0)
+      // return requestId part of url
+      return CentrapayQr(data.split('/').last, CENTRAPAY_DEV_BASE_URL);
   }
   return null;
 }
@@ -101,11 +108,14 @@ Future<http.Response> postAndCatch(String url, Map<String, dynamic> params, {boo
   try {
     var headers = {'x-api-key': CentrapayApiKey};
     if (usePost) {
+      print(':: centrapay endpoint: $url');
+      print('   data: $params');
       return await post(url, params, contentType: 'application/x-www-form-urlencoded', extraHeaders: headers);
     }
     else {
       var queryString = Uri(queryParameters: params).query;
       url = url + '?' + queryString;
+      print(':: centrapay endpoint: $url');
       return await get_(url, extraHeaders: headers);
     }
   } on SocketException catch(e) {
@@ -117,9 +127,9 @@ Future<http.Response> postAndCatch(String url, Map<String, dynamic> params, {boo
   }
 }
 
-Future<CentrapayRequestInfoResult> centrapayRequestInfo(String requestId) async {
-  var url = centrapayBaseUrl() + "/payments/api/requests.info";
-  var params = {"requestId": requestId};
+Future<CentrapayRequestInfoResult> centrapayRequestInfo(CentrapayQr qr) async {
+  var url = qr.baseUrl + "/payments/api/requests.info";
+  var params = {"requestId": qr.reqId};
   var response = await postAndCatch(url, params, usePost: false);
   if (response == null)
     return CentrapayRequestInfoResult(null, CentrapayError.Network);
@@ -142,8 +152,8 @@ Future<CentrapayRequestInfoResult> centrapayRequestInfo(String requestId) async 
   return CentrapayRequestInfoResult(null, CentrapayError.Network);
 }
 
-Future<CentrapayRequestPayResult> centrapayRequestPay(CentrapayRequest req, CentrapayPayment payment, String authorization) async {
-  var url = centrapayBaseUrl() + "/payments/api/requests.pay";
+Future<CentrapayRequestPayResult> centrapayRequestPay(CentrapayQr qr, CentrapayRequest req, CentrapayPayment payment, String authorization) async {
+  var url = qr.baseUrl + "/payments/api/requests.pay";
   var params = {"requestId": req.id, "ledger": payment.ledger, "authorization": authorization};
   var response = await postAndCatch(url, params);
   if (response == null)
@@ -165,9 +175,9 @@ class CentrapayScreen extends StatefulWidget {
   final String _seed;
   final Decimal _fee;
   final Decimal _max;
-  final String _reqId;
+  final CentrapayQr _qr;
 
-  CentrapayScreen(this._testnet, this._seed, this._fee, this._max, this._reqId) : super();
+  CentrapayScreen(this._testnet, this._seed, this._fee, this._max, this._qr) : super();
 
   @override
   CentrapayScreenState createState() {
@@ -195,7 +205,7 @@ class CentrapayScreenState extends State<CentrapayScreen> {
       _loading = true;
       _msg = 'getting centrapay request details..';
     });
-    var result = await centrapayRequestInfo(widget._reqId);
+    var result = await centrapayRequestInfo(widget._qr);
     _msg = '';
     if (result.error == CentrapayError.None) {
       if (result.request.status == CentrapayRequestStatusNew) {
@@ -245,7 +255,7 @@ class CentrapayScreenState extends State<CentrapayScreen> {
   Future<CentrapayZapResult> payZapAndConfirm(CentrapayRequest req, CentrapayPayment payment) async {
     switch (payment.ledger) {
       case CentrapayPaymentMethodTestUplink:
-        var res = await centrapayRequestPay(req, payment, DateTime.now().millisecondsSinceEpoch.toString());
+        var res = await centrapayRequestPay(widget._qr, req, payment, DateTime.now().millisecondsSinceEpoch.toString());
         return CentrapayZapResult(false, null, res);
       case CentrapayPaymentMethodZapMain:
       case CentrapayPaymentMethodZapTest:
@@ -259,7 +269,7 @@ class CentrapayScreenState extends State<CentrapayScreen> {
           );
         if (tx == null)
           return CentrapayZapResult(true, null, null);
-        var res = await centrapayRequestPay(req, payment, tx.id);
+        var res = await centrapayRequestPay(widget._qr, req, payment, tx.id);
         return CentrapayZapResult(true, tx, res);
     }
     return CentrapayZapResult(true, null, null);
@@ -270,7 +280,7 @@ class CentrapayScreenState extends State<CentrapayScreen> {
       _loading = true;
       _msg = 'confirming payment..';
     });
-    var res = await centrapayRequestPay(_req, _payment, _zapTx.id);
+    var res = await centrapayRequestPay(widget._qr, _req, _payment, _zapTx.id);
     switch (res.error) {
       case CentrapayError.None:
         _msg = 'completed centrapay payment';

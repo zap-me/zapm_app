@@ -8,11 +8,11 @@ import qrcode
 EXIT_NO_COMMAND = 1
 EXIT_HTTP_ERROR = 2
 
-CENTRAPAY_PAY_BASE_URI = 'http://app.centrapay.com/pay'
+CENTRAPAY_QR_BASE_URI = 'http://app.centrapay.com/pay'
 CENTRAPAY_BASE_URL = 'https://service.centrapay.com'
-
-if os.environ.get('BASE_URL'):
-    CENTRAPAY_BASE_URL = os.environ.get('BASE_URL')
+if os.environ.get('DEVENV'):
+    CENTRAPAY_QR_BASE_URI = 'http://app.cp42.click/pay'
+    CENTRAPAY_BASE_URL = 'https://service.cp42.click'
 MERCHANT_ID = os.environ.get('MERCHANT_ID')
 CLIENT_ID = os.environ.get('CLIENT_ID')
 MERCHANT_API_KEY = os.environ.get('MERCHANT_API_KEY')
@@ -73,7 +73,7 @@ def request_(endpoint, data, post=True):
 
 def print_centrapay_qrcode(request_id):
     qr = qrcode.QRCode()
-    qr.add_data('{}/{}'.format(CENTRAPAY_PAY_BASE_URI, request_id))
+    qr.add_data('{}/{}'.format(CENTRAPAY_QR_BASE_URI, request_id))
     qr.print_ascii(tty=True)
 
 def request_create(args):

@@ -611,12 +611,12 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
             flushbarMsg(context, 'claim failed', category: MessageCategory.Warning);
         }
         else {
-          var reqId = centrapayParseQrcode(value);
-          if (reqId != null) {
+          var qr = centrapayParseQrcode(value);
+          if (qr != null) {
             var tx = await Navigator.push<Tx>(
               context,
               MaterialPageRoute(
-                  builder: (context) => CentrapayScreen(_testnet, _wallet.mnemonic, _fee, _balance, reqId)),
+                  builder: (context) => CentrapayScreen(_testnet, _wallet.mnemonic, _fee, _balance, qr)),
             );
             if (tx != null)
               _updateBalance();
