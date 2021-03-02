@@ -260,10 +260,10 @@ Future<List<Bank>> merchantBanks() async {
 }
 
 Future<ZapCalcResult> merchantZapCalc(Decimal nzdRequired) async {
-  var baseUrl = await Prefs.apiserverGet();
+  var baseUrl = await Prefs.merchantApiServerGet();
   var url = baseUrl + "zap_calc";
-  var apikey = await Prefs.apikeyGet();
-  var apisecret = await Prefs.apisecretGet();
+  var apikey = await Prefs.merchantApiKeyGet();
+  var apisecret = await Prefs.merchantApiSecretGet();
   checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var d100 = Decimal.fromInt(100);

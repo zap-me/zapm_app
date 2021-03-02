@@ -32,13 +32,9 @@ import 'account_login_form.dart';
 import 'transactions.dart';
 import 'merchant.dart';
 import 'recovery_form.dart';
-<<<<<<< HEAD
 import 'centrapay.dart';
 import 'firebase.dart';
-=======
-import 'firebase.dart';
 import 'paydb.dart';
->>>>>>> 83f707e... PayDB version of app:
 
 void main() {
   // See https://github.com/flutter/flutter/wiki/Desktop-shells#target-platform-override
