@@ -135,6 +135,22 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   Future<bool> processUri(Uri uri) async {
     print('$uri');
 
+    // process waves links
+    //
+    // waves://<addr>...
+    //
+    var result = parseWavesUri(_testnet, uri.toString());
+    if (result.error == NO_ERROR) {
+      var tx = await Navigator.push<Tx>(
+        context,
+        MaterialPageRoute(
+            builder: (context) => SendScreen(_testnet, _wallet.mnemonic, _fee, uri.toString(), _balance)),
+      );
+      if (tx != null)
+        _updateBalance();
+      return true;
+    }
+
     // process premio stage links (scheme parameter is optional - default to 'https')
     //
     // premiostagelink://<HOST>/claim_payment/<CLAIM_CODE>[?scheme=<SCHEME>]
@@ -174,30 +190,18 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     //
     // http://app.centrapay.com/pay/<REQUEST_ID>
     //
-    if (CentrapayApiKey != null &&
-      uri.host.toLowerCase() == 'app.centrapay.com' &&
-      uri.pathSegments.length == 2 && uri.pathSegments[0].toLowerCase() == 'pay') {
-      var requestId = uri.pathSegments[1];
-      var url = 'https://service.centrapay.com/payments/api/requests.info';
-      var body = {'requestId': requestId};
-      var resultText = '';
-      var failed = false;
-      showAlertDialog(context, 'requesting payment info..');
-      try {
-        var headers = {'x-api-key': CentrapayApiKey};
-        var response = await post(url.toString(), body, extraHeaders: headers);
-        if (response.statusCode == 200)
-          resultText = response.body;
-        else
-          resultText = 'request failed: ${response.statusCode} - ${response.body}';
-          failed = true;
-      } catch(e) {
-        resultText = 'request failed: $e';
-        failed = true;
+    if (CentrapayApiKey != null) {
+      var qr = centrapayParseQrcode(uri.toString());
+      if (qr != null) {
+        var tx = await Navigator.push<Tx>(
+          context,
+          MaterialPageRoute(
+              builder: (context) => CentrapayScreen(_testnet, _wallet.mnemonic, _fee, _balance, qr)),
+        );
+        if (tx != null)
+          _updateBalance();
+        return true;
       }
-      Navigator.pop(context);
-      flushbarMsg(context, resultText, category: failed ? MessageCategory.Warning : MessageCategory.Info);
-      return true;
     }
 
     // did not recognize uri
@@ -209,7 +213,8 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     try {
       var initialUri = await getInitialUri();
       if (initialUri != null) {
-        await processUri(initialUri);
+        if (!await processUri(initialUri))
+          flushbarMsg(context, 'invalid URL', category: MessageCategory.Warning);
       }
     } on FormatException {
       print('intial uri format exception!');
@@ -223,7 +228,8 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     _uniLinksSub = getUriLinksStream().listen((Uri uri) async {
       await _previousUniUriLock.synchronized(() async {
         if (_previousUniUri != uri) { // this seems to be invoked twice so ignore the second one
-          await processUri(uri);
+          if (!await processUri(uri))
+            flushbarMsg(context, 'invalid URL', category: MessageCategory.Warning);
           _previousUniUri = uri;
         }
       });
@@ -591,47 +597,36 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
 
   void _scanQrCode() async {
     var value = await new QRCodeReader().scan();
-    if (value != null) {
-      var result = parseRecipientOrWavesUri(_testnet, value);
-      if (result != null) {
-        var tx = await Navigator.push<Tx>(
-          context,
-          MaterialPageRoute(
-              builder: (context) => SendScreen(_testnet, _wallet.mnemonic, _fee, value, _balance)),
-        );
-        if (tx != null)
-          _updateBalance();
-      }
-      else {
-        var result = parseClaimCodeUri(value);
-        if (result.error == NO_ERROR) {
-          if (await merchantClaim(result.code, _wallet.address))
-            flushbarMsg(context, 'claim succeded');
-          else 
-            flushbarMsg(context, 'claim failed', category: MessageCategory.Warning);
-        }
-        else {
-          var qr = centrapayParseQrcode(value);
-          if (qr != null) {
-            var tx = await Navigator.push<Tx>(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => CentrapayScreen(_testnet, _wallet.mnemonic, _fee, _balance, qr)),
-            );
-            if (tx != null)
-              _updateBalance();
-          }
-          else {
-            try {
-              var uri = Uri.parse(value);
-              if (!await processUri(uri))
-                flushbarMsg(context, 'invalid QR code', category: MessageCategory.Warning);
-            }  on FormatException {
-              flushbarMsg(context, 'invalid QR code', category: MessageCategory.Warning);
-            }
-          }
-        }
-      }
+    if (value == null)
+      return;
+
+    var result = parseRecipientOrWavesUri(_testnet, value);
+    if (result != null) {
+      var tx = await Navigator.push<Tx>(
+        context,
+        MaterialPageRoute(
+            builder: (context) => SendScreen(_testnet, _wallet.mnemonic, _fee, value, _balance)),
+      );
+      if (tx != null)
+        _updateBalance();
+      return;
+    }
+
+    var ccresult = parseClaimCodeUri(value);
+    if (ccresult.error == NO_ERROR) {
+      if (await merchantClaim(ccresult.code, _wallet.address))
+        flushbarMsg(context, 'claim succeded');
+      else 
+        flushbarMsg(context, 'claim failed', category: MessageCategory.Warning);
+      return;
+    }
+
+    try {
+      var uri = Uri.parse(value);
+      if (!await processUri(uri))
+        flushbarMsg(context, 'invalid QR code', category: MessageCategory.Warning);
+    }  on FormatException {
+      flushbarMsg(context, 'invalid QR code', category: MessageCategory.Warning);
     }
   }
 
