@@ -96,6 +96,14 @@ class Settlement {
   Settlement({this.token, this.amount, this.amountReceive, this.bankAccount, this.txid, this.status});
 }
 
+class ZapCalcResult {
+  final Decimal nzdRequired;
+  final Decimal zap;
+  final String error;
+
+  ZapCalcResult(this.nzdRequired, this.zap, this.error);
+}
+
 class SettlementCalcResult {
   final Decimal amount;
   final Decimal amountReceive;
@@ -268,6 +276,25 @@ Future<List<Bank>> merchantBanks() async {
   return null;
 }
 
+Future<ZapCalcResult> merchantZapCalc(Decimal nzdRequired) async {
+  var baseUrl = await Prefs.apiserverGet();
+  var url = baseUrl + "zap_calc";
+  var apikey = await Prefs.apikeyGet();
+  var apisecret = await Prefs.apisecretGet();
+  checkApiKey(apikey, apisecret);
+  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
+  var d100 = Decimal.fromInt(100);
+  var body = jsonEncode({"api_key": apikey, "nonce": nonce, "nzd_required": (nzdRequired * d100).toInt()});
+  var sig = createHmacSig(apisecret, body);
+  var response = await post(url, body, extraHeaders: {"X-Signature": sig});
+  if (response.statusCode == 200) {
+    var jsnObj = json.decode(response.body);
+    return ZapCalcResult(Decimal.fromInt(jsnObj["nzd_required"]) / d100, Decimal.fromInt(jsnObj["zap"]) / d100, null);
+  }
+  var jsnObj = json.decode(response.body);
+  return ZapCalcResult(null, null, jsnObj["message"]);
+}
+
 Future<SettlementCalcResult> merchantSettlementCalc(Decimal amount) async {
   var baseUrl = await Prefs.apiserverGet();
   var url = baseUrl + "settlement_calc";
@@ -377,17 +404,6 @@ String toNZDAmount(Decimal amount, Rates rates) {
     return "${amountNZD.toStringAsFixed(2)} NZD";
   }
   return "";
-}
-
-Decimal equivalentCustomerZapForNzd(Decimal nzdRequired, Rates rates) {
-  print('nzdRequired: $nzdRequired');
-  var merchantFee = (nzdRequired * (Decimal.fromInt(1) + rates.customerRate)) - nzdRequired;
-  print('merchantFee: $merchantFee');
-  merchantFee = merchantFee * (Decimal.fromInt(1) + rates.salesTax);
-  print('merchantFee (inc tax): $merchantFee');
-  var amountZap = nzdRequired + merchantFee;
-  print('amountZap: $amountZap');
-  return amountZap;
 }
 
 class ListTx extends StatelessWidget {

@@ -95,12 +95,12 @@ class SendFormState extends State<SendForm> {
         var libzap = LibZap();
         var spendTx = libzap.transactionCreate(widget._seed, recipient, amount, fee, _attachment);
         if (spendTx.success) {
-          var result = await Navigator.push<bool>(
+          var tx = await Navigator.push<Tx>(
             context,
             MaterialPageRoute(builder: (context) => SendingForm(spendTx)),
           );
-          if (result)
-            Navigator.pop(context, true);
+          if (tx != null)
+            Navigator.pop(context, tx);
         }
         else
           flushbarMsg(context, 'failed to create transaction', category: MessageCategory.Warning);
@@ -183,7 +183,7 @@ class SendFormState extends State<SendForm> {
             padding: const EdgeInsets.only(top: 24.0),
             child: RoundedButton(send, ZapWhite, ZapYellow, 'send $AssetShortNameLower', minWidth: MediaQuery.of(context).size.width / 2, holePunch: true),
           ),
-          RoundedButton(() => Navigator.pop(context, false), ZapBlue, ZapWhite, 'cancel', borderColor: ZapBlue, minWidth: MediaQuery.of(context).size.width / 2),
+          RoundedButton(() => Navigator.pop(context, null), ZapBlue, ZapWhite, 'cancel', borderColor: ZapBlue, minWidth: MediaQuery.of(context).size.width / 2),
         ],
       ),
     );
