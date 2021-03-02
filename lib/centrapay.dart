@@ -13,8 +13,8 @@ import 'package:zapdart/colors.dart';
 import 'send_receive.dart';
 import 'config.dart';
 
-const CENTRAPAY_QR_BASE_URI = 'http://app.centrapay.com/pay';
-const CENTRAPAY_DEV_QR_BASE_URI = 'http://app.cp42.click/pay';
+const CENTRAPAY_QR_BASE_URI = 'https://app.centrapay.com/pay';
+const CENTRAPAY_DEV_QR_BASE_URI = 'https://app.cp42.click/pay';
 const CENTRAPAY_BASE_URL = 'https://service.centrapay.com';
 const CENTRAPAY_DEV_BASE_URL = 'https://service.cp42.click';
 
@@ -238,7 +238,7 @@ class CentrapayScreenState extends State<CentrapayScreen> {
   String paymentAmount(CentrapayPayment payment) {
     if (payment == null)
       return '0';
-    return (_payment.amount / 100).toStringAsFixed(2);
+    return (payment.amount / 100).toStringAsFixed(2);
   }
 
   String paymentUnit(CentrapayPayment payment) {
@@ -272,7 +272,7 @@ class CentrapayScreenState extends State<CentrapayScreen> {
         var res = await centrapayRequestPay(widget._qr, req, payment, tx.id);
         return CentrapayZapResult(true, tx, res);
     }
-    return CentrapayZapResult(true, null, null);
+    return CentrapayZapResult(true, null, CentrapayRequestPayResult(null, CentrapayError.None));
   }
 
   void payConfirm() async {
@@ -284,7 +284,7 @@ class CentrapayScreenState extends State<CentrapayScreen> {
     switch (res.error) {
       case CentrapayError.None:
         _msg = 'completed centrapay payment';
-          _confirmed = true;
+        _confirmed = true;
         flushbarMsg(context, _msg);
         break;
       case CentrapayError.Auth:
