@@ -11,12 +11,13 @@ import 'config.dart';
 import 'prefs.dart';
 import 'hmac.dart';
 import 'merchant.dart';
+import 'paydb.dart';
 
 class ReceiveForm extends StatefulWidget {
   final bool _testnet;
-  final String _address;
+  final String _addressOrAccount;
   
-  ReceiveForm(this._testnet, this._address) : super();
+  ReceiveForm(this._testnet, this._addressOrAccount) : super();
 
   @override
   ReceiveFormState createState() {
@@ -60,8 +61,14 @@ class ReceiveFormState extends State<ReceiveForm> {
       }
       amount = res.zap;
     }
-    var deviceName = await Prefs.deviceNameGet();
-    return LibZap.paymentUriDec(widget._testnet, widget._address, amount, deviceName);
+    switch (AppTokenType) {
+      case TokenType.Waves:
+        var deviceName = await Prefs.deviceNameGet();
+        return LibZap.paymentUriDec(widget._testnet, widget._addressOrAccount, amount, deviceName);
+      case TokenType.PayDB:
+        return PayDbUri(widget._addressOrAccount, amount, null).toUri();
+    }
+    return null;
   }
 
   void updateUriUi() {

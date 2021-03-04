@@ -39,10 +39,10 @@ class SendScreen extends StatelessWidget {
 }
 
 class ReceiveScreen extends StatelessWidget {
-  ReceiveScreen(this._testnet, this._address) : super();
+  ReceiveScreen(this._testnet, this._addressOrAccount) : super();
 
   final bool _testnet;
-  final String _address;
+  final String _addressOrAccount;
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +58,7 @@ class ReceiveScreen extends StatelessWidget {
             width: MediaQuery.of(context).size.width, 
             height: MediaQuery.of(context).size.height,
             padding: EdgeInsets.all(20),
-            child: ReceiveForm(_testnet, _address)
+            child: ReceiveForm(_testnet, _addressOrAccount)
           )
         )
     );

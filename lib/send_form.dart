@@ -60,6 +60,15 @@ class SendFormState extends State<SendForm> {
           _recipientController.text = recipientOrUri;
           return true;
         }
+        var parts = PayDbUri.parse(recipientOrUri);
+        if (parts != null) {
+          _recipientController.text = parts.account;
+          _amountController.text = parts.amount.toString();
+          _attachment = Uri.decodeFull(parts.attachment);
+          _msgController.text = '';
+          updateAttachment(null);
+          return true;
+        }
         return false;
     }
     return false;

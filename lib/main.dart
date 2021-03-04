@@ -171,23 +171,53 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     return null;
   }
 
+  String _addressOrAccount() {
+    switch (AppTokenType) {
+      case TokenType.Waves:
+        return _wallet.address;
+      case TokenType.PayDB:
+        return _account.email;
+    }
+    return null;
+  }
+
   Future<bool> processUri(Uri uri) async {
     print('$uri');
 
-    // process waves links
-    //
-    // waves://<addr>...
-    //
-    var result = parseWavesUri(_testnet, uri.toString());
-    if (result.error == NO_ERROR) {
-      var tx = await Navigator.push<Tx>(
-        context,
-        MaterialPageRoute(
-            builder: (context) => SendScreen(_testnet, _wallet.mnemonic, _fee, uri.toString(), _balance)),
-      );
-      if (tx != null)
-        _updateBalance();
-      return true;
+    switch (AppTokenType) {
+      case TokenType.Waves:
+        // process waves links
+        //
+        // waves://<addr>...
+        //
+        var result = parseWavesUri(_testnet, uri.toString());
+        if (result.error == NO_ERROR) {
+          var tx = await Navigator.push<Tx>(
+            context,
+            MaterialPageRoute(
+                builder: (context) => SendScreen(_testnet, _wallet.mnemonic, _fee, uri.toString(), _balance)),
+          );
+          if (tx != null)
+            _updateBalance();
+          return true;
+        }
+        break;
+      case TokenType.PayDB:
+        // process paydb links
+        //
+        // paydb://<acct>...
+        //
+        if (PayDbUri.parse(uri.toString()) != null) {
+          var tx = await Navigator.push<Tx>(
+            context,
+            MaterialPageRoute(
+                builder: (context) => SendScreen(_testnet, _account.email, _fee, uri.toString(), _balance)),
+          );
+          if (tx != null)
+            _updateBalance();
+          return true;
+        }
+        break;
     }
 
     // process premio stage links (scheme parameter is optional - default to 'https')
@@ -810,19 +840,10 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
             flushbarMsg(context, 'claim failed', category: MessageCategory.Warning);
           return;
         }
-        // other uris we support
-        try {
-          var uri = Uri.parse(value);
-          if (!await processUri(uri))
-            flushbarMsg(context, 'invalid QR code', category: MessageCategory.Warning);
-        }  on FormatException {
-          flushbarMsg(context, 'invalid QR code', category: MessageCategory.Warning);
-        }
         break;
       case TokenType.PayDB:
-        // paydb recipient (email)
-        var pdbresult = paydbParseRecipient(value);
-        if (pdbresult != null) {
+        // paydb recipient or uri
+        if (paydbParseValid(value)) {
           var tx = await Navigator.push<Tx>(
             context,
             MaterialPageRoute(
@@ -833,6 +854,14 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
           return;
         }
         break;
+    }
+    // other uris we support
+    try {
+      var uri = Uri.parse(value);
+      if (!await processUri(uri))
+        flushbarMsg(context, 'invalid QR code', category: MessageCategory.Warning);
+    }  on FormatException {
+      flushbarMsg(context, 'invalid QR code', category: MessageCategory.Warning);
     }
   }
 
@@ -849,7 +878,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   void _receive() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => ReceiveScreen(_testnet, _wallet.address)),
+      MaterialPageRoute(builder: (context) => ReceiveScreen(_testnet, _addressOrAccount())),
     );
   }
 

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:async';
 import 'dart:convert';
+import 'package:decimal/decimal.dart';
 import 'package:http/http.dart' as http;
 import 'package:email_validator/email_validator.dart';
 
@@ -20,6 +21,58 @@ const ActionDestroy = 'destroy';
 
 enum PayDbError {
   None, Network, Auth
+}
+
+class PayDbUri {
+  final String account;
+  final Decimal amount;
+  final String attachment;
+
+  PayDbUri(this.account, this.amount, this.attachment);
+
+  String _addPart(String current, String part) {
+    if (current.isEmpty)
+      return '?$part';
+    return '$current&$part';
+  }
+
+  String toUri() {
+    var queryParts = '';
+    if (amount > Decimal.zero) {
+      var amountCents = amount * Decimal.fromInt(100);
+      queryParts = _addPart(queryParts, 'amount=$amountCents');
+    }
+    if (attachment != null && attachment.isNotEmpty)
+      queryParts = _addPart(queryParts, 'attachment=$attachment');
+    return 'paydb://$account$queryParts';
+  }
+
+  static PayDbUri parse(String uri) {
+  //
+  // paydb://<email>?amount=<AMOUNT_CENTS>&attachment=<ATTACHMENT>
+  //
+  var account = '';
+  var amount = Decimal.fromInt(0);
+  var attachment = '';
+  if (uri.length > 8 && uri.substring(0, 8).toLowerCase() == 'paydb://') {
+    var parts = uri.substring(8).split('?');
+    if (parts.length == 2) {
+      account = parts[0];
+      if (account.endsWith('/'))
+        account = account.substring(0, account.length - 1);
+      parts = parts[1].split('&');
+      for (var part in parts) {
+        var res = parseUriParameter(part, 'amount');
+        if (res != null) amount = Decimal.parse(res) / Decimal.fromInt(100);
+        res = parseUriParameter(part, 'attachment');
+        if (res != null) attachment = res;
+      }
+    }
+    return PayDbUri(account, amount, attachment);
+  }
+  return null;
+}
+
 }
 
 class UserInfo {
@@ -97,6 +150,10 @@ String paydbParseRecipient(String value) {
   if (EmailValidator.validate(value))
     return value;
   return null;
+}
+
+bool paydbParseValid(String recipientOrUri) {
+  return (paydbParseRecipient(recipientOrUri) != null || PayDbUri.parse(recipientOrUri) != null);
 }
 
 Future<PayDbApiKeyResult> paydbApiKeyCreate(String email, String password, String deviceName) async {

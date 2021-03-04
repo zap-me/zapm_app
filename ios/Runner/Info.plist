@@ -47,7 +47,7 @@
 	<false/>
 	<key>CFBundleURLTypes</key>
 	<array>
-		<dict>
+		<dict> <!-- TODO: remove waves or paydb link -->
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
@@ -55,6 +55,16 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>waves</string>
+			</array>
+		</dict>
+		<dict> <!-- TODO: remove waves or paydb link -->
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>PayDb Link</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>paydb</string>
 			</array>
 		</dict>
 		<dict>
