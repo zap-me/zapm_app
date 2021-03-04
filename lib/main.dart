@@ -897,7 +897,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     }
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => SettingsScreen(_pinExists, _wallet.mnemonic, _fcm)),
+      MaterialPageRoute(builder: (context) => SettingsScreen(_pinExists, _mnemonicOrAccount(), _fcm)),
     );
     _setTokenKeyDetails();
   }

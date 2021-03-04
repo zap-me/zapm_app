@@ -21,10 +21,10 @@ import 'firebase.dart';
 
 class SettingsScreen extends StatefulWidget {
   final bool _pinProtectedInitial;
-  final String _mnemonic;
+  final String _mnemonicOrAccount;
   final FCM _fcm;
 
-  SettingsScreen(this._pinProtectedInitial, this._mnemonic, this._fcm) : super();
+  SettingsScreen(this._pinProtectedInitial, this._mnemonicOrAccount, this._fcm) : super();
 
   @override
   _SettingsState createState() => new _SettingsState(_pinProtectedInitial);
@@ -105,7 +105,7 @@ class _SettingsState extends State<SettingsScreen> {
   void initState() {
     super.initState();
     // set secondary
-    _secondary = widget._mnemonic == null;
+    _secondary = widget._mnemonicOrAccount == null;
   }
 
   void _toggleTestnet() async {
@@ -169,9 +169,10 @@ class _SettingsState extends State<SettingsScreen> {
   }
 
   void _addPasswordProtection() async {
+    assert(AppTokenType == TokenType.Waves);
     var password = await askSetMnemonicPassword(context);
     if (password != null) {
-      var res = encryptMnemonic(widget._mnemonic, password);
+      var res = encryptMnemonic(widget._mnemonicOrAccount, password);
       await Prefs.cryptoIVSet(res.iv);
       await Prefs.mnemonicSet(res.encryptedMnemonic);
       setState(() {
@@ -199,7 +200,7 @@ class _SettingsState extends State<SettingsScreen> {
         });
         flushbarMsg(context, 'API KEY set');
         if (result.accountAdmin && result.walletAddress.isEmpty) {
-          var address = _getWalletAddress(widget._mnemonic);
+          var address = _getWalletAddress(widget._mnemonicOrAccount);
           var yes = await askYesNo(context, "Do you want to set the account wallet address ($address)?");
           if (yes) {
             var res = await merchantWalletAddress(address);
@@ -277,7 +278,10 @@ class _SettingsState extends State<SettingsScreen> {
         child: ListView( 
           children: <Widget>[
             ListTile(title: Text("Version: $_appVersion"), subtitle: Text("Build: $_buildNumber")),
-            ListTile(title: Text("Libzap Version: $_libzapVersion")),
+            Visibility(
+              visible: AppTokenType == TokenType.Waves,
+              child:  ListTile(title: Text("Libzap Version: $_libzapVersion")),
+            ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),
               child: SwitchListTile(
@@ -321,7 +325,7 @@ class _SettingsState extends State<SettingsScreen> {
                     ),
                   ),
                   Visibility(
-                    visible: !_showMnemonic,
+                    visible: !_showMnemonic && AppTokenType == TokenType.Waves,
                     child: Container(
                       padding: const EdgeInsets.only(top: 18.0),
                       child: ListTile(
@@ -330,17 +334,17 @@ class _SettingsState extends State<SettingsScreen> {
                     ),
                   ),
                   Visibility(
-                    visible: _showMnemonic,
+                    visible: _showMnemonic && AppTokenType == TokenType.Waves,
                     child: Container(
                       padding: const EdgeInsets.only(top: 18.0),
                       child: ListTile(
                         title: Text("Recovery words"),
-                        subtitle: !_secondary ? Bip39Words.fromString(widget._mnemonic) : Text('n/a'),
+                        subtitle: !_secondary ? Bip39Words.fromString(widget._mnemonicOrAccount) : Text('n/a'),
                         trailing: _mnemonicPasswordProtected ? Icon(Icons.lock) : Icon(Icons.lock_open),),
                     )
                   ),
                   Visibility(
-                    visible: !_mnemonicPasswordProtected,
+                    visible: !_mnemonicPasswordProtected && AppTokenType == TokenType.Waves,
                     child: Container(
                       child: ListTile(
                         title: RaisedButton.icon(label: Text("Password Protect Recovery words"), icon: Icon(Icons.lock), onPressed: _addPasswordProtection),
