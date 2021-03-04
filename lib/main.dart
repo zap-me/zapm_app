@@ -107,7 +107,7 @@ class ZapHomePage extends StatefulWidget {
 }
 
 enum NoWalletAction { CreateMnemonic, RecoverMnemonic, RecoverRaw, ScanMerchantApiKey }
-enum NoAccountAction { Register, Login }
+enum NoAccountAction { Register, Login, SwitchServer }
 
 class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   Socket _merchantSocket; // merchant portal websocket
@@ -417,6 +417,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
 
   Future<NoAccountAction> _noAccountDialog(BuildContext context) async {
     assert(AppTokenType == TokenType.PayDB);
+    var server = await paydbServer();
     return await showDialog<NoAccountAction>(
         context: context,
         barrierDismissible: true,
@@ -435,6 +436,12 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
                   Navigator.pop(context, NoAccountAction.Login);
                 },
                 child: const Text("Login to your account"),
+              ),
+              SimpleDialogOption(
+                onPressed: () {
+                  Navigator.pop(context, NoAccountAction.SwitchServer);
+                },
+                child: Text("Switch server ($server)"),
               ),
             ],
           );
@@ -602,6 +609,10 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
               accountEmail = login.email;
               break;
           }
+          break;
+        case NoAccountAction.SwitchServer:
+          Prefs.testnetSet(!_testnet);
+          await _updateTestnet();
           break;
       }
       if (accountEmail != null && accountEmail.isNotEmpty) {
@@ -776,33 +787,52 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     if (value == null)
       return;
 
-    var result = parseRecipientOrWavesUri(_testnet, value);
-    if (result != null) {
-      var tx = await Navigator.push<Tx>(
-        context,
-        MaterialPageRoute(
-            builder: (context) => SendScreen(_testnet, _wallet.mnemonic, _fee, value, _balance)),
-      );
-      if (tx != null)
-        _updateBalance();
-      return;
-    }
-
-    var ccresult = parseClaimCodeUri(value);
-    if (ccresult.error == NO_ERROR) {
-      if (await merchantClaim(ccresult.code, _wallet.address))
-        flushbarMsg(context, 'claim succeded');
-      else 
-        flushbarMsg(context, 'claim failed', category: MessageCategory.Warning);
-      return;
-    }
-
-    try {
-      var uri = Uri.parse(value);
-      if (!await processUri(uri))
-        flushbarMsg(context, 'invalid QR code', category: MessageCategory.Warning);
-    }  on FormatException {
-      flushbarMsg(context, 'invalid QR code', category: MessageCategory.Warning);
+    switch (AppTokenType) {
+      case TokenType.Waves:
+        // waves address or uri
+        var result = parseRecipientOrWavesUri(_testnet, value);
+        if (result != null) {
+          var tx = await Navigator.push<Tx>(
+            context,
+            MaterialPageRoute(
+                builder: (context) => SendScreen(_testnet, _wallet.mnemonic, _fee, value, _balance)),
+          );
+          if (tx != null)
+            _updateBalance();
+          return;
+        }
+        // merchant claim code
+        var ccresult = parseClaimCodeUri(value);
+        if (ccresult.error == NO_ERROR) {
+          if (await merchantClaim(ccresult.code, _wallet.address))
+            flushbarMsg(context, 'claim succeded');
+          else 
+            flushbarMsg(context, 'claim failed', category: MessageCategory.Warning);
+          return;
+        }
+        // other uris we support
+        try {
+          var uri = Uri.parse(value);
+          if (!await processUri(uri))
+            flushbarMsg(context, 'invalid QR code', category: MessageCategory.Warning);
+        }  on FormatException {
+          flushbarMsg(context, 'invalid QR code', category: MessageCategory.Warning);
+        }
+        break;
+      case TokenType.PayDB:
+        // paydb recipient (email)
+        var pdbresult = paydbParseRecipient(value);
+        if (pdbresult != null) {
+          var tx = await Navigator.push<Tx>(
+            context,
+            MaterialPageRoute(
+                builder: (context) => SendScreen(_testnet, _account.email, _fee, value, _balance)),
+          );
+          if (tx != null)
+            _updateBalance();
+          return;
+        }
+        break;
     }
   }
 

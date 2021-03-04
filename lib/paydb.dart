@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:email_validator/email_validator.dart';
 
 import 'hmac.dart';
 import 'config.dart';
@@ -86,6 +87,16 @@ Future<http.Response> postAndCatch(String url, String body, {Map<String, String>
     print(e);
     return null;
   }
+}
+
+Future<String> paydbServer() async {
+  return await _server();
+}
+
+String paydbParseRecipient(String value) {
+  if (EmailValidator.validate(value))
+    return value;
+  return null;
 }
 
 Future<PayDbApiKeyResult> paydbApiKeyCreate(String email, String password, String deviceName) async {

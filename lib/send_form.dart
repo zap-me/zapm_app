@@ -37,19 +37,30 @@ class SendFormState extends State<SendForm> {
   String _attachment;
 
   bool setRecipientOrUri(String recipientOrUri) {
-    var result = parseRecipientOrWavesUri(widget._testnet, recipientOrUri);
-    if (result == recipientOrUri) {
-      _recipientController.text = recipientOrUri;
-      return true;
-    }
-    else if (result != null) {
-      var parts = parseWavesUri(widget._testnet, recipientOrUri);
-      _recipientController.text = parts.address;
-      _amountController.text = parts.amount.toString();
-      _attachment = Uri.decodeFull(parts.attachment);
-      _msgController.text = '';
-      updateAttachment(null);
-      return true;
+    switch (AppTokenType) {
+      case TokenType.Waves:
+        var result = parseRecipientOrWavesUri(widget._testnet, recipientOrUri);
+        if (result == recipientOrUri) {
+          _recipientController.text = recipientOrUri;
+          return true;
+        }
+        else if (result != null) {
+          var parts = parseWavesUri(widget._testnet, recipientOrUri);
+          _recipientController.text = parts.address;
+          _amountController.text = parts.amount.toString();
+          _attachment = Uri.decodeFull(parts.attachment);
+          _msgController.text = '';
+          updateAttachment(null);
+          return true;
+        }
+        return false;
+      case TokenType.PayDB:
+        var result = paydbParseRecipient(recipientOrUri);
+        if (result == recipientOrUri) {
+          _recipientController.text = recipientOrUri;
+          return true;
+        }
+        return false;
     }
     return false;
   }
