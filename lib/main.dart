@@ -192,7 +192,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         //
         var result = parseWavesUri(_testnet, uri.toString());
         if (result.error == NO_ERROR) {
-          var tx = await Navigator.push<Tx>(
+          var tx = await Navigator.push(
             context,
             MaterialPageRoute(
                 builder: (context) => SendScreen(_testnet, _wallet.mnemonic, _fee, uri.toString(), _balance)),
@@ -208,7 +208,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         // paydb://<acct>...
         //
         if (PayDbUri.parse(uri.toString()) != null) {
-          var tx = await Navigator.push<Tx>(
+          var tx = await Navigator.push(
             context,
             MaterialPageRoute(
                 builder: (context) => SendScreen(_testnet, _account.email, _fee, uri.toString(), _balance)),
@@ -865,7 +865,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         // waves address or uri
         var result = parseRecipientOrWavesUri(_testnet, value);
         if (result != null) {
-          var tx = await Navigator.push<Tx>(
+          var tx = await Navigator.push(
             context,
             MaterialPageRoute(
                 builder: (context) => SendScreen(_testnet, _wallet.mnemonic, _fee, value, _balance)),
@@ -887,7 +887,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
       case TokenType.PayDB:
         // paydb recipient or uri
         if (paydbParseValid(value)) {
-          var tx = await Navigator.push<Tx>(
+          var tx = await Navigator.push(
             context,
             MaterialPageRoute(
                 builder: (context) => SendScreen(_testnet, _account.email, _fee, value, _balance)),
@@ -909,7 +909,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   }
 
   void _send() async {
-    var tx = await Navigator.push<Tx>(
+    var tx = await Navigator.push(
       context,
       MaterialPageRoute(
           builder: (context) => SendScreen(_testnet, _mnemonicOrAccount(), AppTokenType == TokenType.Waves ? _fee : Decimal.fromInt(0), '', _balance)),
