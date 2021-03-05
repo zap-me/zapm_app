@@ -28,7 +28,7 @@ import 'settlement.dart';
 import 'settings.dart';
 import 'prefs.dart';
 import 'new_mnemonic_form.dart';
-import 'account_login_form.dart';
+import 'account_forms.dart';
 import 'transactions.dart';
 import 'merchant.dart';
 import 'recovery_form.dart';
@@ -445,6 +445,33 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         });
   }
 
+  Future<bool> _directLoginAccountDialog(BuildContext context) async {
+    assert(AppTokenType == TokenType.PayDB);
+    return await showDialog<bool>(
+        context: context,
+        barrierDismissible: true,
+        builder: (BuildContext context) {
+          return SimpleDialog(
+            title: const Text("User registration in process"),
+            children: <Widget>[
+              Center(child: const Text("Complete by confirming your email", style: TextStyle(fontSize: 10))),
+              SimpleDialogOption(
+                onPressed: () {
+                  Navigator.pop(context, true);
+                },
+                child: const Text("I have confirmed my email (login now)"),
+              ),
+              SimpleDialogOption(
+                onPressed: () {
+                  Navigator.pop(context, false);
+                },
+                child: const Text("I will confirm my email later"),
+              ),
+            ],
+          );
+        });
+  }
+
   Future<NoAccountAction> _noAccountDialog(BuildContext context) async {
     assert(AppTokenType == TokenType.PayDB);
     var server = await paydbServer();
@@ -481,7 +508,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   Future<String> _recoverMnemonic(BuildContext context) {
     return Navigator.push<String>(context, MaterialPageRoute(builder: (context) => RecoveryForm()));
   }
-
+  
   Future<String> _recoverSeed(BuildContext context) async {
     String seed = "";
     return showDialog<String>(
@@ -593,6 +620,31 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     }
   }
 
+  Future<String> _paydbLogin(AccountLogin login) async {
+    var device = 'app';
+    if (Platform.isAndroid)
+      device = (await DeviceInfoPlugin().androidInfo).model;
+    if (Platform.isIOS)
+      device = (await DeviceInfoPlugin().iosInfo).utsname.machine;
+    var date = DateTime.now().toIso8601String().split('T').first;
+    var deviceName = '$device - $date';
+    var result = await paydbApiKeyCreate(login.email, login.password, deviceName);
+    switch (result.error) {
+      case PayDbError.Auth:
+        await alert(context, "Authentication not valid", "The login details you entered are not valid");
+        break;
+      case PayDbError.Network:
+        await alert(context, "Network error", "A network error occured when trying to login");
+        break;
+      case PayDbError.None:
+        // write api key
+        await Prefs.paydbApiKeySet(result.apikey.token);
+        await Prefs.paydbApiSecretSet(result.apikey.secret);
+        return login.email;
+    }
+    return null;
+  }
+
   void _noAccount() async {
     assert(AppTokenType == TokenType.PayDB);
     while (true) {
@@ -600,13 +652,25 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
       var action = await _noAccountDialog(context);
       switch (action) {
         case NoAccountAction.Register:
-          //TODO
-          await alert(context, "not yet implemented", "soz");
           // show register form
-          /*await Navigator.push(
+          var registration = await Navigator.push<AccountRegistration>(
             context,
             MaterialPageRoute(builder: (context) => AccountRegisterForm()),
-          );*/
+          );
+          if (registration== null)
+            break;
+          var result = await paydbUserRegister(registration.firstName, registration.lastName, registration.email, registration.password);
+          switch (result) {
+            case PayDbError.Auth:
+            case PayDbError.Network:
+              await alert(context, "Network error", "A network error occured when trying to login");
+              break;
+            case PayDbError.None:
+              if (await _directLoginAccountDialog(context))
+                // save account if login successful
+                accountEmail = await _paydbLogin(AccountLogin(registration.email, registration.password));
+              break;
+          }
           break;
         case NoAccountAction.Login:
           // login form
@@ -616,29 +680,8 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
           );
           if (login == null)
             break;
-          var device = 'app';
-          if (Platform.isAndroid)
-            device = (await DeviceInfoPlugin().androidInfo).model;
-          if (Platform.isIOS)
-            device = (await DeviceInfoPlugin().iosInfo).utsname.machine;
-          var date = DateTime.now().toIso8601String().split('T').first;
-          var deviceName = '$device - $date';
-          var result = await paydbApiKeyCreate(login.email, login.password, deviceName);
-          switch (result.error) {
-            case PayDbError.Auth:
-              await alert(context, "Authentication not valid", "The login details you entered are not valid");
-              break;
-            case PayDbError.Network:
-              await alert(context, "Network error", "A network error occured when trying to login");
-              break;
-            case PayDbError.None:
-              // write api key
-              await Prefs.paydbApiKeySet(result.apikey.token);
-              await Prefs.paydbApiSecretSet(result.apikey.secret);
-              // save account
-              accountEmail = login.email;
-              break;
-          }
+          // save account if login successful
+          accountEmail = await _paydbLogin(login);
           break;
         case NoAccountAction.SwitchServer:
           Prefs.testnetSet(!_testnet);

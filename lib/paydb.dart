@@ -156,6 +156,21 @@ bool paydbParseValid(String recipientOrUri) {
   return (paydbParseRecipient(recipientOrUri) != null || PayDbUri.parse(recipientOrUri) != null);
 }
 
+Future<PayDbError> paydbUserRegister(String firstName, String lastName, String email, String password) async {
+  var baseUrl = await _server();
+  var url = baseUrl + "user_register";
+  var body = jsonEncode({"first_name": firstName, "last_name": lastName, "email": email, "password": password, "photo": null});
+  var response = await postAndCatch(url, body);
+  if (response == null)
+    return PayDbError.Network;
+  if (response.statusCode == 200) {
+    return PayDbError.None;
+  } else if (response.statusCode == 400)
+    return PayDbError.Auth;
+  print(response.statusCode);
+  return PayDbError.Network;
+}
+
 Future<PayDbApiKeyResult> paydbApiKeyCreate(String email, String password, String deviceName) async {
   var baseUrl = await _server();
   var url = baseUrl + "api_key_create";

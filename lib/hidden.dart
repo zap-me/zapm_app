@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -6,6 +8,7 @@ import 'package:zapdart/colors.dart';
 
 import 'tests.dart';
 import 'multisig.dart';
+import 'prefs.dart';
 
 class HiddenScreen extends StatefulWidget {
   final bool testnet;
@@ -27,6 +30,13 @@ class _HiddenState extends State<HiddenScreen> {
     });
   }
 
+  void _deleteMnemonicAndAccount() {
+    Prefs.mnemonicSet('');
+    Prefs.paydbApiKeySet('');
+    Prefs.paydbApiSecretSet('');
+    exit(0);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,7 +52,8 @@ class _HiddenState extends State<HiddenScreen> {
             RaisedButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => MultisigScreen())),
               child: Text("Multisig")),
             ListTile(title: Text("FCM Registration Token"), subtitle: Text("${widget.fcmRegistrationToken}")),
-            RaisedButton(onPressed: _copyFCMToken, child: Text("Copy FCM Registration Token"))
+            RaisedButton(onPressed: _copyFCMToken, child: Text("Copy FCM Registration Token")),
+            RaisedButton(onPressed: _deleteMnemonicAndAccount, child: Text("Delete Mnemonic/Account"))
           ],
         ),
       )
