@@ -1,14 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:email_validator/email_validator.dart';
+import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 
-class AccountRegistration {
-  final String firstName;
-  final String lastName;
-  final String email;
-  final String password;
-
-  AccountRegistration(this.firstName, this.lastName, this.email, this.password);
-}
+import 'paydb.dart';
 
 class AccountLogin {
   final String email;
@@ -36,6 +32,33 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
   final TextEditingController _passwordConfirmController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
+  String _imgString;
+  String _imgType;
+
+  @protected
+  @mustCallSuper
+  void initState() {
+    super.initState();
+  }
+  
+  void _imgFromCamera() async {
+  var file = await ImagePicker().getImage(source: ImageSource.camera, imageQuality: 50);
+  var imgString = base64Encode(await file.readAsBytes());
+  setState(() {
+    _imgString = imgString;
+    _imgType = 'raster';
+  });
+}
+
+void _imgFromGallery() async {
+  var file = await  ImagePicker().getImage(source: ImageSource.gallery, imageQuality: 50);
+  var imgString = base64Encode(await file.readAsBytes());
+  setState(() {
+    _imgString = imgString;
+    _imgType = 'raster';
+  });
+}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,7 +74,7 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
                 if (value.isEmpty)
                   return 'Please enter a first name';
                 return null;
-              }),
+            }),
             TextFormField(controller: _lastNameController,
               decoration: InputDecoration(labelText: 'Last Name'),
               keyboardType: TextInputType.name,
@@ -59,7 +82,19 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
                 if (value.isEmpty)
                   return 'Please enter a last name';
                 return null;
-              }),
+            }),
+            InputDecorator(decoration: InputDecoration(labelText: 'Profile Image'),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(children: [
+                    paydbAccountImage(_imgString, _imgType),
+                    IconButton(icon: Icon(Icons.folder_open), onPressed: _imgFromGallery),
+                    IconButton(icon: Icon(Icons.camera), onPressed: _imgFromCamera),
+                  ]),
+                ],
+              ),
+            ),
             TextFormField(controller: _emailController,
               decoration: InputDecoration(labelText: 'Email'),
               keyboardType: TextInputType.emailAddress,
@@ -69,14 +104,14 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
                 if (!EmailValidator.validate(value))
                   return 'Invalid email';
                 return null;
-              }),
+            }),
             TextFormField(controller: _passwordController, obscureText: true,
               decoration: InputDecoration(labelText: 'Password'),
               validator: (value) {
                 if (value.isEmpty)
                   return 'Please enter a password';
                 return null;
-              }),
+            }),
             TextFormField(controller: _passwordConfirmController, obscureText: true,
               decoration: InputDecoration(labelText: 'Password Confirmation'),
               validator: (value) {
@@ -85,12 +120,13 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
                 if (value != _passwordController.text)
                   return 'Password does not match';
                 return null;
-              }),
+            }),
             RaisedButton(
               child: Text("Ok"),
-              onPressed: () {
+              onPressed: () async {
                 if (_formKey.currentState.validate()) {
-                  var accountReg = AccountRegistration(_firstNameController.text, _lastNameController.text, _emailController.text, _passwordController.text);
+                  var accountReg = AccountRegistration(_firstNameController.text, _lastNameController.text, _emailController.text, _passwordController.text,
+                    _imgString, _imgType);
                   Navigator.of(context).pop(accountReg);
                 }
               },

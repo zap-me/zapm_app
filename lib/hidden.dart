@@ -38,7 +38,6 @@ class _HiddenState extends State<HiddenScreen> {
     Prefs.mnemonicSet('');
     Prefs.paydbApiKeySet('');
     Prefs.paydbApiSecretSet('');
-    exit(0);
   }
 
   void _paydbIssue() async {

@@ -659,7 +659,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
           );
           if (registration== null)
             break;
-          var result = await paydbUserRegister(registration.firstName, registration.lastName, registration.email, registration.password);
+          var result = await paydbUserRegister(registration);
           switch (result) {
             case PayDbError.Auth:
             case PayDbError.Network:
@@ -689,7 +689,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
           break;
       }
       if (accountEmail != null && accountEmail.isNotEmpty) {
-        _account = PayDbAccount(accountEmail);
+        _account = PayDbAccount(accountEmail, null, null);
         await alert(context, "Login successful", ":)");
         // update token key details now we have an account
         _setTokenKeyDetails();
@@ -813,7 +813,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         var result = await paydbUserInfo();
         switch (result.error) {
           case PayDbError.None:
-            _account = PayDbAccount(result.info.email);
+            _account = PayDbAccount(result.info.email, result.info.photo, result.info.photoType);
             break;
           case PayDbError.Auth:
             await Prefs.paydbApiKeySet(null);
@@ -1119,6 +1119,12 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
               padding: const EdgeInsets.only(top: 28.0),
               child: Text('${_addrOrAccount()}:', style: TextStyle(color: ZapBlackMed, fontWeight: FontWeight.w700), textAlign: TextAlign.center),
             ),
+            Visibility(
+              visible: AppTokenType == TokenType.PayDB,
+              child: Container(
+                padding: const EdgeInsets.only(top: 18.0),
+                child: paydbAccountImage(_account?.photo, _account?.photoType),
+            )),
             Container(
               padding: const EdgeInsets.only(top: 18.0),
               child: Text(_addrOrAccountValue(), style: TextStyle(color: ZapBlackLight), textAlign: TextAlign.center),

@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:decimal/decimal.dart';
 import 'package:http/http.dart' as http;
 import 'package:email_validator/email_validator.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import 'hmac.dart';
 import 'config.dart';
@@ -48,39 +50,50 @@ class PayDbUri {
   }
 
   static PayDbUri parse(String uri) {
-  //
-  // paydb://<email>?amount=<AMOUNT_CENTS>&attachment=<ATTACHMENT>
-  //
-  var account = '';
-  var amount = Decimal.fromInt(0);
-  var attachment = '';
-  if (uri.length > 8 && uri.substring(0, 8).toLowerCase() == 'paydb://') {
-    var parts = uri.substring(8).split('?');
-    if (parts.length == 2) {
-      account = parts[0];
-      if (account.endsWith('/'))
-        account = account.substring(0, account.length - 1);
-      parts = parts[1].split('&');
-      for (var part in parts) {
-        var res = parseUriParameter(part, 'amount');
-        if (res != null) amount = Decimal.parse(res) / Decimal.fromInt(100);
-        res = parseUriParameter(part, 'attachment');
-        if (res != null) attachment = res;
+    //
+    // paydb://<email>?amount=<AMOUNT_CENTS>&attachment=<ATTACHMENT>
+    //
+    var account = '';
+    var amount = Decimal.fromInt(0);
+    var attachment = '';
+    if (uri.length > 8 && uri.substring(0, 8).toLowerCase() == 'paydb://') {
+      var parts = uri.substring(8).split('?');
+      if (parts.length == 2) {
+        account = parts[0];
+        if (account.endsWith('/'))
+          account = account.substring(0, account.length - 1);
+        parts = parts[1].split('&');
+        for (var part in parts) {
+          var res = parseUriParameter(part, 'amount');
+          if (res != null) amount = Decimal.parse(res) / Decimal.fromInt(100);
+          res = parseUriParameter(part, 'attachment');
+          if (res != null) attachment = res;
+        }
       }
+      return PayDbUri(account, amount, attachment);
     }
-    return PayDbUri(account, amount, attachment);
+    return null;
   }
-  return null;
 }
 
+class AccountRegistration {
+  final String firstName;
+  final String lastName;
+  final String email;
+  final String password;
+  final String photo;
+  final String photoType;
+
+  AccountRegistration(this.firstName, this.lastName, this.email, this.password, this.photo, this.photoType);
 }
 
 class UserInfo {
   final String email;
   final int balance;
   final String photo;
+  final String photoType;
 
-  UserInfo(this.email, this.balance, this.photo);
+  UserInfo(this.email, this.balance, this.photo, this.photoType);
 }
 
 class UserInfoResult {
@@ -142,6 +155,17 @@ Future<http.Response> postAndCatch(String url, String body, {Map<String, String>
   }
 }
 
+Widget paydbAccountImage(String imgString, String imgType) {
+  const size = 40.0;
+  if (imgString != null) {
+    if (imgType == 'raster')
+      return Image.memory(base64Decode(imgString), width: size, height: size);
+    if (imgType == 'svg')
+      return SvgPicture.string(imgString, width: size, height: size);
+  }
+  return SvgPicture.asset('assets/user.svg', width: size, height: size);
+}
+
 Future<String> paydbServer() async {
   return await _server();
 }
@@ -156,10 +180,10 @@ bool paydbParseValid(String recipientOrUri) {
   return (paydbParseRecipient(recipientOrUri) != null || PayDbUri.parse(recipientOrUri) != null);
 }
 
-Future<PayDbError> paydbUserRegister(String firstName, String lastName, String email, String password) async {
+Future<PayDbError> paydbUserRegister(AccountRegistration reg) async {
   var baseUrl = await _server();
   var url = baseUrl + "user_register";
-  var body = jsonEncode({"first_name": firstName, "last_name": lastName, "email": email, "password": password, "photo": null});
+  var body = jsonEncode({"first_name": reg.firstName, "last_name": reg.lastName, "email": reg.email, "password": reg.password, "photo": reg.photo, "photo_type": reg.photoType});
   var response = await postAndCatch(url, body);
   if (response == null)
     return PayDbError.Network;
@@ -202,7 +226,7 @@ Future<UserInfoResult> paydbUserInfo() async {
     return UserInfoResult(null, PayDbError.Network);
   if (response.statusCode == 200) {
     var jsnObj = json.decode(response.body);
-    var info = UserInfo(jsnObj["email"], jsnObj["balance"], jsnObj["photo"]);
+    var info = UserInfo(jsnObj["email"], jsnObj["balance"], jsnObj["photo"], jsnObj["photo_type"]);
     return UserInfoResult(info, PayDbError.None);
   } else if (response.statusCode == 400)
     return UserInfoResult(null, PayDbError.Auth);

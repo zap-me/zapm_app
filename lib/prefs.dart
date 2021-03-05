@@ -19,8 +19,10 @@ class WavesWallet {
 
 class PayDbAccount {
   final String email;
+  final String photo;
+  final String photoType;
 
-  PayDbAccount(this.email);
+  PayDbAccount(this.email, this.photo, this.photoType);
 }
 
 class PrefHelper {
