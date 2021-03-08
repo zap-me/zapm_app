@@ -35,6 +35,7 @@ class SendFormState extends State<SendForm> {
   final _amountController = TextEditingController();
   final _msgController = TextEditingController();
   String _attachment;
+  Widget _recipientImage;
 
   bool setRecipientOrUri(String recipientOrUri) {
     switch (AppTokenType) {
@@ -47,6 +48,7 @@ class SendFormState extends State<SendForm> {
         else if (result != null) {
           var parts = parseWavesUri(widget._testnet, recipientOrUri);
           _recipientController.text = parts.address;
+          updateRecipient(parts.address);
           _amountController.text = parts.amount.toString();
           _attachment = Uri.decodeFull(parts.attachment);
           _msgController.text = '';
@@ -58,11 +60,13 @@ class SendFormState extends State<SendForm> {
         var result = paydbParseRecipient(recipientOrUri);
         if (result == recipientOrUri) {
           _recipientController.text = recipientOrUri;
+          updateRecipient(recipientOrUri);
           return true;
         }
         var parts = PayDbUri.parse(recipientOrUri);
         if (parts != null) {
           _recipientController.text = parts.account;
+          updateRecipient(parts.account);
           _amountController.text = parts.amount.toString();
           _attachment = Uri.decodeFull(parts.attachment);
           _msgController.text = '';
@@ -72,6 +76,20 @@ class SendFormState extends State<SendForm> {
         return false;
     }
     return false;
+  }
+
+  void updateRecipient(String recipient) async {
+    if (AppTokenType == TokenType.PayDB) {
+      var recipientImage;
+      if (paydbRecipientCheck(recipient)) {
+        var result = await paydbUserInfo(email: recipient);
+        if (result.error == PayDbError.None)
+          recipientImage = paydbAccountImage(result.info.photo, result.info.photoType);
+      }
+      setState(() {
+        _recipientImage = recipientImage;
+      });
+    }
   }
 
   void updateAttachment(String msg) async {
@@ -158,6 +176,11 @@ class SendFormState extends State<SendForm> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
           Center(heightFactor: 3, child: Text('send $AssetShortNameLower\n  ', style: TextStyle(color: ZapWhite, fontWeight: FontWeight.bold), textAlign: TextAlign.center)),
+          Visibility(
+            visible: _recipientImage != null,
+            child: Container(
+              child: _recipientImage
+          )),
           TextFormField(
             controller: _recipientController,
             keyboardType: TextInputType.text,
@@ -192,6 +215,7 @@ class SendFormState extends State<SendForm> {
               }
               return null;
             },
+            onChanged: updateRecipient,
           ),
           TextFormField(
             controller: _amountController,

@@ -157,7 +157,7 @@ Future<http.Response> postAndCatch(String url, String body, {Map<String, String>
 
 Widget paydbAccountImage(String imgString, String imgType) {
   const size = 40.0;
-  if (imgString != null) {
+  if (imgString != null && imgString.isNotEmpty) {
     if (imgType == 'raster')
       return Image.memory(base64Decode(imgString), width: size, height: size);
     if (imgType == 'svg')
@@ -212,14 +212,14 @@ Future<PayDbApiKeyResult> paydbApiKeyCreate(String email, String password, Strin
   return PayDbApiKeyResult(null, PayDbError.Network);
 }
 
-Future<UserInfoResult> paydbUserInfo() async {
+Future<UserInfoResult> paydbUserInfo({String email}) async {
   var baseUrl = await _server();
   var url = baseUrl + "user_info";
   var apikey = await Prefs.paydbApiKeyGet();
   var apisecret = await Prefs.paydbApiSecretGet();
   checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
-  var body = jsonEncode({"api_key": apikey, "nonce": nonce, "email": null});
+  var body = jsonEncode({"api_key": apikey, "nonce": nonce, "email": email});
   var sig = createHmacSig(apisecret, body);
   var response = await postAndCatch(url, body, extraHeaders: {"X-Signature": sig});
   if (response == null)

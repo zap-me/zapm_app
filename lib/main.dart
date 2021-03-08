@@ -171,6 +171,16 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     return null;
   }
 
+  Widget _profileImage() {
+    switch (AppTokenType) {
+      case TokenType.Waves:
+        return SizedBox();
+      case TokenType.PayDB:
+        return Padding(child: paydbAccountImage(_account?.photo, _account?.photoType), padding: EdgeInsets.only(right: 20));
+    }
+    return SizedBox();
+  }
+
   String _addressOrAccount() {
     switch (AppTokenType) {
       case TokenType.Waves:
@@ -1119,15 +1129,15 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
               padding: const EdgeInsets.only(top: 28.0),
               child: Text('${_addrOrAccount()}:', style: TextStyle(color: ZapBlackMed, fontWeight: FontWeight.w700), textAlign: TextAlign.center),
             ),
-            Visibility(
-              visible: AppTokenType == TokenType.PayDB,
-              child: Container(
-                padding: const EdgeInsets.only(top: 18.0),
-                child: paydbAccountImage(_account?.photo, _account?.photoType),
-            )),
             Container(
               padding: const EdgeInsets.only(top: 18.0),
-              child: Text(_addrOrAccountValue(), style: TextStyle(color: ZapBlackLight), textAlign: TextAlign.center),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _profileImage(),
+                  Text(_addrOrAccountValue(), style: TextStyle(color: ZapBlackLight), textAlign: TextAlign.center),
+                ],
+              )
             ),
             Divider(),
             Container(
