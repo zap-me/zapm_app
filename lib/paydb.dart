@@ -87,6 +87,13 @@ class AccountRegistration {
   AccountRegistration(this.firstName, this.lastName, this.email, this.password, this.photo, this.photoType);
 }
 
+class AccountRequestApiKey {
+  final String email;
+  final String deviceName;
+
+  AccountRequestApiKey(this.email, this.deviceName);
+}
+
 class UserInfo {
   final String email;
   final int balance;
@@ -115,6 +122,13 @@ class PayDbApiKeyResult {
   final PayDbError error;
 
   PayDbApiKeyResult(this.apikey, this.error);
+}
+
+class PayDbApiKeyRequestResult {
+  final String token;
+  final PayDbError error;
+
+  PayDbApiKeyRequestResult(this.token, this.error);
 }
 
 class PayDbTx {
@@ -199,6 +213,40 @@ Future<PayDbApiKeyResult> paydbApiKeyCreate(String email, String password, Strin
   var baseUrl = await _server();
   var url = baseUrl + "api_key_create";
   var body = jsonEncode({"email": email, "password": password, "device_name": deviceName});
+  var response = await postAndCatch(url, body);
+  if (response == null)
+    return PayDbApiKeyResult(null, PayDbError.Network);
+  if (response.statusCode == 200) {
+    var jsnObj = json.decode(response.body);
+    var info = PayDbApiKey(jsnObj["token"], jsnObj["secret"]);
+    return PayDbApiKeyResult(info, PayDbError.None);
+  } else if (response.statusCode == 400)
+    return PayDbApiKeyResult(null, PayDbError.Auth);
+  print(response.statusCode);
+  return PayDbApiKeyResult(null, PayDbError.Network);
+}
+
+Future<PayDbApiKeyRequestResult> paydbApiKeyRequest(String email, String deviceName) async {
+  var baseUrl = await _server();
+  var url = baseUrl + "api_key_request";
+  var body = jsonEncode({"email": email, "device_name": deviceName});
+  var response = await postAndCatch(url, body);
+  if (response == null)
+    return PayDbApiKeyRequestResult(null, PayDbError.Network);
+  if (response.statusCode == 200) {
+    var jsnObj = json.decode(response.body);
+    var token = jsnObj["token"];
+    return PayDbApiKeyRequestResult(token, PayDbError.None);
+  } else if (response.statusCode == 400)
+    return PayDbApiKeyRequestResult(null, PayDbError.Auth);
+  print(response.statusCode);
+  return PayDbApiKeyRequestResult(null, PayDbError.Network);
+}
+
+Future<PayDbApiKeyResult> paydbApiKeyClaim(String token) async {
+  var baseUrl = await _server();
+  var url = baseUrl + "api_key_claim";
+  var body = jsonEncode({"token": token});
   var response = await postAndCatch(url, body);
   if (response == null)
     return PayDbApiKeyResult(null, PayDbError.Network);

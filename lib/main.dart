@@ -107,7 +107,7 @@ class ZapHomePage extends StatefulWidget {
 }
 
 enum NoWalletAction { CreateMnemonic, RecoverMnemonic, RecoverRaw, ScanMerchantApiKey }
-enum NoAccountAction { Register, Login, SwitchServer }
+enum NoAccountAction { Register, Login, RequestApiKey, SwitchServer }
 
 class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   Socket _merchantSocket; // merchant portal websocket
@@ -482,6 +482,33 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         });
   }
 
+  Future<bool> _waitApiKeyAccountDialog(BuildContext context) async {
+    assert(AppTokenType == TokenType.PayDB);
+    return await showDialog<bool>(
+        context: context,
+        barrierDismissible: true,
+        builder: (BuildContext context) {
+          return SimpleDialog(
+            title: const Text("API KEY request in process"),
+            children: <Widget>[
+              Center(child: const Text("Complete by confirming your email", style: TextStyle(fontSize: 10))),
+              SimpleDialogOption(
+                onPressed: () {
+                  Navigator.pop(context, true);
+                },
+                child: const Text("I have confirmed my email (claim API KEY now)"),
+              ),
+              SimpleDialogOption(
+                onPressed: () {
+                  Navigator.pop(context, false);
+                },
+                child: const Text("Cancel"),
+              ),
+            ],
+          );
+        });
+  }
+
   Future<NoAccountAction> _noAccountDialog(BuildContext context) async {
     assert(AppTokenType == TokenType.PayDB);
     var server = await paydbServer();
@@ -503,6 +530,12 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
                   Navigator.pop(context, NoAccountAction.Login);
                 },
                 child: const Text("Login to your account"),
+              ),
+              SimpleDialogOption(
+                onPressed: () {
+                  Navigator.pop(context, NoAccountAction.RequestApiKey);
+                },
+                child: const Text("Request API KEY from your account"),
               ),
               SimpleDialogOption(
                 onPressed: () {
@@ -630,14 +663,18 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     }
   }
 
-  Future<String> _paydbLogin(AccountLogin login) async {
+  Future<String> _deviceName() async {
     var device = 'app';
     if (Platform.isAndroid)
       device = (await DeviceInfoPlugin().androidInfo).model;
     if (Platform.isIOS)
       device = (await DeviceInfoPlugin().iosInfo).utsname.machine;
     var date = DateTime.now().toIso8601String().split('T').first;
-    var deviceName = '$device - $date';
+    return '$device - $date';
+  }
+
+  Future<String> _paydbLogin(AccountLogin login) async {
+    var deviceName = await _deviceName();
     var result = await paydbApiKeyCreate(login.email, login.password, deviceName);
     switch (result.error) {
       case PayDbError.Auth:
@@ -653,6 +690,25 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         return login.email;
     }
     return null;
+  }
+
+  Future<String> _paydbApiKeyClaim(AccountRequestApiKey req, String token) async {
+    var result = await paydbApiKeyClaim(token);
+    switch (result.error) {
+      case PayDbError.Auth:
+        await alert(context, "Authentication not valid", "The login details you entered are not valid");
+        break;
+      case PayDbError.Network:
+        await alert(context, "Network error", "A network error occured when trying to login");
+        break;
+      case PayDbError.None:
+        // write api key
+        await Prefs.paydbApiKeySet(result.apikey.token);
+        await Prefs.paydbApiSecretSet(result.apikey.secret);
+        return req.email;
+    }
+    return null;
+
   }
 
   void _noAccount() async {
@@ -692,6 +748,28 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
             break;
           // save account if login successful
           accountEmail = await _paydbLogin(login);
+          break;
+        case NoAccountAction.RequestApiKey:
+          // request api key form
+          var deviceName = await _deviceName();
+          var req = await Navigator.push<AccountRequestApiKey>(
+            context,
+            MaterialPageRoute(builder: (context) => AccountRequestApiKeyForm(deviceName)),
+          );
+          if (req == null)
+            break;
+          var result = await paydbApiKeyRequest(req.email, req.deviceName);
+          switch (result.error) {
+            case PayDbError.Auth:
+            case PayDbError.Network:
+              await alert(context, "Network error", "A network error occured when trying to login");
+              break;
+            case PayDbError.None:
+              if (await _waitApiKeyAccountDialog(context))
+                // claim api key
+                accountEmail = await _paydbApiKeyClaim(req, result.token);
+              break;
+          }
           break;
         case NoAccountAction.SwitchServer:
           Prefs.testnetSet(!_testnet);

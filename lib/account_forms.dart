@@ -307,3 +307,74 @@ class AccountLoginFormState extends State<AccountLoginForm> {
     );
   }
 }
+
+class AccountRequestApiKeyForm extends StatefulWidget {
+  final String deviceName;
+  final String instructions;
+  
+  AccountRequestApiKeyForm(this.deviceName, {this.instructions}) : super();
+
+  @override
+  AccountRequestApiKeyFormState createState() {
+    return AccountRequestApiKeyFormState();
+  }
+}
+
+class AccountRequestApiKeyFormState extends State<AccountRequestApiKeyForm> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _deviceNameController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  @protected
+  @mustCallSuper
+  void initState() {
+    super.initState();
+    _deviceNameController.text = widget.deviceName;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: PreferredSize(child: Container(), preferredSize: Size(0, 0),),
+      body: Form(key: _formKey,
+        child: Container(padding: EdgeInsets.all(20), child: Center(child: Column(
+          children: <Widget>[
+            Text(widget.instructions == null ? "Enter your email and device name to request your api key" : widget.instructions),
+            TextFormField(controller: _emailController,
+              decoration: InputDecoration(labelText: 'Email'),
+              keyboardType: TextInputType.emailAddress,
+              validator: (value) {
+                if (value.isEmpty)
+                  return 'Please enter an email';
+                if (!EmailValidator.validate(value))
+                  return 'Invalid email';
+                return null;
+              }),
+            TextFormField(controller: _deviceNameController,
+              decoration: InputDecoration(labelText: 'Device Name'),
+              validator: (value) {
+                if (value.isEmpty)
+                  return 'Please enter a device name';
+                return null;
+              }),
+            RaisedButton(
+              child: Text("Ok"),
+              onPressed: () {
+                if (_formKey.currentState.validate()) {
+                  var req = AccountRequestApiKey(_emailController.text, _deviceNameController.text);
+                  Navigator.of(context).pop(req);
+                }
+              },
+            ),
+            RaisedButton(
+              child: Text("Cancel"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        )))
+      )
+    );
+  }
+}
