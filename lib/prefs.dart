@@ -5,6 +5,7 @@ import 'package:ini/ini.dart';
 import 'package:zapdart/libzap.dart';
 
 import 'config.dart';
+import 'paydb.dart';
 
 class WavesWallet {
   final String mnemonic;
@@ -21,8 +22,9 @@ class PayDbAccount {
   final String email;
   final String photo;
   final String photoType;
+  final Iterable<PayDbPermission> permissions;
 
-  PayDbAccount(this.email, this.photo, this.photoType);
+  PayDbAccount(this.email, this.photo, this.photoType, this.permissions);
 }
 
 class PrefHelper {
@@ -118,7 +120,7 @@ class Prefs {
     return await prefs.getBool("testnet", TestnetDefault);
   }
 
-  static void testnetSet(bool value) async {
+  static Future<void> testnetSet(bool value) async {
     final prefs = PrefHelper();
     await prefs.setBool("testnet", value);
 

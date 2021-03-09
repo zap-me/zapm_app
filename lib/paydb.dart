@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:async';
 import 'dart:convert';
 import 'package:decimal/decimal.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
@@ -23,6 +24,10 @@ const ActionDestroy = 'destroy';
 
 enum PayDbError {
   None, Network, Auth
+}
+
+enum PayDbPermission {
+  receive, balance, history, transfer, issue
 }
 
 class PayDbUri {
@@ -99,8 +104,9 @@ class UserInfo {
   final int balance;
   final String photo;
   final String photoType;
+  final Iterable<PayDbPermission> permissions;
 
-  UserInfo(this.email, this.balance, this.photo, this.photoType);
+  UserInfo(this.email, this.balance, this.photo, this.photoType, this.permissions);
 }
 
 class UserInfoResult {
@@ -164,6 +170,9 @@ Future<http.Response> postAndCatch(String url, String body, {Map<String, String>
     print(e);
     return null;
   } on TimeoutException catch(e) {
+    print(e);
+    return null;
+  } on http.ClientException catch(e) {
     print(e);
     return null;
   }
@@ -274,7 +283,12 @@ Future<UserInfoResult> paydbUserInfo({String email}) async {
     return UserInfoResult(null, PayDbError.Network);
   if (response.statusCode == 200) {
     var jsnObj = json.decode(response.body);
-    var info = UserInfo(jsnObj["email"], jsnObj["balance"], jsnObj["photo"], jsnObj["photo_type"]);
+    var perms = List<PayDbPermission>();
+    for (var permName in jsnObj["permissions"])
+      for (var perm in PayDbPermission.values)
+        if (describeEnum(perm) == permName) 
+          perms.add(perm);
+    var info = UserInfo(jsnObj["email"], jsnObj["balance"], jsnObj["photo"], jsnObj["photo_type"], perms);
     return UserInfoResult(info, PayDbError.None);
   } else if (response.statusCode == 400)
     return UserInfoResult(null, PayDbError.Auth);

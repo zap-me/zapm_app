@@ -108,6 +108,8 @@ class ZapHomePage extends StatefulWidget {
 
 enum NoWalletAction { CreateMnemonic, RecoverMnemonic, RecoverRaw, ScanMerchantApiKey }
 enum NoAccountAction { Register, Login, RequestApiKey, SwitchServer }
+enum Capability { Receive, Balance, History, Spend }
+enum InitTokenDetailsResult { None, NoData, Auth, Network }
 
 class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   Socket _merchantSocket; // merchant portal websocket
@@ -589,7 +591,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     );
   }
 
-  void _noWallet() async {
+  Future<void> _noWallet() async {
     assert(AppTokenType == TokenType.Waves);
     var libzap = LibZap();
     while (true) {
@@ -649,15 +651,11 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
       if (mnemonic != null && mnemonic.isNotEmpty) {
         await Prefs.mnemonicSet(mnemonic);
         await alert(context, "Recovery words saved", ":)");
-        // update token key details now we have a mnemonic
-        _setTokenKeyDetails();
         break;
       }
       if (address != null && address.isNotEmpty) {
         await Prefs.addressSet(address);
         await alert(context, "Address saved", ":)");
-        // update token key details now we have an address
-        _setTokenKeyDetails();
         break;
       }
     }
@@ -711,7 +709,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
 
   }
 
-  void _noAccount() async {
+  Future<void> _noAccount() async {
     assert(AppTokenType == TokenType.PayDB);
     while (true) {
       String accountEmail;
@@ -777,10 +775,8 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
           break;
       }
       if (accountEmail != null && accountEmail.isNotEmpty) {
-        _account = PayDbAccount(accountEmail, null, null);
+        _account = PayDbAccount(accountEmail, null, null, []);
         await alert(context, "Login successful", ":)");
-        // update token key details now we have an account
-        _setTokenKeyDetails();
         break;
       }
     }
@@ -844,7 +840,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     return true;
   }
 
-  Future<bool> _setTokenKeyDetails() async {
+  Future<InitTokenDetailsResult> _initTokenDetails() async {
     _alerts.clear();
     // check apikey
     if (UseMerchantApi && !await Prefs.hasMerchantApiKey())
@@ -885,7 +881,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
             if (address != null && address.isNotEmpty) {
               _wallet = WavesWallet.justAddress(address);
             } else {
-              return false;
+              return InitTokenDetailsResult.NoData;
             }
           }
         } else if (_wallet.isMnemonic) {
@@ -897,18 +893,22 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
       case TokenType.PayDB:
         // check apikey
         if (!await Prefs.hasPaydbApiKey())
-          return false;
+          return InitTokenDetailsResult.NoData;
         var result = await paydbUserInfo();
         switch (result.error) {
           case PayDbError.None:
-            _account = PayDbAccount(result.info.email, result.info.photo, result.info.photoType);
+            _account = PayDbAccount(result.info.email, result.info.photo, result.info.photoType, result.info.permissions);
             break;
           case PayDbError.Auth:
-            await Prefs.paydbApiKeySet(null);
-            await Prefs.paydbApiKeySet(null);
-            return false;
+            var yes = await askYesNo(context, 'Authentication failed, delete credentials?');
+            if (yes) {
+              await Prefs.paydbApiKeySet(null);
+              await Prefs.paydbApiKeySet(null);
+            }
+            return InitTokenDetailsResult.Auth;
           case PayDbError.Network:
-            return false; //TODO: check this code path works (may need to pass error back?)
+            await alert(context, "Network error", "check your network settings before continuing");
+            return InitTokenDetailsResult.Network;
         }
         break;
     }
@@ -921,7 +921,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     // update merchant rates
     if (UseMerchantApi && await Prefs.hasMerchantApiKey())
       merchantRates().then((value) => _merchantRates = value);
-    return true;
+    return InitTokenDetailsResult.None;
   }
 
   void _showQrCode() {
@@ -1017,7 +1017,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     var deviceName = await Prefs.deviceNameGet();
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => TransactionsScreen(_addrOrAccountValue(), _testnet, _haveSeedOrAccount() ? null : deviceName, _merchantRates)),
+      MaterialPageRoute(builder: (context) => TransactionsScreen(_addrOrAccountValue(), _testnet, _haveCapabililty(Capability.Spend) ? null : deviceName, _merchantRates)),
     );
   }
 
@@ -1030,7 +1030,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
       context,
       MaterialPageRoute(builder: (context) => SettingsScreen(_pinExists, _mnemonicOrAccount(), _fcm)),
     );
-    _setTokenKeyDetails();
+    _initTokenDetails();
   }
 
   void _zapReward() async {
@@ -1073,12 +1073,32 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     }
   }
 
-  bool _haveSeedOrAccount() {
+  bool _haveCapabililty(Capability cap) {
     switch (AppTokenType) {
       case TokenType.Waves:
-        return _wallet != null && _wallet.isMnemonic;
+        switch (cap) {
+          case Capability.Receive:
+            return _wallet != null;
+          case Capability.Balance:
+          case Capability.History:
+          case Capability.Spend:
+            return _wallet != null && _wallet.isMnemonic;
+        }
+        break;
       case TokenType.PayDB:
-        return _account != null;
+        if (_account == null)
+          return false;
+        switch (cap) {
+          case Capability.Receive:
+            return _account.permissions.contains(PayDbPermission.receive);
+          case Capability.Balance:
+            return _account.permissions.contains(PayDbPermission.balance);
+          case Capability.History:
+            return _account.permissions.contains(PayDbPermission.history);
+          case Capability.Spend:
+            return _account.permissions.contains(PayDbPermission.transfer);
+        }
+        break;
     }
     return false;
   }
@@ -1108,17 +1128,19 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     var testnet = await Prefs.testnetGet();
     LibZap().networkParamsSet(AssetIdMainnet, AssetIdTestnet, NodeUrlMainnet, NodeUrlTestnet, testnet);
     // init wallet
-    var hasTokenKey = await _setTokenKeyDetails();
-    if (!hasTokenKey) {
-      switch (AppTokenType) {
-        case TokenType.Waves:
-          _noWallet();
-          break;
-        case TokenType.PayDB:
-          _noAccount();
-          break;
+    var tokenDetailsResult = InitTokenDetailsResult.NoData;
+    while (tokenDetailsResult != InitTokenDetailsResult.None) {
+      tokenDetailsResult = await _initTokenDetails();
+      if (tokenDetailsResult == InitTokenDetailsResult.NoData) {
+        switch (AppTokenType) {
+          case TokenType.Waves:
+            await _noWallet();
+            break;
+          case TokenType.PayDB:
+            await _noAccount();
+            break;
+        }
       }
-      _setTokenKeyDetails();
     }
     // webview
     _showHomepage();
@@ -1163,7 +1185,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
               child: AlertDrawer(_toggleAlerts, _alerts)
             ),
             Visibility(
-              visible: _haveSeedOrAccount(),
+              visible: _haveCapabililty(Capability.Balance),
               child: Column(children: <Widget>[
                 Container(
                   padding: const EdgeInsets.only(top: 28.0),
@@ -1203,29 +1225,35 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
                 ),
               ],)
             ),
-            Container(
-              padding: const EdgeInsets.only(top: 28.0),
-              child: Text('${_addrOrAccount()}:', style: TextStyle(color: ZapBlackMed, fontWeight: FontWeight.w700), textAlign: TextAlign.center),
-            ),
-            Container(
-              padding: const EdgeInsets.only(top: 18.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _profileImage(),
-                  Text(_addrOrAccountValue(), style: TextStyle(color: ZapBlackLight), textAlign: TextAlign.center),
-                ],
-              )
-            ),
-            Divider(),
-            Container(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  RoundedButton(_showQrCode, ZapBlue, ZapWhite, 'view QR code', icon: MaterialCommunityIcons.qrcode_scan, minWidth: MediaQuery.of(context).size.width / 2 - 20),
-                  RoundedButton(_copyAddrOrAccount, ZapWhite, ZapBlue, 'copy ${_addrOrAccount()}', minWidth: MediaQuery.of(context).size.width / 2 - 20),
-                ]
-              )
+
+
+            Visibility(
+              visible: _haveCapabililty(Capability.Receive),
+              child: Column(children: <Widget>[
+                Container(
+                  padding: const EdgeInsets.only(top: 28.0),
+                  child: Text('${_addrOrAccount()}:', style: TextStyle(color: ZapBlackMed, fontWeight: FontWeight.w700), textAlign: TextAlign.center),
+                ),
+                Container(
+                  padding: const EdgeInsets.only(top: 18.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _profileImage(),
+                      Text(_addrOrAccountValue(), style: TextStyle(color: ZapBlackLight), textAlign: TextAlign.center),
+                  ])
+                ),
+                Divider(),
+                Container(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      RoundedButton(_showQrCode, ZapBlue, ZapWhite, 'view QR code', icon: MaterialCommunityIcons.qrcode_scan, minWidth: MediaQuery.of(context).size.width / 2 - 20),
+                      RoundedButton(_copyAddrOrAccount, ZapWhite, ZapBlue, 'copy ${_addrOrAccount()}', minWidth: MediaQuery.of(context).size.width / 2 - 20),
+                    ]
+                  )
+                )
+              ])
             ),
             Container(
               //height: 300, ???
@@ -1237,20 +1265,23 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: <Widget>[
-                      _haveSeedOrAccount() ? SquareButton(_send, MaterialCommunityIcons.chevron_double_up, ZapYellow, 'SEND $AssetShortNameUpper') : null,
-                      _haveSeedOrAccount() ? SquareButton(_scanQrCode, MaterialCommunityIcons.qrcode_scan, ZapBlue, 'SCAN QR CODE') : null,
+                      _haveCapabililty(Capability.Spend) ? SquareButton(_send, MaterialCommunityIcons.chevron_double_up, ZapYellow, 'SEND $AssetShortNameUpper') : null,
+                      _haveCapabililty(Capability.Spend) ? SquareButton(_scanQrCode, MaterialCommunityIcons.qrcode_scan, ZapBlue, 'SCAN QR CODE') : null,
                       SquareButton(_receive, MaterialCommunityIcons.chevron_double_down, ZapGreen, 'RECEIVE $AssetShortNameUpper'),
                     ].where((child) => child != null).toList(),
                   ),
                   SizedBox.fromSize(size: Size(1, 10)),
-                  ListButton(_transactions, 'transactions'),
                   Visibility(
-                    visible: _haveSeedOrAccount() && UseReward,
+                    visible: _haveCapabililty(Capability.History),
+                    child: ListButton(_transactions, 'transactions'),
+                  ),
+                  Visibility(
+                    visible: _haveCapabililty(Capability.Spend) && UseReward,
                     child: 
                       ListButton(_zapReward, '$AssetShortNameLower rewards'),
                   ),
                   Visibility(
-                    visible: _haveSeedOrAccount() && UseSettlement,
+                    visible: _haveCapabililty(Capability.Spend) && UseSettlement,
                     child: 
                       ListButton(_settlement, 'make settlement'),
                   ),
