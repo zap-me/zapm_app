@@ -46,7 +46,7 @@ dependencies:
   firebase_messaging: ^7.0.3
   email_validator: ^1.0.6
   image_picker: ^0.6.7+22
-  extended_image: ^3.0.0-non-null-safety
+  extended_image: ^2.0.0
   image: ^2.1.19
 
   zapdart:
