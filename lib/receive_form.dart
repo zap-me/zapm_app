@@ -13,11 +13,14 @@ import 'hmac.dart';
 import 'merchant.dart';
 import 'paydb.dart';
 
+typedef TxNotificationCallback = void Function(String txid, String sender, String recipient, double amount, String attachment);
+
 class ReceiveForm extends StatefulWidget {
   final bool _testnet;
   final String _addressOrAccount;
+  final TxNotificationCallback _txNotification;
   
-  ReceiveForm(this._testnet, this._addressOrAccount) : super();
+  ReceiveForm(this._testnet, this._addressOrAccount, this._txNotification) : super();
 
   @override
   ReceiveFormState createState() {
@@ -37,7 +40,9 @@ class ReceiveFormState extends State<ReceiveForm> {
   String _amountType = UseMerchantApi ? 'nzd' : AssetShortNameLower;
   bool _validAmount = true;
   StreamSubscription<String> _uriSub;
-  Rates _rates;
+  List<String> _receivedTxs = List<String>();
+  Timer _checkReceivedTxTimer;
+  final int _initialTimestamp = (DateTime.now().millisecondsSinceEpoch / 1000).round();
 
   bool validQrData() {
     return _uri != null && _uri != API_LOADING && _uri != API_FAILED && _uri != NO_API_KEY;
@@ -95,6 +100,28 @@ class ReceiveFormState extends State<ReceiveForm> {
     return Future<bool>.value(true); 
   }
 
+  void onCheckReceivedTxTimeout(Timer timer) async {
+    switch (AppTokenType) {
+      case TokenType.Waves:
+        break;
+      case TokenType.PayDB:
+        var res = await paydbUserTransactions(0, 10);
+        if (res.error == PayDbError.None) {
+          for (var tx in res.txs) {
+            if (_receivedTxs.contains(tx.token))
+              continue;
+            if (tx.action != ActionTransfer)
+              continue;
+            if (tx.timestamp < _initialTimestamp)
+              continue;
+            widget._txNotification(tx.token, tx.sender, tx.recipient, tx.amount / 100.0, tx.attachment);
+            _receivedTxs.add(tx.token);
+          }
+        }
+        break;
+    }
+  }
+
   ReceiveFormState() : super() {
     _amountController.addListener(onAmountChanged);
   }
@@ -104,6 +131,16 @@ class ReceiveFormState extends State<ReceiveForm> {
   void initState() {
     super.initState();
     updateUriUi();
+    _checkReceivedTxTimer = Timer.periodic(Duration(seconds: 2), onCheckReceivedTxTimeout);
+  }
+
+
+
+  @protected
+  @mustCallSuper
+  void dispose() {
+    super.dispose();
+    _checkReceivedTxTimer.cancel();
   }
 
   @override

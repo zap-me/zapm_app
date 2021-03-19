@@ -363,7 +363,9 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     }
     // decode attachment
     if (attachment != null && attachment.isNotEmpty)
+      try {
         attachment = base58decodeString(attachment);
+      } catch(e) {};
     // show user overview of new tx
     showDialog(
       context: context,
@@ -389,8 +391,9 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         );
       }
     );
-    // alert server to update merchant tx table
-    merchantTx();
+    if (UseMerchantApi)
+      // alert server to update merchant tx table
+      merchantTx();
     // update balance
     _updateBalance();
   }
@@ -1009,7 +1012,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   void _receive() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => ReceiveScreen(_testnet, _addressOrAccount())),
+      MaterialPageRoute(builder: (context) => ReceiveScreen(_testnet, _addressOrAccount(), _txNotification)),
     );
   }
 
