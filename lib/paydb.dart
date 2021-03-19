@@ -51,22 +51,24 @@ class PayDbUri {
     }
     if (attachment != null && attachment.isNotEmpty)
       queryParts = _addPart(queryParts, 'attachment=$attachment');
-    return 'paydb://$account$queryParts';
+    return 'premiopay://$account$queryParts';
   }
 
   static PayDbUri parse(String uri) {
     //
-    // paydb://<email>?amount=<AMOUNT_CENTS>&attachment=<ATTACHMENT>
+    // premiopay://<email>?amount=<AMOUNT_CENTS>&attachment=<ATTACHMENT>
     //
     var account = '';
     var amount = Decimal.fromInt(0);
     var attachment = '';
-    if (uri.length > 8 && uri.substring(0, 8).toLowerCase() == 'paydb://') {
-      var parts = uri.substring(8).split('?');
-      if (parts.length == 2) {
+    if (uri.length > 12 && uri.substring(0, 12).toLowerCase() == 'premiopay://') {
+      var parts = uri.substring(12).split('?');
+      if (parts.length == 1 || parts.length == 2) {
         account = parts[0];
         if (account.endsWith('/'))
           account = account.substring(0, account.length - 1);
+      }
+      if (parts.length == 2) {
         parts = parts[1].split('&');
         for (var part in parts) {
           var res = parseUriParameter(part, 'amount');

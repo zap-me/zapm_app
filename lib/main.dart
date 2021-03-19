@@ -217,7 +217,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
       case TokenType.PayDB:
         // process paydb links
         //
-        // paydb://<acct>...
+        // premiopay://<acct>...
         //
         if (PayDbUri.parse(uri.toString()) != null) {
           var tx = await Navigator.push(

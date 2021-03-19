@@ -64,7 +64,7 @@
 			<string>PayDb Link</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>paydb</string>
+				<string>premiopay</string>
 			</array>
 		</dict>
 		<dict>
