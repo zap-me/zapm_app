@@ -11,13 +11,13 @@ enum TokenType {
 // the default testnet value
 const TestnetDefault = false;
 // the app title
-const AppTitle = 'Zap Retailer';
+const AppTitle = 'Zero';
 // all instances where the asset short name has the first letter capitalized
-const AssetShortName = 'Zap';
+const AssetShortName = 'Zero';
 // all instances where the asset short name is lower case
-const AssetShortNameLower = 'zap';
+const AssetShortNameLower = 'zero';
 // all instances where the asset short name is upper case
-const AssetShortNameUpper = 'ZAP';
+const AssetShortNameUpper = 'ZERO';
 // the 'zap' icon on the header of the home page
 const AssetHeaderIconPng = 'assets/icon.png';
 // the lightning icon on the home page balance widget
@@ -25,9 +25,9 @@ const AssetBalanceIconSvg = 'assets/icon-bolt.svg';
 // enable/disable reward UI/feature
 const UseReward = false;
 // enable/disable settlement UI/feature
-const UseSettlement = true;
+const UseSettlement = false;
 // enable/disable merchant api (including all references/conversions to NZD)
-const UseMerchantApi = true;
+const UseMerchantApi = false;
 // enable/disable a webview homepage (null = disabled)
 const String WebviewURL = null;
 
@@ -37,7 +37,7 @@ const TokenType AppTokenType = TokenType.Waves;
 // Waves settings
 // set these two to use a different mainnet/testnet asset id pair then the default zap asset ids.
 const String AssetIdMainnet = null;
-const String AssetIdTestnet = null;
+const String AssetIdTestnet = 'GLWABFd7KmPYXWLaubABdA4ePLkzNDp9ctar8Hb3x35S';
 // set these two to use a different mainnet/testnet node url pair then the default urls.
 const String NodeUrlMainnet = null;
 const String NodeUrlTestnet = null;
