@@ -13,6 +13,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'package:uni_links/uni_links.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:device_info/device_info.dart';
+import 'package:audioplayers/audio_cache.dart';
 
 
 import 'package:zapdart/colors.dart';
@@ -128,6 +129,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   Uri _previousUniUri;
   final Lock _previousUniUriLock = Lock();
   FCM _fcm;
+  final audioPlayer = AudioCache();
 
   _ZapHomePageState();
 
@@ -365,7 +367,9 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     if (attachment != null && attachment.isNotEmpty)
       try {
         attachment = base58decodeString(attachment);
-      } catch(e) {};
+      } catch(_) {};
+    // play audio file
+    audioPlayer.play('chaching.mp3');
     // show user overview of new tx
     showDialog(
       context: context,
