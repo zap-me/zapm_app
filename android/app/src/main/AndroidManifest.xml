@@ -9,7 +9,7 @@
 
     <application
         android:name=".Application"
-        android:label="Whitelabel Demo"
+        android:label="Frankie"
         android:requestLegacyExternalStorage="true"
         android:icon="@mipmap/launcher_icon">
         <meta-data

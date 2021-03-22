@@ -11,7 +11,7 @@ enum TokenType {
 // the default testnet value
 const TestnetDefault = false;
 // the app title
-const AppTitle = 'M Token';
+const AppTitle = 'Frankie';
 // all instances where the asset short name has the first letter capitalized
 const AssetShortName = 'MTOK';
 // all instances where the asset short name is lower case
@@ -56,10 +56,10 @@ const String CentrapayApiKey = 'PvfgoXxDv2FCzsgVsk1izM41e5tWd7C8AGuThG9M1';
 void initConfig() {
   overrideTheme(
     zapWhite: Colors.white,
-    zapYellow: Color.fromARGB(255, 255, 65, 93),
+    zapYellow: Color.fromARGB(255, 237, 29, 38),
     zapWarning: Colors.yellow,
     zapWarningLight: Colors.yellow[100],
-    zapBlue: Color.fromARGB(255, 7, 65, 173),
-    zapGreen: Color.fromARGB(255, 123, 216, 58),
+    zapBlue: Color.fromARGB(255, 23, 125, 57),
+    zapGreen: Colors.yellow,
     zapTextThemer: GoogleFonts.robotoTextTheme);
 }
