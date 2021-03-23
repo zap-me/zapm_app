@@ -130,6 +130,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   final Lock _previousUniUriLock = Lock();
   FCM _fcm;
   final audioPlayer = AudioCache();
+  bool _walletOrAcctInited = false;
 
   _ZapHomePageState();
 
@@ -1145,6 +1146,8 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         }
       }
     }
+    //
+    _walletOrAcctInited = true;
     // webview
     _showHomepage();
     // init firebase push notifications
@@ -1178,6 +1181,16 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    if (!_walletOrAcctInited)
+      return Scaffold(
+        body: Column(children: [
+          SizedBox(height: 100),
+          Center(child: Image.asset(AssetHeaderIconPng, height: 30)),
+          SizedBox(height: 50),
+          SizedBox(child: CircularProgressIndicator(), height: 28.0, width: 28.0)
+        ]
+      ));
+
     return _appScaffold(
       RefreshIndicator(
         onRefresh: _updateBalance,
