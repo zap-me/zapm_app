@@ -131,6 +131,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   FCM _fcm;
   final audioPlayer = AudioCache();
   bool _walletOrAcctInited = false;
+  bool _walletOrAcctLoading = false;
   AppVersion _appVersion;
 
   _ZapHomePageState();
@@ -601,7 +602,9 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     while (true) {
       String mnemonic;
       String address;
+      setState(() => _walletOrAcctLoading = false);
       var action = await _noWalletDialog(context);
+      setState(() => _walletOrAcctLoading = true);
       switch (action) {
         case NoWalletAction.CreateMnemonic:
           mnemonic = libzap.mnemonicCreate();
@@ -722,7 +725,9 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     assert(paydbServer() != null);
     while (true) {
       String accountEmail;
+      setState(() => _walletOrAcctLoading = false);
       var action = await _noAccountDialog(context);
+      setState(() => _walletOrAcctLoading = true);
       switch (action) {
         case NoAccountAction.Register:
           // show register form
@@ -1194,9 +1199,13 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
           Center(child: Image.asset(AssetHeaderIconPng, height: 30)),
           Visibility(
             visible: _appVersion != null,
-            child: Center(child: Text("${_appVersion?.version}+${_appVersion?.build}", style: TextStyle(fontSize: 10)))),
+            child: Center(child: Text("${_appVersion?.version}+${_appVersion?.build}", style: TextStyle(fontSize: 10)))
+          ),
           SizedBox(height: 50),
-          SizedBox(child: CircularProgressIndicator(), height: 28.0, width: 28.0)
+          Visibility(
+            visible: _walletOrAcctLoading,
+            child: SizedBox(child: CircularProgressIndicator(), height: 28.0, width: 28.0)
+          )
         ]
       ));
 
