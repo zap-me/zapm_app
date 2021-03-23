@@ -718,11 +718,11 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
 
   Future<void> _noAccount() async {
     assert(AppTokenType == TokenType.PayDB);
-    if (paydbServer() == null) {
+    if (await paydbServer() == null) {
       Prefs.testnetSet(!_testnet);
       await _updateTestnet();
     }
-    assert(paydbServer() != null);
+    assert(await paydbServer() != null);
     while (true) {
       String accountEmail;
       setState(() => _walletOrAcctLoading = false);
@@ -1134,6 +1134,8 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   }
 
   void _init() async  {
+    // init _testnet var
+    _testnet = await _setTestnet();
     // get app version
     _appVersion = await AppVersion.parsePubspec();
     setState(() {
