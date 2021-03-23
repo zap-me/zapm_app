@@ -20,6 +20,26 @@ import 'hidden.dart';
 import 'firebase.dart';
 import 'paydb.dart';
 
+class AppVersion {
+  final String version;
+  final String build;
+
+  AppVersion(this.version, this.build);
+
+  static Future<AppVersion> parsePubspec() async {
+    if (!Platform.isAndroid && !Platform.isIOS) {
+      var pubspec = await rootBundle.loadString('pubspec.yaml');
+      var doc = loadYaml(pubspec);
+      var version = doc["version"].toString().split("+");
+      return AppVersion(version[0], version[1]);
+    }
+    else {
+      var packageInfo = await PackageInfo.fromPlatform();
+      return AppVersion(packageInfo.version, packageInfo.buildNumber);
+    }
+  }
+
+}
 class SettingsScreen extends StatefulWidget {
   final bool _pinProtectedInitial;
   final String _mnemonicOrAccount;
@@ -36,8 +56,7 @@ class _SettingsState extends State<SettingsScreen> {
   bool _pinProtected;
   bool _showMnemonic = false;
   bool _mnemonicPasswordProtected = true;
-  String _appVersion;
-  String _buildNumber;
+  AppVersion _appVersion;
   int _libzapVersion = -1;
   bool _testnet = false;
   String _deviceName;
@@ -54,22 +73,10 @@ class _SettingsState extends State<SettingsScreen> {
 
   void _initSettings() async {
     // app version
-    if (!Platform.isAndroid && !Platform.isIOS) {
-      var pubspec = await rootBundle.loadString('pubspec.yaml');
-      var doc = loadYaml(pubspec);
-      var version = doc["version"].toString().split("+");
-      setState(() {
-        _appVersion = version[0];
-        _buildNumber = version[1];
-      });
-    }
-    else {
-      var packageInfo = await PackageInfo.fromPlatform();
-      setState(() {
-        _appVersion = packageInfo.version;
-        _buildNumber = packageInfo.buildNumber;
-      });
-    }
+    var version = await AppVersion.parsePubspec();
+    setState(() {
+      _appVersion = version;
+    });
     // wallet
     var mnemonicPasswordProtected = await Prefs.mnemonicPasswordProtectedGet();
     setState(() {
@@ -282,7 +289,7 @@ class _SettingsState extends State<SettingsScreen> {
       body: Center(
         child: ListView( 
           children: <Widget>[
-            ListTile(title: Text("Version: $_appVersion"), subtitle: Text("Build: $_buildNumber")),
+            ListTile(title: Text("Version: ${_appVersion.version}"), subtitle: Text("Build: ${_appVersion.build}")),
             Visibility(
               visible: AppTokenType == TokenType.Waves,
               child:  ListTile(title: Text("Libzap Version: $_libzapVersion")),

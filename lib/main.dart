@@ -131,6 +131,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   FCM _fcm;
   final audioPlayer = AudioCache();
   bool _walletOrAcctInited = false;
+  AppVersion _appVersion;
 
   _ZapHomePageState();
 
@@ -1128,6 +1129,11 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   }
 
   void _init() async  {
+    // get app version
+    _appVersion = await AppVersion.parsePubspec();
+    setState(() {
+      _appVersion = _appVersion;
+    });
     // set libzap to initial testnet value so we can devrive address from mnemonic
     var testnet = await Prefs.testnetGet();
     LibZap().networkParamsSet(AssetIdMainnet, AssetIdTestnet, NodeUrlMainnet, NodeUrlTestnet, testnet);
@@ -1146,7 +1152,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         }
       }
     }
-    //
+    // wallet/account now initialized
     _walletOrAcctInited = true;
     // webview
     _showHomepage();
@@ -1186,6 +1192,9 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         body: Column(children: [
           SizedBox(height: 100),
           Center(child: Image.asset(AssetHeaderIconPng, height: 30)),
+          Visibility(
+            visible: _appVersion != null,
+            child: Center(child: Text("${_appVersion?.version}+${_appVersion?.build}", style: TextStyle(fontSize: 10)))),
           SizedBox(height: 50),
           SizedBox(child: CircularProgressIndicator(), height: 28.0, width: 28.0)
         ]
@@ -1301,7 +1310,8 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
                     child: 
                       ListButton(_settlement, 'make settlement'),
                   ),
-                  ListButtonEnd()
+                  ListButtonEnd(),
+                  Center(child: Text("${_appVersion?.version}+${_appVersion?.build}", style: TextStyle(fontSize: 10))),
                 ],
               )
             ),      
