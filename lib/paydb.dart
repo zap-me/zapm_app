@@ -177,6 +177,9 @@ Future<http.Response> postAndCatch(String url, String body, {Map<String, String>
   } on http.ClientException catch(e) {
     print(e);
     return null;
+  } on ArgumentError catch(e) {
+    print(e);
+    return null;
   }
 }
 

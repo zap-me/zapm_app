@@ -18,6 +18,7 @@ import 'merchant.dart';
 import 'prefs.dart';
 import 'hidden.dart';
 import 'firebase.dart';
+import 'paydb.dart';
 
 class SettingsScreen extends StatefulWidget {
   final bool _pinProtectedInitial;
@@ -44,6 +45,7 @@ class _SettingsState extends State<SettingsScreen> {
   String _apisecret;
   String _apiserver;
   int _titleTaps = 0;
+  String _paydbServer;
 
   _SettingsState(this._pinProtected) {
     _initSettings();
@@ -83,11 +85,14 @@ class _SettingsState extends State<SettingsScreen> {
     var apikey = await Prefs.merchantApiKeyGet();
     var apisecret = await Prefs.merchantApiSecretGet();
     var apiserver = await Prefs.merchantApiServerGet();
+    // paydb server
+    var paydbserver = await paydbServer();
     setState(() {
       _deviceName = deviceName;
       _apikey = apikey;
       _apisecret = apisecret;
       _apiserver = apiserver;
+      _paydbServer = paydbserver;
     });
   }
 
@@ -281,6 +286,10 @@ class _SettingsState extends State<SettingsScreen> {
             Visibility(
               visible: AppTokenType == TokenType.Waves,
               child:  ListTile(title: Text("Libzap Version: $_libzapVersion")),
+            ),
+            Visibility(
+              visible: AppTokenType == TokenType.PayDB,
+              child:  ListTile(title: Text("Server: $_paydbServer")),
             ),
             Container(
               padding: const EdgeInsets.only(top: 18.0),

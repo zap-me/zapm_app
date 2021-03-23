@@ -108,7 +108,7 @@ class ZapHomePage extends StatefulWidget {
 }
 
 enum NoWalletAction { CreateMnemonic, RecoverMnemonic, RecoverRaw, ScanMerchantApiKey }
-enum NoAccountAction { Register, Login, RequestApiKey, SwitchServer }
+enum NoAccountAction { Register, Login, RequestApiKey }
 enum Capability { Receive, Balance, History, Spend }
 enum InitTokenDetailsResult { None, NoData, Auth, Network }
 
@@ -528,6 +528,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
           return SimpleDialog(
             title: const Text("Register or Login"),
             children: <Widget>[
+              Center(child: Text("Server: $server", style: TextStyle(fontSize: 10))),
               SimpleDialogOption(
                 onPressed: () {
                   Navigator.pop(context, NoAccountAction.Register);
@@ -545,12 +546,6 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
                   Navigator.pop(context, NoAccountAction.RequestApiKey);
                 },
                 child: const Text("Request API KEY from your account"),
-              ),
-              SimpleDialogOption(
-                onPressed: () {
-                  Navigator.pop(context, NoAccountAction.SwitchServer);
-                },
-                child: Text("Switch server ($server)"),
               ),
             ],
           );
@@ -718,6 +713,11 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
 
   Future<void> _noAccount() async {
     assert(AppTokenType == TokenType.PayDB);
+    if (paydbServer() == null) {
+      Prefs.testnetSet(!_testnet);
+      await _updateTestnet();
+    }
+    assert(paydbServer() != null);
     while (true) {
       String accountEmail;
       var action = await _noAccountDialog(context);
@@ -775,10 +775,6 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
                 accountEmail = await _paydbApiKeyClaim(req, result.token);
               break;
           }
-          break;
-        case NoAccountAction.SwitchServer:
-          Prefs.testnetSet(!_testnet);
-          await _updateTestnet();
           break;
       }
       if (accountEmail != null && accountEmail.isNotEmpty) {
