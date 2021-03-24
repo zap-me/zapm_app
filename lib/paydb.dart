@@ -51,18 +51,18 @@ class PayDbUri {
     }
     if (attachment != null && attachment.isNotEmpty)
       queryParts = _addPart(queryParts, 'attachment=$attachment');
-    return 'premiopay://$account$queryParts';
+    return 'premiomtoken://$account$queryParts';
   }
 
   static PayDbUri parse(String uri) {
     //
-    // premiopay://<email>?amount=<AMOUNT_CENTS>&attachment=<ATTACHMENT>
+    // premiomtoken://<email>?amount=<AMOUNT_CENTS>&attachment=<ATTACHMENT>
     //
     var account = '';
     var amount = Decimal.fromInt(0);
     var attachment = '';
-    if (uri.length > 12 && uri.substring(0, 12).toLowerCase() == 'premiopay://') {
-      var parts = uri.substring(12).split('?');
+    if (uri.length > 15 && uri.substring(0, 15).toLowerCase() == 'premiomtoken://') {
+      var parts = uri.substring(15).split('?');
       if (parts.length == 1 || parts.length == 2) {
         account = parts[0];
         if (account.endsWith('/'))

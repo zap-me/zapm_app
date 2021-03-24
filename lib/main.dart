@@ -222,7 +222,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
       case TokenType.PayDB:
         // process paydb links
         //
-        // premiopay://<acct>...
+        // premiomtoken://<acct>...
         //
         if (PayDbUri.parse(uri.toString()) != null) {
           var tx = await Navigator.push(
@@ -239,9 +239,9 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
 
     // process premio stage links (scheme parameter is optional - default to 'https')
     //
-    // premiostagelink://<HOST>/claim_payment/<CLAIM_CODE>[?scheme=<SCHEME>]
+    // premiostagemtoken://<HOST>/claim_payment/<CLAIM_CODE>[?scheme=<SCHEME>]
     //
-    if (uri.isScheme('premiostagelink')) {
+    if (uri.isScheme('premiostagemtoken')) {
       if (uri.pathSegments.length == 2 && uri.pathSegments[0] == 'claim_payment') {
         var scheme = 'https';
         if (uri.queryParameters.containsKey('scheme'))

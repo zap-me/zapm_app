@@ -28,26 +28,19 @@
             </intent-filter>
 
             <!-- Deep Links -->
-            <intent-filter> <!-- TODO: remove waves or paydb -->
+            <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
-                android:scheme="waves" />
-            </intent-filter>
-            <intent-filter> <!-- TODO: remove waves or paydb -->
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data
-                android:scheme="premiopay" />
+                android:scheme="premiomtoken" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
-                android:scheme="premiostagelink" />
+                android:scheme="premiostagemtoken" />
             </intent-filter>
 
             <!-- Push Notifications -->
