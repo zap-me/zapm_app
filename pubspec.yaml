@@ -1,6 +1,6 @@
 name: Frankie
 description: Frankie mtoken wallet
-version: 1.3.6+49
+version: 1.3.7+50
 
 environment:
   sdk: '>=2.10.0 <=2.12.0'
