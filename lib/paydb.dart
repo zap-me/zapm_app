@@ -184,23 +184,17 @@ Future<http.Response> postAndCatch(String url, String body, {Map<String, String>
 }
 
 Widget paydbAccountImage(String imgString, String imgType) {
-  const size = 90.0;
+  const size = 70.0;
+  Widget img = SvgPicture.asset('assets/user.svg', width: size, height: size);
   if (imgString != null && imgString.isNotEmpty) {
     if (imgType == 'raster')
-      return ClipRRect(
-    borderRadius: BorderRadius.circular(13.5),
-    child: Image.memory(base64Decode(imgString), width: size, height: size)
-    );
+      img = Image.memory(base64Decode(imgString), width: size, height: size);
     if (imgType == 'svg')
-      return ClipRRect(
-      borderRadius: BorderRadius.circular(13.5),
-      child: SvgPicture.string(imgString, width: size, height: size)
-      );
+      img = SvgPicture.string(imgString, width: size, height: size);
   }
   return ClipRRect(
-         borderRadius: BorderRadius.circular(13.5),
-         child: SvgPicture.asset('assets/user.svg', width: size, height: size)
-         );
+       borderRadius: BorderRadius.circular(13.5),
+       child: img);
 }
 
 Future<String> paydbServer() async {
