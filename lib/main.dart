@@ -1183,7 +1183,13 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
               ],
             ),
       ),
-      body: body
+      body: TabBarView(
+            children : [
+            Tab(icon: Icon(Icons.directions_car)),
+            Tab(child: body),
+            Tab(icon: Icon(Icons.settings_outlined))
+            ]
+            )
     );
   }
 
