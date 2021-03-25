@@ -92,7 +92,10 @@ class MyApp extends StatelessWidget {
           textTheme: ZapTextThemer(Theme.of(context).textTheme),
           primaryTextTheme: ZapTextThemer(Theme.of(context).textTheme),
         ),
-        home: ZapHomePage(title: AppTitle),
+        home:DefaultTabController(
+             length: 3,
+             child: ZapHomePage(title: AppTitle),
+             )
       )
     );
   }
@@ -1172,21 +1175,13 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   Widget _appScaffold(Widget body, {bool isHomepage = false}) {
     return Scaffold(
       appBar: AppBar(
-        leading: Visibility(
-          child: IconButton(onPressed: _toggleAlerts, icon: Icon(Icons.warning, color: _showAlerts ? ZapGrey : ZapWarning)),
-          maintainSize: true, 
-          maintainAnimation: true,
-          maintainState: true,
-          visible: _alerts.length > 0 && !isHomepage, 
-        ),
-        title: Center(child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          WebviewURL != null ? IconButton(icon: Icon(isHomepage ? Icons.home : Icons.home_outlined, color: ZapBlue), onPressed: isHomepage ? null : _showHomepage) : Spacer(),
-          Image.asset(AssetHeaderIconPng, height: 30),
-          WebviewURL != null ? IconButton(icon: Icon(isHomepage ? Icons.account_balance_wallet_outlined : Icons.account_balance_wallet, color: ZapBlue), onPressed: isHomepage ? _showWallet : null) : Spacer()
-        ])),
-        actions: <Widget>[
-          IconButton(icon: Icon(Icons.settings_outlined, color: ZapBlue), onPressed: _showSettings),
-        ],
+            bottom: TabBar(
+              tabs: [
+                Tab(icon: Icon(Icons.directions_car)),
+                Tab(icon: Icon(Icons.account_balance_wallet)),
+                Tab(icon: Icon(Icons.settings_outlined)),
+              ],
+            ),
       ),
       body: body
     );
