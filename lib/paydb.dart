@@ -183,11 +183,25 @@ Future<http.Response> postAndCatch(String url, String body, {Map<String, String>
   }
 }
 
-Widget paydbAccountImage(String imgString, String imgType) {
-  const size = 40.0;
+Widget paydbAccountImage(String imgString, String imgType, {double size = 70, double borderRadius = 13.5,
+double dropShadowOffsetX = 0, double dropShadowOffsetY = 3, double dropShadowSpreadRadius = 5, double dropShadowBlurRadius = 7}) {
   if (imgString != null && imgString.isNotEmpty) {
     if (imgType == 'raster')
-      return Image.memory(base64Decode(imgString), width: size, height: size);
+      // if image is raster then apply corner radius and drop shadow
+      return Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(borderRadius), 
+          boxShadow: [BoxShadow(
+            color: Colors.grey.withOpacity(0.5),
+            spreadRadius: dropShadowSpreadRadius,
+            blurRadius: dropShadowBlurRadius,
+            offset: Offset(dropShadowOffsetX, dropShadowOffsetY),
+          )],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(borderRadius),
+          child: Image.memory(base64Decode(imgString), width: size, height: size))
+      );
     if (imgType == 'svg')
       return SvgPicture.string(imgString, width: size, height: size);
   }
