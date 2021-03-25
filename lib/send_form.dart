@@ -183,7 +183,7 @@ class SendFormState extends State<SendForm> {
           )),
           TextFormField(
             controller: _recipientController,
-            keyboardType: TextInputType.text,
+            keyboardType: AppTokenType == TokenType.PayDB ? TextInputType.emailAddress : TextInputType.text,
             decoration: InputDecoration(labelText: 'recipient',
               suffixIcon: FlatButton.icon(
                 onPressed: () {
