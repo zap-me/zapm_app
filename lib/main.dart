@@ -136,6 +136,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   bool _walletOrAcctInited = false;
   bool _walletOrAcctLoading = false;
   AppVersion _appVersion;
+  dynamic _pinExists;
 
   _ZapHomePageState();
 
@@ -170,6 +171,14 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     }
     return '...';
   }
+  
+  void doesPinExist() async {
+    var pinExists = await Prefs.pinExists();
+    setState(
+      () {_pinExists = pinExists;}
+    );
+    } 
+    
 
   String _mnemonicOrAccount() {
     switch (AppTokenType) {
@@ -1173,6 +1182,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   }
 
   Widget _appScaffold(Widget body, {bool isHomepage = false}) {
+    doesPinExist();
     return Scaffold(
       appBar: AppBar(
             bottom: TabBar(
@@ -1187,7 +1197,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
             children : [
             Tab(icon: Icon(Icons.directions_car)),
             Tab(child: body),
-            Tab(icon: Icon(Icons.settings_outlined))
+            Tab(child: SettingsScreen(_pinExists, _mnemonicOrAccount(), _fcm))
             ]
             )
     );
