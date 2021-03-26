@@ -282,10 +282,6 @@ class _SettingsState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: backButton(context, color: ZapBlack),
-        title: GestureDetector(onTap: _titleTap, child: Text("Settings")),
-      ),
       body: Center(
         child: ListView( 
           children: <Widget>[
