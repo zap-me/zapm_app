@@ -292,25 +292,6 @@ class _TransactionsState extends State<TransactionsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: backButton(context, color: ZapBlue),
-        title: Text("transactions", style: TextStyle(color: ZapBlue)),
-        actions: <Widget>[
-          PopupMenuButton<Choice>(
-            icon: Icon(Icons.more_vert, color: ZapBlue),
-            onSelected: _select,
-            enabled: !_loading,
-            itemBuilder: (BuildContext context) {
-              return choices.map((Choice choice) {
-                return PopupMenuItem<Choice>(
-                  value: choice,
-                  child: Text(choice.title),
-                );
-              }).toList();
-            },
-          ),
-        ],
-      ),
       body: Center(
         child: Column(
           mainAxisAlignment: _loading ? MainAxisAlignment.center : MainAxisAlignment.start,

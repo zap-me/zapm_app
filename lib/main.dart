@@ -137,6 +137,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   bool _walletOrAcctLoading = false;
   AppVersion _appVersion;
   dynamic _pinExists;
+  dynamic _deviceNameIs;
 
   _ZapHomePageState();
 
@@ -178,6 +179,13 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
       () {_pinExists = pinExists;}
     );
     } 
+
+  void getdeviceName() async {
+    var deviceName = await Prefs.deviceNameGet();
+    setState(
+      () {_deviceNameIs = deviceName;}
+    );
+  }
     
 
   String _mnemonicOrAccount() {
@@ -1183,11 +1191,12 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
 
   Widget _appScaffold(Widget body, {bool isHomepage = false}) {
     doesPinExist();
+    getdeviceName();
     return Scaffold(
       appBar: AppBar(
             bottom: TabBar(
               tabs: [
-                Tab(icon: Icon(Icons.directions_car)),
+                Tab(icon: Icon(Icons.history_outlined)),
                 Tab(icon: Icon(Icons.account_balance_wallet)),
                 Tab(icon: Icon(Icons.settings_outlined)),
               ],
@@ -1195,7 +1204,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
       ),
       body: TabBarView(
             children : [
-            Tab(icon: Icon(Icons.directions_car)),
+            Tab(child: TransactionsScreen(_addrOrAccountValue(), _testnet, _haveCapabililty(Capability.Spend) ? null : _deviceNameIs, _merchantRates)),
             Tab(child: body),
             Tab(child: SettingsScreen(_pinExists, _mnemonicOrAccount(), _fcm))
             ]
