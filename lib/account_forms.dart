@@ -17,9 +17,10 @@ class AccountLogin {
 }
 
 class AccountRegisterForm extends StatefulWidget {
+  final AccountRegistration registration;
   final String instructions;
   
-  AccountRegisterForm({this.instructions}) : super();
+  AccountRegisterForm(this.registration, {this.instructions}) : super();
 
   @override
   AccountRegisterFormState createState() {
@@ -42,6 +43,16 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
   @mustCallSuper
   void initState() {
     super.initState();
+
+    if (widget.registration != null) {
+      _firstNameController.text = widget.registration.firstName;
+      _lastNameController.text = widget.registration.lastName;
+      _emailController.text = widget.registration.email;
+      _passwordController.text = widget.registration.password;
+      _passwordConfirmController.text = widget.registration.password;
+      _imgType = widget.registration.photoType;
+      _imgString = widget.registration.photo;
+    }
   }
 
   Future<String> _imgDataEdited(PickedFile file) async {
@@ -71,11 +82,6 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               mainAxisSize: MainAxisSize.max,
               children: <Widget>[
-                IconButton(
-                  icon: const Icon(Icons.crop),
-                  onPressed: () {
-                  },
-                ),
                 IconButton(
                   icon: const Icon(Icons.flip),
                   onPressed: () {
@@ -128,7 +134,7 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
     }
     if (editAction.hasRotateAngle)
       src = copyRotate(src, editAction.rotateAngle);
-    src = copyResize(src, width: 200);
+    src = copyResize(src, width: 200, height: 200);
     var jpgBytes = encodeJpg(src, quality: 50);
     return base64Encode(jpgBytes);
   }
@@ -246,9 +252,10 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
 }
 
 class AccountLoginForm extends StatefulWidget {
+  final AccountLogin login;
   final String instructions;
-  
-  AccountLoginForm({this.instructions}) : super();
+
+  AccountLoginForm(this.login, {this.instructions}) : super();
 
   @override
   AccountLoginFormState createState() {
@@ -260,6 +267,17 @@ class AccountLoginFormState extends State<AccountLoginForm> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+
+  @protected
+  @mustCallSuper
+  void initState() {
+    super.initState();
+
+    if (widget.login != null) {
+      _emailController.text = widget.login.email;
+      _passwordController.text = widget.login.password;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

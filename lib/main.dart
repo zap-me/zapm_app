@@ -471,7 +471,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     assert(AppTokenType == TokenType.PayDB);
     return await showDialog<bool>(
         context: context,
-        barrierDismissible: true,
+        barrierDismissible: false,
         builder: (BuildContext context) {
           return SimpleDialog(
             title: const Text("User registration in process"),
@@ -498,7 +498,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     assert(AppTokenType == TokenType.PayDB);
     return await showDialog<bool>(
         context: context,
-        barrierDismissible: true,
+        barrierDismissible: false,
         builder: (BuildContext context) {
           return SimpleDialog(
             title: const Text("API KEY request in process"),
@@ -730,36 +730,42 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
       setState(() => _walletOrAcctLoading = true);
       switch (action) {
         case NoAccountAction.Register:
-          // show register form
-          var registration = await Navigator.push<AccountRegistration>(
-            context,
-            MaterialPageRoute(builder: (context) => AccountRegisterForm()),
-          );
-          if (registration== null)
-            break;
-          var result = await paydbUserRegister(registration);
-          switch (result) {
-            case PayDbError.Auth:
-            case PayDbError.Network:
-              await alert(context, "Network error", "A network error occured when trying to login");
+          AccountRegistration registration;
+          while (accountEmail == null) {
+            // show register form
+            registration = await Navigator.push<AccountRegistration>(
+              context,
+              MaterialPageRoute(builder: (context) => AccountRegisterForm(registration)),
+            );
+            if (registration == null)
               break;
-            case PayDbError.None:
-              if (await _directLoginAccountDialog(context))
-                // save account if login successful
-                accountEmail = await _paydbLogin(AccountLogin(registration.email, registration.password));
-              break;
+            var result = await paydbUserRegister(registration);
+            switch (result) {
+              case PayDbError.Auth:
+              case PayDbError.Network:
+                await alert(context, "Network error", "A network error occured when trying to login");
+                break;
+              case PayDbError.None:
+                if (await _directLoginAccountDialog(context))
+                  // save account if login successful
+                  accountEmail = await _paydbLogin(AccountLogin(registration.email, registration.password));
+                break;
+            }
           }
           break;
         case NoAccountAction.Login:
-          // login form
-          var login = await Navigator.push<AccountLogin>(
-            context,
-            MaterialPageRoute(builder: (context) => AccountLoginForm()),
-          );
-          if (login == null)
-            break;
-          // save account if login successful
-          accountEmail = await _paydbLogin(login);
+          AccountLogin login;
+          while (accountEmail == null) {
+            // login form
+            login = await Navigator.push<AccountLogin>(
+              context,
+              MaterialPageRoute(builder: (context) => AccountLoginForm(login)),
+            );
+            if (login == null)
+              break;
+            // save account if login successful
+            accountEmail = await _paydbLogin(login);
+          }
           break;
         case NoAccountAction.RequestApiKey:
           // request api key form
@@ -777,9 +783,12 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
               await alert(context, "Network error", "A network error occured when trying to login");
               break;
             case PayDbError.None:
-              if (await _waitApiKeyAccountDialog(context))
+              while (await _waitApiKeyAccountDialog(context)) {
                 // claim api key
                 accountEmail = await _paydbApiKeyClaim(req, result.token);
+                if (accountEmail != null)
+                  break;
+              }
               break;
           }
           break;
