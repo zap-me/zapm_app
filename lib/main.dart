@@ -93,7 +93,7 @@ class MyApp extends StatelessWidget {
           primaryTextTheme: ZapTextThemer(Theme.of(context).textTheme),
         ),
         home:DefaultTabController(
-             length: 3,
+             length: 2,
              child: ZapHomePage(title: AppTitle),
              )
       )
@@ -1187,7 +1187,6 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
       appBar: AppBar(
             bottom: TabBar(
               tabs: [
-                Tab(icon: Icon(Icons.directions_car)),
                 Tab(icon: Icon(Icons.account_balance_wallet)),
                 Tab(icon: Icon(Icons.settings_outlined)),
               ],
@@ -1195,7 +1194,6 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
       ),
       body: TabBarView(
             children : [
-            Tab(icon: Icon(Icons.directions_car)),
             Tab(child: body),
             Tab(child: SettingsScreen(_pinExists, _mnemonicOrAccount(), _fcm))
             ]
