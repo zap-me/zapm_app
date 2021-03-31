@@ -19,8 +19,8 @@ jobs:
         java-version: '12.x'
     - uses: subosito/flutter-action@v1.4.0
       with:
-        flutter-version: '1.17.x'
-        channel: 'beta'
+        flutter-version: '1.22.x'
+        channel: 'stable'
     - name: install NDK
       run: echo "y" | sudo /usr/local/lib/android/sdk/tools/bin/sdkmanager --install "ndk;20.0.5594570" --sdk_root=${ANDROID_SDK_ROOT}
     - name: download libzap
@@ -44,8 +44,8 @@ jobs:
         submodules: 'true'
     - uses: subosito/flutter-action@v1.4.0
       with:
-        flutter-version: '1.17.x'
-        channel: 'beta'
+        flutter-version: '1.22.x'
+        channel: 'stable'
     - name: download libzap
       run: wget https://github.com/djpnewton/libzap/releases/download/v13/ios.zip
     - name: extract libzap
