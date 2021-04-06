@@ -262,8 +262,9 @@ class _MultisigState extends State<MultisigScreen> {
                   child: Text(_serializing ? "Serializing..." : "Sign")),
               // disabled util https://github.com/miguelpruivo/flutter_file_picker/issues/234 is resolved
               RaisedButton(
-                  /*onPressed: _fileData != null ? _saveFile : null,*/ child:
-                      Text("Save File")),
+                  /*onPressed: _fileData != null ? _saveFile : null,*/ onPressed:
+                      null,
+                  child: Text("Save File")),
               RaisedButton(
                   onPressed: _fileData != null ? _shareFile : null,
                   child: Text("Share File")),

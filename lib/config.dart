@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// uncomment if you need to override the app theme
+//import 'package:flutter/material.dart';
+//import 'package:google_fonts/google_fonts.dart';
 
 import 'package:zapdart/colors.dart';
 

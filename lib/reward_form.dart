@@ -9,12 +9,11 @@ import 'claiming_form.dart';
 import 'prefs.dart';
 
 class RewardForm extends StatefulWidget {
-  final bool _testnet;
   final String _seed;
   final Decimal _fee;
   final Decimal _max;
 
-  RewardForm(this._testnet, this._seed, this._fee, this._max) : super();
+  RewardForm(this._seed, this._fee, this._max) : super();
 
   @override
   RewardFormState createState() {

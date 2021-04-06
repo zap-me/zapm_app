@@ -381,7 +381,6 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
       try {
         attachment = base58decodeString(attachment);
       } catch (_) {}
-    ;
     // play audio file
     audioPlayer.play('chaching.mp3');
     // show user overview of new tx
@@ -1115,8 +1114,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     var sentFunds = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-          builder: (context) =>
-              RewardScreen(_testnet, _wallet.mnemonic, _fee, _balance)),
+          builder: (context) => RewardScreen(_wallet.mnemonic, _fee, _balance)),
     );
     if (sentFunds) _updateBalance();
   }
