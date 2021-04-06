@@ -3,10 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:zapdart/colors.dart';
 
-enum TokenType {
-  Waves,
-  PayDB
-}
+enum TokenType { Waves, PayDB }
 
 // the default testnet value
 const TestnetDefault = false;
@@ -66,4 +63,3 @@ void initConfig() {
     zapTextThemer: GoogleFonts.sansitaTextTheme);
     */
 }
-

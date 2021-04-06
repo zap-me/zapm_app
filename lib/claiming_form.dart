@@ -18,7 +18,8 @@ class ClaimingForm extends StatefulWidget {
   final int _fee;
   final String _msg;
 
-  ClaimingForm(this._amountDec, this._seed, this._amount, this._fee, this._msg) : super();
+  ClaimingForm(this._amountDec, this._seed, this._amount, this._fee, this._msg)
+      : super();
 
   @override
   ClaimingFormState createState() {
@@ -32,29 +33,30 @@ class ClaimingFormState extends State<ClaimingForm> {
   bool _sentFunds = false;
   String _uri;
   Timer _timer;
-  ClaimCode _claimCode = ClaimCode(amount: Decimal.fromInt(0), token: "", secret: "");
+  ClaimCode _claimCode =
+      ClaimCode(amount: Decimal.fromInt(0), token: "", secret: "");
 
   Future check(Timer timer) async {
-    if (!_checking || !_init)
-      return;
+    if (!_checking || !_init) return;
     var addr = await merchantCheck(_claimCode);
     if (addr != null) {
       _timer.cancel();
       setState(() {
-       _checking = false; 
+        _checking = false;
       });
       var libzap = LibZap();
       var deviceName = await Prefs.deviceNameGet();
       var attachment = formatAttachment(deviceName, widget._msg, 'reward');
-      var spendTx = libzap.transactionCreate(widget._seed, addr, widget._amount, widget._fee, attachment);
+      var spendTx = libzap.transactionCreate(
+          widget._seed, addr, widget._amount, widget._fee, attachment);
       if (spendTx.success) {
         _sentFunds = await Navigator.push<bool>(
           context,
           MaterialPageRoute(builder: (context) => WavesSendingForm(spendTx)),
         );
-      }
-      else
-        flushbarMsg(context, 'failed to create transaction', category: MessageCategory.Warning);
+      } else
+        flushbarMsg(context, 'failed to create transaction',
+            category: MessageCategory.Warning);
     }
   }
 
@@ -68,7 +70,8 @@ class ClaimingFormState extends State<ClaimingForm> {
         setState(() {
           _checking = false;
         });
-        flushbarMsg(context, 'failed to create claim code', category: MessageCategory.Warning);
+        flushbarMsg(context, 'failed to create claim code',
+            category: MessageCategory.Warning);
         return;
       }
       // create uri
@@ -83,42 +86,46 @@ class ClaimingFormState extends State<ClaimingForm> {
 
   @override
   Widget build(BuildContext context) {
-  return Material(
+    return Material(
       child: Padding(
         padding: EdgeInsets.all(15),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
-          children:
-            <Widget>[
-              Visibility(
+          children: <Widget>[
+            Visibility(
+              visible: _checking,
+              child: CircularProgressIndicator(),
+            ),
+            Visibility(
                 visible: _checking,
-                child: CircularProgressIndicator(),
-              ),
-              Visibility(visible: _checking, child: Container(padding: const EdgeInsets.only(top: 20.0))),
-              Visibility(
-                visible: _init,
-                child: Text(_claimCode.token),
-              ),
-              Visibility(
-                visible: _init,
-                child: QrWidget(_uri, size: 260, version: 6),
-              ),
-              Visibility(visible: _checking, child: Container(padding: const EdgeInsets.only(top: 20.0))),
-              Visibility(
-                visible: _checking && _init,
-                child: Text("Waiting for customer confirmation..."),
-              ),
-              Visibility(visible: !_checking, child: Container(padding: const EdgeInsets.only(top: 20.0))),
-              Visibility(
-                  visible: !_checking,
-                  child: RaisedButton.icon(
-                      onPressed: () {
-                        Navigator.pop(context, _sentFunds);
-                      },
-                      icon: Icon(Icons.close),
-                      label: Text('Close'))
-              ),
+                child: Container(padding: const EdgeInsets.only(top: 20.0))),
+            Visibility(
+              visible: _init,
+              child: Text(_claimCode.token),
+            ),
+            Visibility(
+              visible: _init,
+              child: QrWidget(_uri, size: 260, version: 6),
+            ),
+            Visibility(
+                visible: _checking,
+                child: Container(padding: const EdgeInsets.only(top: 20.0))),
+            Visibility(
+              visible: _checking && _init,
+              child: Text("Waiting for customer confirmation..."),
+            ),
+            Visibility(
+                visible: !_checking,
+                child: Container(padding: const EdgeInsets.only(top: 20.0))),
+            Visibility(
+                visible: !_checking,
+                child: RaisedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context, _sentFunds);
+                    },
+                    icon: Icon(Icons.close),
+                    label: Text('Close'))),
           ],
         ),
       ),

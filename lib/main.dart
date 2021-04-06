@@ -15,7 +15,6 @@ import 'package:synchronized/synchronized.dart';
 import 'package:device_info/device_info.dart';
 import 'package:audioplayers/audio_cache.dart';
 
-
 import 'package:zapdart/colors.dart';
 import 'package:zapdart/qrwidget.dart';
 import 'package:zapdart/widgets.dart';
@@ -39,14 +38,14 @@ import 'paydb.dart';
 
 void main() {
   // See https://github.com/flutter/flutter/wiki/Desktop-shells#target-platform-override
-  _setTargetPlatformForDesktop();  
+  _setTargetPlatformForDesktop();
 
   // print flutter errors to console
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.dumpErrorToConsole(details);
-    const bool kReleaseMode = bool.fromEnvironment('dart.vm.product', defaultValue: false);
-    if (kReleaseMode)
-      exit(1);
+    const bool kReleaseMode =
+        bool.fromEnvironment('dart.vm.product', defaultValue: false);
+    if (kReleaseMode) exit(1);
   };
 
   // initialize any config functions
@@ -74,27 +73,27 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        // unfocus any text fields when touching non interactive part of app
-        // this should hide any keyboards
-        var currentFocus = FocusScope.of(context);
-        if (!currentFocus.hasPrimaryFocus && currentFocus.focusedChild != null) {
-          FocusManager.instance.primaryFocus.unfocus();
-        }
-      },
-      child: MaterialApp(
-        //debugShowCheckedModeBanner: false,
-        title: AppTitle,
-        theme: ThemeData(
-          brightness: ZapBrightness,
-          primaryColor: ZapWhite,
-          accentColor: ZapBlue,
-          textTheme: ZapTextThemer(Theme.of(context).textTheme),
-          primaryTextTheme: ZapTextThemer(Theme.of(context).textTheme),
-        ),
-        home: ZapHomePage(title: AppTitle),
-      )
-    );
+        onTap: () {
+          // unfocus any text fields when touching non interactive part of app
+          // this should hide any keyboards
+          var currentFocus = FocusScope.of(context);
+          if (!currentFocus.hasPrimaryFocus &&
+              currentFocus.focusedChild != null) {
+            FocusManager.instance.primaryFocus.unfocus();
+          }
+        },
+        child: MaterialApp(
+          //debugShowCheckedModeBanner: false,
+          title: AppTitle,
+          theme: ThemeData(
+            brightness: ZapBrightness,
+            primaryColor: ZapWhite,
+            accentColor: ZapBlue,
+            textTheme: ZapTextThemer(Theme.of(context).textTheme),
+            primaryTextTheme: ZapTextThemer(Theme.of(context).textTheme),
+          ),
+          home: ZapHomePage(title: AppTitle),
+        ));
   }
 }
 
@@ -107,7 +106,12 @@ class ZapHomePage extends StatefulWidget {
   _ZapHomePageState createState() => new _ZapHomePageState();
 }
 
-enum NoWalletAction { CreateMnemonic, RecoverMnemonic, RecoverRaw, ScanMerchantApiKey }
+enum NoWalletAction {
+  CreateMnemonic,
+  RecoverMnemonic,
+  RecoverRaw,
+  ScanMerchantApiKey
+}
 enum NoAccountAction { Register, Login, RequestApiKey }
 enum Capability { Receive, Balance, History, Spend }
 enum InitTokenDetailsResult { None, NoData, Auth, Network }
@@ -115,7 +119,7 @@ enum InitTokenDetailsResult { None, NoData, Auth, Network }
 class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   Socket _merchantSocket; // merchant portal websocket
   StreamSubscription _uniLinksSub; // uni links subscription
-  
+
   bool _testnet = true;
   WavesWallet _wallet;
   PayDbAccount _account;
@@ -157,12 +161,10 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   String _addrOrAccountValue() {
     switch (AppTokenType) {
       case TokenType.Waves:
-        if (_wallet != null)
-          return _wallet.address;
+        if (_wallet != null) return _wallet.address;
         break;
       case TokenType.PayDB:
-        if (_account != null)
-          return _account.email;
+        if (_account != null) return _account.email;
         break;
     }
     return '...';
@@ -183,7 +185,9 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
       case TokenType.Waves:
         return SizedBox();
       case TokenType.PayDB:
-        return Padding(child: paydbAccountImage(_account?.photo, _account?.photoType), padding: EdgeInsets.only(right: 20));
+        return Padding(
+            child: paydbAccountImage(_account?.photo, _account?.photoType),
+            padding: EdgeInsets.only(right: 20));
     }
     return SizedBox();
   }
@@ -212,10 +216,10 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
           var tx = await Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => SendScreen(_testnet, _wallet.mnemonic, _fee, uri.toString(), _balance)),
+                builder: (context) => SendScreen(_testnet, _wallet.mnemonic,
+                    _fee, uri.toString(), _balance)),
           );
-          if (tx != null)
-            _updateBalance();
+          if (tx != null) _updateBalance();
           return true;
         }
         break;
@@ -228,10 +232,10 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
           var tx = await Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => SendScreen(_testnet, _account.email, _fee, uri.toString(), _balance)),
+                builder: (context) => SendScreen(
+                    _testnet, _account.email, _fee, uri.toString(), _balance)),
           );
-          if (tx != null)
-            _updateBalance();
+          if (tx != null) _updateBalance();
           return true;
         }
         break;
@@ -242,7 +246,8 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     // premiostagelink://<HOST>/claim_payment/<CLAIM_CODE>[?scheme=<SCHEME>]
     //
     if (uri.isScheme('premiostagelink')) {
-      if (uri.pathSegments.length == 2 && uri.pathSegments[0] == 'claim_payment') {
+      if (uri.pathSegments.length == 2 &&
+          uri.pathSegments[0] == 'claim_payment') {
         var scheme = 'https';
         if (uri.queryParameters.containsKey('scheme'))
           scheme = uri.queryParameters['scheme'];
@@ -252,13 +257,15 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         switch (AppTokenType) {
           case TokenType.Waves:
             if (_wallet.address == null)
-              throw FormatException('wallet address must be valid to claim payment');
+              throw FormatException(
+                  'wallet address must be valid to claim payment');
             recipient = _wallet.address;
             body = {'recipient': recipient, 'asset_id': LibZap().assetIdGet()};
             break;
           case TokenType.PayDB:
-            if (_account.email== null)
-              throw FormatException('account email must be valid to claim payment');
+            if (_account.email == null)
+              throw FormatException(
+                  'account email must be valid to claim payment');
             recipient = _account.email;
             body = {'recipient': recipient};
             break;
@@ -271,15 +278,17 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
           if (response.statusCode == 200)
             resultText = 'claimed funds to $recipient';
           else {
-            resultText = 'claim link failed: ${response.statusCode} - ${response.body}';
+            resultText =
+                'claim link failed: ${response.statusCode} - ${response.body}';
             failed = true;
           }
-        } catch(e) {
+        } catch (e) {
           resultText = 'claim link failed: $e';
           failed = true;
         }
         Navigator.pop(context);
-        flushbarMsg(context, resultText, category: failed ? MessageCategory.Warning : MessageCategory.Info);
+        flushbarMsg(context, resultText,
+            category: failed ? MessageCategory.Warning : MessageCategory.Info);
         return true;
       }
     }
@@ -294,10 +303,10 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         var tx = await Navigator.push<Tx>(
           context,
           MaterialPageRoute(
-              builder: (context) => CentrapayScreen(_testnet, _wallet.mnemonic, _fee, _balance, qr)),
+              builder: (context) => CentrapayScreen(
+                  _testnet, _wallet.mnemonic, _fee, _balance, qr)),
         );
-        if (tx != null)
-          _updateBalance();
+        if (tx != null) _updateBalance();
         return true;
       }
     }
@@ -312,22 +321,25 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
       var initialUri = await getInitialUri();
       if (initialUri != null) {
         if (!await processUri(initialUri))
-          flushbarMsg(context, 'invalid URL', category: MessageCategory.Warning);
+          flushbarMsg(context, 'invalid URL',
+              category: MessageCategory.Warning);
       }
     } on FormatException {
       print('intial uri format exception!');
     } on PlatformException {
       print('intial uri platform exception!');
-    } catch(e) {
+    } catch (e) {
       print('intial uri exception: $e');
     }
 
     // Attach a listener to catch any links when app is running in the background
     _uniLinksSub = getUriLinksStream().listen((Uri uri) async {
       await _previousUniUriLock.synchronized(() async {
-        if (_previousUniUri != uri) { // this seems to be invoked twice so ignore the second one
+        if (_previousUniUri != uri) {
+          // this seems to be invoked twice so ignore the second one
           if (!await processUri(uri))
-            flushbarMsg(context, 'invalid URL', category: MessageCategory.Warning);
+            flushbarMsg(context, 'invalid URL',
+                category: MessageCategory.Warning);
           _previousUniUri = uri;
         }
       });
@@ -343,23 +355,21 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     // remove WidgetsBindingObserver
     WidgetsBinding.instance.removeObserver(this);
     // close socket
-    if (_merchantSocket != null) 
-      _merchantSocket.close();
+    if (_merchantSocket != null) _merchantSocket.close();
     // close uni links subscription
-    if (_uniLinksSub != null)
-      _uniLinksSub.cancel();
+    if (_uniLinksSub != null) _uniLinksSub.cancel();
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     print("App lifestyle state changed: $state");
-    if (state == AppLifecycleState.resumed)
-      if (AppTokenType == TokenType.Waves)
-        _watchAddress();
+    if (state == AppLifecycleState.resumed) if (AppTokenType == TokenType.Waves)
+      _watchAddress();
   }
 
-  void _txNotification(String txid, String sender, String recipient, double amount, String attachment) {
+  void _txNotification(String txid, String sender, String recipient,
+      double amount, String attachment) {
     var amountString = "${amount.toStringAsFixed(2)} $AssetShortNameUpper";
     // convert amount to NZD
     if (_merchantRates != null) {
@@ -370,34 +380,46 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     if (attachment != null && attachment.isNotEmpty)
       try {
         attachment = base58decodeString(attachment);
-      } catch(_) {};
+      } catch (_) {}
+    ;
     // play audio file
     audioPlayer.play('chaching.mp3');
     // show user overview of new tx
     showDialog(
-      context: context,
-      barrierDismissible: false, // dialog is dismissible with a tap on the barrier
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("received $amountString"),
-          content: Container(
-            width: double.maxFinite,
-            child: ListView(
-              shrinkWrap: true,
-              children: <Widget>[
-                ListTile(title: Text("TXID"), subtitle: Text(txid)),
-                ListTile(title: Text("sender"), subtitle: Text(sender),),
-                ListTile(title: Text("amount"), subtitle: Text(amountString)),
-                ListTile(title: Text(attachment != null && attachment.isNotEmpty ? "attachment" : ""), subtitle: Text(attachment != null && attachment.isNotEmpty ? attachment : "")),
-              ],
+        context: context,
+        barrierDismissible:
+            false, // dialog is dismissible with a tap on the barrier
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("received $amountString"),
+            content: Container(
+              width: double.maxFinite,
+              child: ListView(
+                shrinkWrap: true,
+                children: <Widget>[
+                  ListTile(title: Text("TXID"), subtitle: Text(txid)),
+                  ListTile(
+                    title: Text("sender"),
+                    subtitle: Text(sender),
+                  ),
+                  ListTile(title: Text("amount"), subtitle: Text(amountString)),
+                  ListTile(
+                      title: Text(attachment != null && attachment.isNotEmpty
+                          ? "attachment"
+                          : ""),
+                      subtitle: Text(attachment != null && attachment.isNotEmpty
+                          ? attachment
+                          : "")),
+                ],
+              ),
             ),
-          ),
-          actions: <Widget>[
-            RoundedButton(() => Navigator.pop(context), ZapBlue, ZapWhite, 'ok', borderColor: ZapBlue),
-          ],
-        );
-      }
-    );
+            actions: <Widget>[
+              RoundedButton(
+                  () => Navigator.pop(context), ZapBlue, ZapWhite, 'ok',
+                  borderColor: ZapBlue),
+            ],
+          );
+        });
     if (UseMerchantApi)
       // alert server to update merchant tx table
       merchantTx();
@@ -408,19 +430,16 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   void _watchAddress() async {
     assert(AppTokenType == TokenType.Waves);
     // do nothing if the address, apikey or apisecret is not set
-    if (_wallet == null)
-      return;
-    if (!await Prefs.hasMerchantApiKey())
-      return;
+    if (_wallet == null) return;
+    if (!await Prefs.hasMerchantApiKey()) return;
     // register to watch our address
-    if (!await merchantWatch(_wallet.address))
-    {
-      flushbarMsg(context, 'failed to register address', category: MessageCategory.Warning);
+    if (!await merchantWatch(_wallet.address)) {
+      flushbarMsg(context, 'failed to register address',
+          category: MessageCategory.Warning);
       return;
     }
     // create socket to receive tx alerts
-    if (_merchantSocket != null) 
-      _merchantSocket.close();
+    if (_merchantSocket != null) _merchantSocket.close();
     _merchantSocket = await merchantSocket(_txNotification);
   }
 
@@ -431,9 +450,9 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         barrierDismissible: true,
         builder: (BuildContext context) {
           return SimpleDialog(
-            title: const Text(UseMerchantApi ?
-              "You do not have recovery words or an address saved, what would you like to do?" :
-              "You do not have recovery words saved, what would you like to do?"),
+            title: const Text(UseMerchantApi
+                ? "You do not have recovery words or an address saved, what would you like to do?"
+                : "You do not have recovery words saved, what would you like to do?"),
             children: <Widget>[
               SimpleDialogOption(
                 onPressed: () {
@@ -451,17 +470,17 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
                 onPressed: () {
                   Navigator.pop(context, NoWalletAction.RecoverRaw);
                 },
-                child: const Text("Recover using a raw seed string (advanced use only)"),
+                child: const Text(
+                    "Recover using a raw seed string (advanced use only)"),
               ),
               Visibility(
-                visible: UseMerchantApi,
-                child: SimpleDialogOption(
-                  onPressed: () {
-                    Navigator.pop(context, NoWalletAction.ScanMerchantApiKey);
-                  },
-                  child: const Text("Scan retailer api key")
-                )
-              ),
+                  visible: UseMerchantApi,
+                  child: SimpleDialogOption(
+                      onPressed: () {
+                        Navigator.pop(
+                            context, NoWalletAction.ScanMerchantApiKey);
+                      },
+                      child: const Text("Scan retailer api key"))),
             ],
           );
         });
@@ -476,7 +495,9 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
           return SimpleDialog(
             title: const Text("User registration in process"),
             children: <Widget>[
-              Center(child: const Text("Complete by confirming your email", style: TextStyle(fontSize: 10))),
+              Center(
+                  child: const Text("Complete by confirming your email",
+                      style: TextStyle(fontSize: 10))),
               SimpleDialogOption(
                 onPressed: () {
                   Navigator.pop(context, true);
@@ -503,12 +524,15 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
           return SimpleDialog(
             title: const Text("API KEY request in process"),
             children: <Widget>[
-              Center(child: const Text("Complete by confirming your email", style: TextStyle(fontSize: 10))),
+              Center(
+                  child: const Text("Complete by confirming your email",
+                      style: TextStyle(fontSize: 10))),
               SimpleDialogOption(
                 onPressed: () {
                   Navigator.pop(context, true);
                 },
-                child: const Text("I have confirmed my email (claim API KEY now)"),
+                child:
+                    const Text("I have confirmed my email (claim API KEY now)"),
               ),
               SimpleDialogOption(
                 onPressed: () {
@@ -531,7 +555,9 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
           return SimpleDialog(
             title: const Text("Register or Login"),
             children: <Widget>[
-              Center(child: Text("Server: $server", style: TextStyle(fontSize: 10))),
+              Center(
+                  child:
+                      Text("Server: $server", style: TextStyle(fontSize: 10))),
               SimpleDialogOption(
                 onPressed: () {
                   Navigator.pop(context, NoAccountAction.Register);
@@ -556,31 +582,33 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   }
 
   Future<String> _recoverMnemonic(BuildContext context) {
-    return Navigator.push<String>(context, MaterialPageRoute(builder: (context) => RecoveryForm()));
+    return Navigator.push<String>(
+        context, MaterialPageRoute(builder: (context) => RecoveryForm()));
   }
-  
+
   Future<String> _recoverSeed(BuildContext context) async {
     String seed = "";
     return showDialog<String>(
       context: context,
-      barrierDismissible: false, // dialog is dismissible with a tap on the barrier
+      barrierDismissible:
+          false, // dialog is dismissible with a tap on the barrier
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text("Enter your raw seed string to recover your account"),
           content: Row(
             children: <Widget>[
               Expanded(
-                child: Container(
-                  constraints: BoxConstraints(maxWidth: 300),
-                  child: TextField(
-                    autofocus: true,
-                    decoration: InputDecoration(labelText: "Seed",),
-                    onChanged: (value) {
-                      seed = value;
-                    },
-                  )
-                )
-              )
+                  child: Container(
+                      constraints: BoxConstraints(maxWidth: 300),
+                      child: TextField(
+                        autofocus: true,
+                        decoration: InputDecoration(
+                          labelText: "Seed",
+                        ),
+                        onChanged: (value) {
+                          seed = value;
+                        },
+                      )))
             ],
           ),
           actions: <Widget>[
@@ -626,7 +654,8 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
             }
           }
           if (mnemonic == null)
-            await alert(context, "Recovery words not valid", "The recovery words you entered are not valid");
+            await alert(context, "Recovery words not valid",
+                "The recovery words you entered are not valid");
           break;
         case NoWalletAction.RecoverRaw:
           // recover raw seed string
@@ -637,8 +666,10 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
           if (value != null) {
             var result = parseApiKeyUri(value);
             if (result.error == NO_ERROR) {
-              if (result.walletAddress == null || result.walletAddress.isEmpty) {
-                flushbarMsg(context, 'wallet address not present', category: MessageCategory.Warning);
+              if (result.walletAddress == null ||
+                  result.walletAddress.isEmpty) {
+                flushbarMsg(context, 'wallet address not present',
+                    category: MessageCategory.Warning);
                 break;
               }
               await Prefs.addressSet(result.walletAddress);
@@ -649,9 +680,9 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
                 await Prefs.merchantApiServerSet(result.apiserver);
               flushbarMsg(context, 'API KEY set');
               address = result.walletAddress;
-            }
-            else
-              flushbarMsg(context, 'invalid QR code', category: MessageCategory.Warning);
+            } else
+              flushbarMsg(context, 'invalid QR code',
+                  category: MessageCategory.Warning);
           }
           break;
       }
@@ -680,13 +711,16 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
 
   Future<String> _paydbLogin(AccountLogin login) async {
     var deviceName = await _deviceName();
-    var result = await paydbApiKeyCreate(login.email, login.password, deviceName);
+    var result =
+        await paydbApiKeyCreate(login.email, login.password, deviceName);
     switch (result.error) {
       case PayDbError.Auth:
-        await alert(context, "Authentication not valid", "The login details you entered are not valid");
+        await alert(context, "Authentication not valid",
+            "The login details you entered are not valid");
         break;
       case PayDbError.Network:
-        await alert(context, "Network error", "A network error occured when trying to login");
+        await alert(context, "Network error",
+            "A network error occured when trying to login");
         break;
       case PayDbError.None:
         // write api key
@@ -697,14 +731,17 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     return null;
   }
 
-  Future<String> _paydbApiKeyClaim(AccountRequestApiKey req, String token) async {
+  Future<String> _paydbApiKeyClaim(
+      AccountRequestApiKey req, String token) async {
     var result = await paydbApiKeyClaim(token);
     switch (result.error) {
       case PayDbError.Auth:
-        await alert(context, "Authentication not valid", "The login details you entered are not valid");
+        await alert(context, "Authentication not valid",
+            "The login details you entered are not valid");
         break;
       case PayDbError.Network:
-        await alert(context, "Network error", "A network error occured when trying to login");
+        await alert(context, "Network error",
+            "A network error occured when trying to login");
         break;
       case PayDbError.None:
         // write api key
@@ -713,7 +750,6 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         return req.email;
     }
     return null;
-
   }
 
   Future<void> _noAccount() async {
@@ -735,20 +771,22 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
             // show register form
             registration = await Navigator.push<AccountRegistration>(
               context,
-              MaterialPageRoute(builder: (context) => AccountRegisterForm(registration)),
+              MaterialPageRoute(
+                  builder: (context) => AccountRegisterForm(registration)),
             );
-            if (registration == null)
-              break;
+            if (registration == null) break;
             var result = await paydbUserRegister(registration);
             switch (result) {
               case PayDbError.Auth:
               case PayDbError.Network:
-                await alert(context, "Network error", "A network error occured when trying to login");
+                await alert(context, "Network error",
+                    "A network error occured when trying to login");
                 break;
               case PayDbError.None:
                 if (await _directLoginAccountDialog(context))
                   // save account if login successful
-                  accountEmail = await _paydbLogin(AccountLogin(registration.email, registration.password));
+                  accountEmail = await _paydbLogin(
+                      AccountLogin(registration.email, registration.password));
                 break;
             }
           }
@@ -761,8 +799,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
               context,
               MaterialPageRoute(builder: (context) => AccountLoginForm(login)),
             );
-            if (login == null)
-              break;
+            if (login == null) break;
             // save account if login successful
             accountEmail = await _paydbLogin(login);
           }
@@ -772,22 +809,22 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
           var deviceName = await _deviceName();
           var req = await Navigator.push<AccountRequestApiKey>(
             context,
-            MaterialPageRoute(builder: (context) => AccountRequestApiKeyForm(deviceName)),
+            MaterialPageRoute(
+                builder: (context) => AccountRequestApiKeyForm(deviceName)),
           );
-          if (req == null)
-            break;
+          if (req == null) break;
           var result = await paydbApiKeyRequest(req.email, req.deviceName);
           switch (result.error) {
             case PayDbError.Auth:
             case PayDbError.Network:
-              await alert(context, "Network error", "A network error occured when trying to login");
+              await alert(context, "Network error",
+                  "A network error occured when trying to login");
               break;
             case PayDbError.None:
               while (await _waitApiKeyAccountDialog(context)) {
                 // claim api key
                 accountEmail = await _paydbApiKeyClaim(req, result.token);
-                if (accountEmail != null)
-                  break;
+                if (accountEmail != null) break;
               }
               break;
           }
@@ -806,8 +843,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     _testnet = await _setTestnet();
     setState(() {
       var testnetText = 'Testnet!';
-      if (_testnet && !_alerts.contains(testnetText))
-        _alerts.add(testnetText);
+      if (_testnet && !_alerts.contains(testnetText)) _alerts.add(testnetText);
       if (!_testnet && _alerts.contains(testnetText))
         _alerts.remove(testnetText);
     });
@@ -844,8 +880,9 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
           case PayDbError.Network:
             break;
           case PayDbError.None:
-              balance = Decimal.fromInt(result.info.balance) / Decimal.fromInt(100);
-              balanceText = balance.toStringAsFixed(2);
+            balance =
+                Decimal.fromInt(result.info.balance) / Decimal.fromInt(100);
+            balanceText = balance.toStringAsFixed(2);
             break;
         }
         break;
@@ -871,7 +908,8 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
           var libzap = LibZap();
           var mnemonic = await Prefs.mnemonicGet();
           if (mnemonic != null && mnemonic.isNotEmpty) {
-            var mnemonicPasswordProtected = await Prefs.mnemonicPasswordProtectedGet();
+            var mnemonicPasswordProtected =
+                await Prefs.mnemonicPasswordProtectedGet();
             if (mnemonicPasswordProtected) {
               while (true) {
                 var password = await askMnemonicPassword(context);
@@ -881,13 +919,14 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
                 var iv = await Prefs.cryptoIVGet();
                 var decryptedMnemonic = decryptMnemonic(mnemonic, iv, password);
                 if (decryptedMnemonic == null) {
-                  await alert(context, "Could not decrypt recovery words", "the password entered is probably wrong");
+                  await alert(context, "Could not decrypt recovery words",
+                      "the password entered is probably wrong");
                   continue;
                 }
                 if (!libzap.mnemonicCheck(decryptedMnemonic)) {
-                  var yes = await askYesNo(context, 'The recovery words are not valid, is this ok?');
-                  if (!yes)
-                    continue;
+                  var yes = await askYesNo(
+                      context, 'The recovery words are not valid, is this ok?');
+                  if (!yes) continue;
                 }
                 mnemonic = decryptedMnemonic;
                 break;
@@ -911,22 +950,24 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         break;
       case TokenType.PayDB:
         // check apikey
-        if (!await Prefs.hasPaydbApiKey())
-          return InitTokenDetailsResult.NoData;
+        if (!await Prefs.hasPaydbApiKey()) return InitTokenDetailsResult.NoData;
         var result = await paydbUserInfo();
         switch (result.error) {
           case PayDbError.None:
-            _account = PayDbAccount(result.info.email, result.info.photo, result.info.photoType, result.info.permissions);
+            _account = PayDbAccount(result.info.email, result.info.photo,
+                result.info.photoType, result.info.permissions);
             break;
           case PayDbError.Auth:
-            var yes = await askYesNo(context, 'Authentication failed, delete credentials?');
+            var yes = await askYesNo(
+                context, 'Authentication failed, delete credentials?');
             if (yes) {
               await Prefs.paydbApiKeySet(null);
               await Prefs.paydbApiKeySet(null);
             }
             return InitTokenDetailsResult.Auth;
           case PayDbError.Network:
-            await alert(context, "Network error", "check your network settings before continuing");
+            await alert(context, "Network error",
+                "check your network settings before continuing");
             return InitTokenDetailsResult.Network;
         }
         break;
@@ -935,8 +976,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     _updateTestnet();
     _updateBalance();
     // watch wallet address
-    if (AppTokenType == TokenType.Waves)
-      _watchAddress();
+    if (AppTokenType == TokenType.Waves) _watchAddress();
     // update merchant rates
     if (UseMerchantApi && await Prefs.hasMerchantApiKey())
       merchantRates().then((value) => _merchantRates = value);
@@ -947,11 +987,15 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     showDialog<String>(
       context: context,
       builder: (BuildContext context) {
-        return Align(alignment: Alignment.center, child: Card(
-          child: InkWell(child: Container(width: 300, height: 300,
-            child: QrWidget(_addrOrAccountValue(), size: 300)),
-            onTap: () => Navigator.pop(context))
-        ));
+        return Align(
+            alignment: Alignment.center,
+            child: Card(
+                child: InkWell(
+                    child: Container(
+                        width: 300,
+                        height: 300,
+                        child: QrWidget(_addrOrAccountValue(), size: 300)),
+                    onTap: () => Navigator.pop(context))));
       },
     );
   }
@@ -964,8 +1008,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
 
   void _scanQrCode() async {
     var value = await new QRCodeReader().scan();
-    if (value == null)
-      return;
+    if (value == null) return;
 
     switch (AppTokenType) {
       case TokenType.Waves:
@@ -975,10 +1018,10 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
           var tx = await Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => SendScreen(_testnet, _wallet.mnemonic, _fee, value, _balance)),
+                builder: (context) => SendScreen(
+                    _testnet, _wallet.mnemonic, _fee, value, _balance)),
           );
-          if (tx != null)
-            _updateBalance();
+          if (tx != null) _updateBalance();
           return;
         }
         // merchant claim code
@@ -986,8 +1029,9 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         if (ccresult.error == NO_ERROR) {
           if (await merchantClaim(ccresult.code, _wallet.address))
             flushbarMsg(context, 'claim succeded');
-          else 
-            flushbarMsg(context, 'claim failed', category: MessageCategory.Warning);
+          else
+            flushbarMsg(context, 'claim failed',
+                category: MessageCategory.Warning);
           return;
         }
         break;
@@ -997,10 +1041,10 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
           var tx = await Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => SendScreen(_testnet, _account.email, _fee, value, _balance)),
+                builder: (context) => SendScreen(
+                    _testnet, _account.email, _fee, value, _balance)),
           );
-          if (tx != null)
-            _updateBalance();
+          if (tx != null) _updateBalance();
           return;
         }
         break;
@@ -1009,9 +1053,11 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     try {
       var uri = Uri.parse(value);
       if (!await processUri(uri))
-        flushbarMsg(context, 'invalid QR code', category: MessageCategory.Warning);
-    }  on FormatException {
-      flushbarMsg(context, 'invalid QR code', category: MessageCategory.Warning);
+        flushbarMsg(context, 'invalid QR code',
+            category: MessageCategory.Warning);
+    } on FormatException {
+      flushbarMsg(context, 'invalid QR code',
+          category: MessageCategory.Warning);
     }
   }
 
@@ -1019,16 +1065,22 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     var tx = await Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (context) => SendScreen(_testnet, _mnemonicOrAccount(), AppTokenType == TokenType.Waves ? _fee : Decimal.fromInt(0), '', _balance)),
+          builder: (context) => SendScreen(
+              _testnet,
+              _mnemonicOrAccount(),
+              AppTokenType == TokenType.Waves ? _fee : Decimal.fromInt(0),
+              '',
+              _balance)),
     );
-    if (tx != null)
-      _updateBalance();
+    if (tx != null) _updateBalance();
   }
 
   void _receive() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => ReceiveScreen(_testnet, _addressOrAccount(), _txNotification)),
+      MaterialPageRoute(
+          builder: (context) =>
+              ReceiveScreen(_testnet, _addressOrAccount(), _txNotification)),
     );
   }
 
@@ -1036,7 +1088,12 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     var deviceName = await Prefs.deviceNameGet();
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => TransactionsScreen(_addrOrAccountValue(), _testnet, _haveCapabililty(Capability.Spend) ? null : deviceName, _merchantRates)),
+      MaterialPageRoute(
+          builder: (context) => TransactionsScreen(
+              _addrOrAccountValue(),
+              _testnet,
+              _haveCapabililty(Capability.Spend) ? null : deviceName,
+              _merchantRates)),
     );
   }
 
@@ -1047,7 +1104,9 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     }
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => SettingsScreen(_pinExists, _mnemonicOrAccount(), _fcm)),
+      MaterialPageRoute(
+          builder: (context) =>
+              SettingsScreen(_pinExists, _mnemonicOrAccount(), _fcm)),
     );
     _initTokenDetails();
   }
@@ -1056,20 +1115,20 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     var sentFunds = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-          builder: (context) => RewardScreen(_testnet, _wallet.mnemonic, _fee, _balance)),
+          builder: (context) =>
+              RewardScreen(_testnet, _wallet.mnemonic, _fee, _balance)),
     );
-    if (sentFunds)
-      _updateBalance();
+    if (sentFunds) _updateBalance();
   }
 
   void _settlement() async {
     var sentFunds = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-          builder: (context) => SettlementScreen(_wallet.mnemonic, _fee, _balance)),
+          builder: (context) =>
+              SettlementScreen(_wallet.mnemonic, _fee, _balance)),
     );
-    if (sentFunds)
-      _updateBalance();
+    if (sentFunds) _updateBalance();
   }
 
   void _showWallet() {
@@ -1084,11 +1143,9 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         gestureNavigationEnabled: true,
       );
       Navigator.push<bool>(
-        context,
-        MaterialPageRoute(
-            builder: (context) => _appScaffold(webview, isHomepage: true)
-        )
-      );
+          context,
+          MaterialPageRoute(
+              builder: (context) => _appScaffold(webview, isHomepage: true)));
     }
   }
 
@@ -1105,8 +1162,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         }
         break;
       case TokenType.PayDB:
-        if (_account == null)
-          return false;
+        if (_account == null) return false;
         switch (cap) {
           case Capability.Receive:
             return _account.permissions.contains(PayDbPermission.receive);
@@ -1126,11 +1182,13 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     var testnet = await Prefs.testnetGet();
     if (AppTokenType == TokenType.Waves) {
       var libzap = LibZap();
-      libzap.networkParamsSet(AssetIdMainnet, AssetIdTestnet, NodeUrlMainnet, NodeUrlTestnet, testnet);
+      libzap.networkParamsSet(AssetIdMainnet, AssetIdTestnet, NodeUrlMainnet,
+          NodeUrlTestnet, testnet);
       if (!_wallet.isMnemonic) {
         if (!libzap.addressCheck(_wallet.address)) {
           testnet = !testnet;
-          libzap.networkParamsSet(AssetIdMainnet, AssetIdTestnet, NodeUrlMainnet, NodeUrlTestnet, testnet);
+          libzap.networkParamsSet(AssetIdMainnet, AssetIdTestnet,
+              NodeUrlMainnet, NodeUrlTestnet, testnet);
           await Prefs.testnetSet(testnet);
         }
       }
@@ -1142,7 +1200,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     setState(() => _showAlerts = !_showAlerts);
   }
 
-  void _init() async  {
+  void _init() async {
     // init _testnet var
     _testnet = await _setTestnet();
     // get app version
@@ -1152,7 +1210,8 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     });
     // set libzap to initial testnet value so we can devrive address from mnemonic
     var testnet = await Prefs.testnetGet();
-    LibZap().networkParamsSet(AssetIdMainnet, AssetIdTestnet, NodeUrlMainnet, NodeUrlTestnet, testnet);
+    LibZap().networkParamsSet(AssetIdMainnet, AssetIdTestnet, NodeUrlMainnet,
+        NodeUrlTestnet, testnet);
     // init wallet
     var tokenDetailsResult = InitTokenDetailsResult.NoData;
     while (tokenDetailsResult != InitTokenDetailsResult.None) {
@@ -1180,45 +1239,66 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
 
   Widget _appScaffold(Widget body, {bool isHomepage = false}) {
     return Scaffold(
-      appBar: AppBar(
-        leading: Visibility(
-          child: IconButton(onPressed: _toggleAlerts, icon: Icon(Icons.warning, color: _showAlerts ? ZapGrey : ZapWarning)),
-          maintainSize: true, 
-          maintainAnimation: true,
-          maintainState: true,
-          visible: _alerts.length > 0 && !isHomepage, 
+        appBar: AppBar(
+          leading: Visibility(
+            child: IconButton(
+                onPressed: _toggleAlerts,
+                icon: Icon(Icons.warning,
+                    color: _showAlerts ? ZapGrey : ZapWarning)),
+            maintainSize: true,
+            maintainAnimation: true,
+            maintainState: true,
+            visible: _alerts.length > 0 && !isHomepage,
+          ),
+          title: Center(
+              child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                WebviewURL != null
+                    ? IconButton(
+                        icon: Icon(
+                            isHomepage ? Icons.home : Icons.home_outlined,
+                            color: ZapBlue),
+                        onPressed: isHomepage ? null : _showHomepage)
+                    : Spacer(),
+                Image.asset(AssetHeaderIconPng, height: 30),
+                WebviewURL != null
+                    ? IconButton(
+                        icon: Icon(
+                            isHomepage
+                                ? Icons.account_balance_wallet_outlined
+                                : Icons.account_balance_wallet,
+                            color: ZapBlue),
+                        onPressed: isHomepage ? _showWallet : null)
+                    : Spacer()
+              ])),
+          actions: <Widget>[
+            IconButton(
+                icon: Icon(Icons.settings_outlined, color: ZapBlue),
+                onPressed: _showSettings),
+          ],
         ),
-        title: Center(child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          WebviewURL != null ? IconButton(icon: Icon(isHomepage ? Icons.home : Icons.home_outlined, color: ZapBlue), onPressed: isHomepage ? null : _showHomepage) : Spacer(),
-          Image.asset(AssetHeaderIconPng, height: 30),
-          WebviewURL != null ? IconButton(icon: Icon(isHomepage ? Icons.account_balance_wallet_outlined : Icons.account_balance_wallet, color: ZapBlue), onPressed: isHomepage ? _showWallet : null) : Spacer()
-        ])),
-        actions: <Widget>[
-          IconButton(icon: Icon(Icons.settings_outlined, color: ZapBlue), onPressed: _showSettings),
-        ],
-      ),
-      body: body
-    );
+        body: body);
   }
 
   @override
   Widget build(BuildContext context) {
     if (!_walletOrAcctInited)
       return Scaffold(
-        body: Column(children: [
-          SizedBox(height: 100),
-          Center(child: Image.asset(AssetHeaderIconPng, height: 30)),
-          Visibility(
+          body: Column(children: [
+        SizedBox(height: 100),
+        Center(child: Image.asset(AssetHeaderIconPng, height: 30)),
+        Visibility(
             visible: _appVersion != null,
-            child: Center(child: Text("${_appVersion?.version}+${_appVersion?.build}", style: TextStyle(fontSize: 10)))
-          ),
-          SizedBox(height: 50),
-          Visibility(
+            child: Center(
+                child: Text("${_appVersion?.version}+${_appVersion?.build}",
+                    style: TextStyle(fontSize: 10)))),
+        SizedBox(height: 50),
+        Visibility(
             visible: _walletOrAcctLoading,
-            child: SizedBox(child: CircularProgressIndicator(), height: 28.0, width: 28.0)
-          )
-        ]
-      ));
+            child: SizedBox(
+                child: CircularProgressIndicator(), height: 28.0, width: 28.0))
+      ]));
 
     return _appScaffold(
       RefreshIndicator(
@@ -1226,115 +1306,150 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         child: ListView(
           children: <Widget>[
             Visibility(
-              visible: _showAlerts && _alerts.length > 0,
-              child: AlertDrawer(_toggleAlerts, _alerts)
-            ),
+                visible: _showAlerts && _alerts.length > 0,
+                child: AlertDrawer(_toggleAlerts, _alerts)),
             Visibility(
-              visible: _haveCapabililty(Capability.Balance),
-              child: Column(children: <Widget>[
-                Container(
-                  padding: const EdgeInsets.only(top: 28.0),
-                  child: Text('my balance:',  style: TextStyle(color: ZapBlackMed, fontWeight: FontWeight.w700), textAlign: TextAlign.center,),
-                ),
-                Container(
-                  height: 100,
-                  width: MediaQuery.of(context).size.width,
-                  child: Card(
-                    child: Align(alignment: Alignment.center, 
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Visibility(
-                            visible: _updatingBalance,
-                            child: SizedBox(child: CircularProgressIndicator(), height: 28.0, width: 28.0,)
-                          ),
-                          Visibility(
-                            visible: !_updatingBalance,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: <Widget>[
-                                Text(_balanceText, style: TextStyle(color: ZapBlue, fontSize: 28)),
-                                SizedBox.fromSize(size: Size(4, 1)),
-                                SvgPicture.asset(AssetBalanceIconSvg, height: 20)
-                              ],
-                            )
-                          )
-                        ]
-                      )
+                visible: _haveCapabililty(Capability.Balance),
+                child: Column(
+                  children: <Widget>[
+                    Container(
+                      padding: const EdgeInsets.only(top: 28.0),
+                      child: Text(
+                        'my balance:',
+                        style: TextStyle(
+                            color: ZapBlackMed, fontWeight: FontWeight.w700),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0),
+                    Container(
+                      height: 100,
+                      width: MediaQuery.of(context).size.width,
+                      child: Card(
+                        child: Align(
+                            alignment: Alignment.center,
+                            child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: <Widget>[
+                                  Visibility(
+                                      visible: _updatingBalance,
+                                      child: SizedBox(
+                                        child: CircularProgressIndicator(),
+                                        height: 28.0,
+                                        width: 28.0,
+                                      )),
+                                  Visibility(
+                                      visible: !_updatingBalance,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: <Widget>[
+                                          Text(_balanceText,
+                                              style: TextStyle(
+                                                  color: ZapBlue,
+                                                  fontSize: 28)),
+                                          SizedBox.fromSize(size: Size(4, 1)),
+                                          SvgPicture.asset(AssetBalanceIconSvg,
+                                              height: 20)
+                                        ],
+                                      ))
+                                ])),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
+                        margin: EdgeInsets.all(10),
+                      ),
                     ),
-                    margin: EdgeInsets.all(10),
+                  ],
+                )),
+            Visibility(
+                visible: _haveCapabililty(Capability.Receive),
+                child: Column(children: <Widget>[
+                  Container(
+                    padding: const EdgeInsets.only(top: 28.0),
+                    child: Text('${_addrOrAccount()}:',
+                        style: TextStyle(
+                            color: ZapBlackMed, fontWeight: FontWeight.w700),
+                        textAlign: TextAlign.center),
                   ),
-                ),
-              ],)
-            ),
-
-
-            Visibility(
-              visible: _haveCapabililty(Capability.Receive),
-              child: Column(children: <Widget>[
-                Container(
-                  padding: const EdgeInsets.only(top: 28.0),
-                  child: Text('${_addrOrAccount()}:', style: TextStyle(color: ZapBlackMed, fontWeight: FontWeight.w700), textAlign: TextAlign.center),
-                ),
-                Container(
-                  padding: const EdgeInsets.only(top: 18.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _profileImage(),
-                      Text(_addrOrAccountValue(), style: TextStyle(color: ZapBlackLight), textAlign: TextAlign.center),
-                  ])
-                ),
-                Divider(),
-                Container(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      RoundedButton(_showQrCode, ZapBlue, ZapWhite, 'view QR code', icon: MaterialCommunityIcons.qrcode_scan, minWidth: MediaQuery.of(context).size.width / 2 - 20),
-                      RoundedButton(_copyAddrOrAccount, ZapWhite, ZapBlue, 'copy ${_addrOrAccount()}', minWidth: MediaQuery.of(context).size.width / 2 - 20),
-                    ]
-                  )
-                )
-              ])
-            ),
+                  Container(
+                      padding: const EdgeInsets.only(top: 18.0),
+                      child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _profileImage(),
+                            Text(_addrOrAccountValue(),
+                                style: TextStyle(color: ZapBlackLight),
+                                textAlign: TextAlign.center),
+                          ])),
+                  Divider(),
+                  Container(
+                      child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                        RoundedButton(
+                            _showQrCode, ZapBlue, ZapWhite, 'view QR code',
+                            icon: MaterialCommunityIcons.qrcode_scan,
+                            minWidth:
+                                MediaQuery.of(context).size.width / 2 - 20),
+                        RoundedButton(_copyAddrOrAccount, ZapWhite, ZapBlue,
+                            'copy ${_addrOrAccount()}',
+                            minWidth:
+                                MediaQuery.of(context).size.width / 2 - 20),
+                      ]))
+                ])),
             Container(
-              //height: 300, ???
-              margin: const EdgeInsets.only(top: 40),
-              padding: const EdgeInsets.only(top: 20),
-              color: ZapWhite,
-              child: Column(
-                children: <Widget>[
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: <Widget>[
-                      _haveCapabililty(Capability.Spend) ? SquareButton(_send, MaterialCommunityIcons.chevron_double_up, ZapYellow, 'SEND $AssetShortNameUpper') : null,
-                      _haveCapabililty(Capability.Spend) ? SquareButton(_scanQrCode, MaterialCommunityIcons.qrcode_scan, ZapBlue, 'SCAN QR CODE') : null,
-                      SquareButton(_receive, MaterialCommunityIcons.chevron_double_down, ZapGreen, 'RECEIVE $AssetShortNameUpper'),
-                    ].where((child) => child != null).toList(),
-                  ),
-                  SizedBox.fromSize(size: Size(1, 10)),
-                  Visibility(
-                    visible: _haveCapabililty(Capability.History),
-                    child: ListButton(_transactions, 'transactions'),
-                  ),
-                  Visibility(
-                    visible: _haveCapabililty(Capability.Spend) && UseReward,
-                    child: 
-                      ListButton(_zapReward, '$AssetShortNameLower rewards'),
-                  ),
-                  Visibility(
-                    visible: _haveCapabililty(Capability.Spend) && UseSettlement,
-                    child: 
-                      ListButton(_settlement, 'make settlement'),
-                  ),
-                  ListButtonEnd(),
-                  Center(child: Text("${_appVersion?.version}+${_appVersion?.build}", style: TextStyle(fontSize: 10))),
-                ],
-              )
-            ),      
+                //height: 300, ???
+                margin: const EdgeInsets.only(top: 40),
+                padding: const EdgeInsets.only(top: 20),
+                color: ZapWhite,
+                child: Column(
+                  children: <Widget>[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: <Widget>[
+                        _haveCapabililty(Capability.Spend)
+                            ? SquareButton(
+                                _send,
+                                MaterialCommunityIcons.chevron_double_up,
+                                ZapYellow,
+                                'SEND $AssetShortNameUpper')
+                            : null,
+                        _haveCapabililty(Capability.Spend)
+                            ? SquareButton(
+                                _scanQrCode,
+                                MaterialCommunityIcons.qrcode_scan,
+                                ZapBlue,
+                                'SCAN QR CODE')
+                            : null,
+                        SquareButton(
+                            _receive,
+                            MaterialCommunityIcons.chevron_double_down,
+                            ZapGreen,
+                            'RECEIVE $AssetShortNameUpper'),
+                      ].where((child) => child != null).toList(),
+                    ),
+                    SizedBox.fromSize(size: Size(1, 10)),
+                    Visibility(
+                      visible: _haveCapabililty(Capability.History),
+                      child: ListButton(_transactions, 'transactions'),
+                    ),
+                    Visibility(
+                      visible: _haveCapabililty(Capability.Spend) && UseReward,
+                      child: ListButton(
+                          _zapReward, '$AssetShortNameLower rewards'),
+                    ),
+                    Visibility(
+                      visible:
+                          _haveCapabililty(Capability.Spend) && UseSettlement,
+                      child: ListButton(_settlement, 'make settlement'),
+                    ),
+                    ListButtonEnd(),
+                    Center(
+                        child: Text(
+                            "${_appVersion?.version}+${_appVersion?.build}",
+                            style: TextStyle(fontSize: 10))),
+                  ],
+                )),
           ],
         ),
       ),

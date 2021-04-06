@@ -39,8 +39,7 @@ class PrefHelper {
       var data = await File("zap.ini").readAsLines();
       config = Config.fromStrings(data);
     }
-    if (!config.hasSection(_section))
-      config.addSection(_section);
+    if (!config.hasSection(_section)) config.addSection(_section);
     return config;
   }
 
@@ -52,8 +51,7 @@ class PrefHelper {
     if (Platform.isAndroid || Platform.isIOS) {
       final prefs = await SharedPreferences.getInstance();
       prefs.setBool(key, value);
-    }
-    else {
+    } else {
       var config = await fromFile();
       config.set(_section, key, value.toString());
       await toFile(config);
@@ -64,20 +62,18 @@ class PrefHelper {
     if (Platform.isAndroid || Platform.isIOS) {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getBool(key) ?? defaultValue;
-    }
-    else {
+    } else {
       var config = await fromFile();
       var value = config.get(_section, key) ?? defaultValue.toString();
       return value.toLowerCase() == 'true';
-    }  
+    }
   }
 
   Future<void> setString(String key, String value) async {
     if (Platform.isAndroid || Platform.isIOS) {
       final prefs = await SharedPreferences.getInstance();
       prefs.setString(key, value);
-    }
-    else {
+    } else {
       var config = await fromFile();
       config.set(_section, key, value);
       await toFile(config);
@@ -88,23 +84,22 @@ class PrefHelper {
     if (Platform.isAndroid || Platform.isIOS) {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getString(key) ?? defaultValue;
-    }
-    else {
+    } else {
       var config = await fromFile();
       return config.get(_section, key) ?? defaultValue;
-    }  
+    }
   }
 }
 
 class Prefs {
   static Future<String> getKeyNetworkSpecific(String key) async {
     var testnet = await testnetGet();
-    if (!testnet)
-      key = '${key}_mainnet';
+    if (!testnet) key = '${key}_mainnet';
     return key;
   }
 
-  static Future<String> getStringNetworkSpecific(String key, String defaultValue) async {
+  static Future<String> getStringNetworkSpecific(
+      String key, String defaultValue) async {
     final prefs = PrefHelper();
     return prefs.getString(await getKeyNetworkSpecific(key), defaultValue);
   }
@@ -125,7 +120,8 @@ class Prefs {
     await prefs.setBool("testnet", value);
 
     // set libzap
-    LibZap().networkParamsSet(AssetIdMainnet, AssetIdTestnet, NodeUrlMainnet, NodeUrlTestnet, value);
+    LibZap().networkParamsSet(
+        AssetIdMainnet, AssetIdTestnet, NodeUrlMainnet, NodeUrlTestnet, value);
   }
 
   static Future<String> pinGet() async {
@@ -140,8 +136,8 @@ class Prefs {
   }
 
   static Future<bool> pinExists() async {
-  var pin = await Prefs.pinGet();
-  return pin != null && pin != '';
+    var pin = await Prefs.pinGet();
+    return pin != null && pin != '';
   }
 
   static Future<String> addressGet() async {
@@ -209,8 +205,7 @@ class Prefs {
 
   static Future<String> merchantApiServerGet() async {
     var server = await getStringNetworkSpecific("apiserver", null);
-    if (server == null || server.isEmpty)
-      server = "https://retail.zap.me/";
+    if (server == null || server.isEmpty) server = "https://retail.zap.me/";
     return server;
   }
 
@@ -221,11 +216,9 @@ class Prefs {
 
   static Future<bool> hasMerchantApiKey() async {
     var apikey = await merchantApiKeyGet();
-    if (apikey == null || apikey.isEmpty)
-      return false;
+    if (apikey == null || apikey.isEmpty) return false;
     var apisecret = await merchantApiSecretGet();
-    if (apisecret == null || apisecret.isEmpty)
-      return false;  
+    if (apisecret == null || apisecret.isEmpty) return false;
     return true;
   }
 
@@ -249,11 +242,9 @@ class Prefs {
 
   static Future<bool> hasPaydbApiKey() async {
     var apikey = await Prefs.paydbApiKeyGet();
-    if (apikey == null || apikey.isEmpty)
-      return false;
+    if (apikey == null || apikey.isEmpty) return false;
     var apisecret = await Prefs.paydbApiSecretGet();
-    if (apisecret == null || apisecret.isEmpty)
-      return false;  
+    if (apisecret == null || apisecret.isEmpty) return false;
     return true;
   }
 }

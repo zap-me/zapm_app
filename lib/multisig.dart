@@ -19,7 +19,9 @@ class SignaturePicker extends StatelessWidget {
   final String fileData;
   final int signatureIndex;
 
-  SignaturePicker(this.signatureSelect, this.signatureSwap, this.signatureDelete, this.fileData, this.signatureIndex) : super();
+  SignaturePicker(this.signatureSelect, this.signatureSwap,
+      this.signatureDelete, this.fileData, this.signatureIndex)
+      : super();
 
   @override
   Widget build(BuildContext context) {
@@ -27,27 +29,32 @@ class SignaturePicker extends StatelessWidget {
     if (fileData != null) {
       var res = json.decode(fileData);
       for (var i = 0; i < res['proofs'].length; i++) {
-        var sig = FlatButton(onPressed: () => signatureSelect(i), 
-          child: //Flexible(child:
-            Text(res['proofs'][i], overflow: TextOverflow.ellipsis,
-            style: i == signatureIndex ? TextStyle(color: ZapRed) : null)
-          //)
-        );
+        var sig = FlatButton(
+            onPressed: () => signatureSelect(i),
+            child: //Flexible(child:
+                Text(res['proofs'][i],
+                    overflow: TextOverflow.ellipsis,
+                    style:
+                        i == signatureIndex ? TextStyle(color: ZapRed) : null)
+            //)
+            );
         var trail = Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
           DragTarget<int>(
-            builder: (context, candidateData, rejectedData) {
-              return Draggable(
-                data: i,
-                child: Icon(Icons.reorder),
-                childWhenDragging: Icon(Icons.reorder, color: ZapGrey),
-                feedback: Icon(Icons.reorder, color: ZapRed, size: 30),
-              );
-            },
-            onWillAccept: (data) => true,
-            onAccept: (data) => signatureSwap(data, i)),
-          IconButton(onPressed: () => signatureDelete(i), icon: Icon(Icons.close))]
-        );
-        var tile = ListTile(key: Key('$i'),
+              builder: (context, candidateData, rejectedData) {
+                return Draggable(
+                  data: i,
+                  child: Icon(Icons.reorder),
+                  childWhenDragging: Icon(Icons.reorder, color: ZapGrey),
+                  feedback: Icon(Icons.reorder, color: ZapRed, size: 30),
+                );
+              },
+              onWillAccept: (data) => true,
+              onAccept: (data) => signatureSwap(data, i)),
+          IconButton(
+              onPressed: () => signatureDelete(i), icon: Icon(Icons.close))
+        ]);
+        var tile = ListTile(
+          key: Key('$i'),
           leading: Text('$i', style: TextStyle(color: ZapGrey, fontSize: 10)),
           title: sig,
           trailing: trail,
@@ -55,9 +62,7 @@ class SignaturePicker extends StatelessWidget {
         sigs.add(tile);
       }
     }
-    return Column(
-      children: sigs
-    );
+    return Column(children: sigs);
   }
 }
 
@@ -111,30 +116,29 @@ class _MultisigState extends State<MultisigScreen> {
     var json1 = json.decode(fileData) as Map<String, dynamic>;
     var json2 = json.decode(fileDataToMerge) as Map<String, dynamic>;
     for (var key in json1.keys) {
-      if (key == 'proofs')
-        continue;
+      if (key == 'proofs') continue;
       if (json1[key] != json2[key]) {
-        flushbarMsg(context, 'file did not match', category: MessageCategory.Warning);
+        flushbarMsg(context, 'file did not match',
+            category: MessageCategory.Warning);
         return fileData;
       }
     }
     var proofs1 = json1['proofs'] as List<dynamic>;
     var proofs2 = json2['proofs'] as List<dynamic>;
-    for (var proof in proofs2)
-      proofs1.add(proof);
+    for (var proof in proofs2) proofs1.add(proof);
     json1['proofs'] = proofs1;
     return jsonEncodePretty(json1);
   }
 
   void _loadFile() async {
-    _filePath = await FilePicker.getFilePath(type: FileType.custom, allowedExtensions: ['json', 'json_signed']);
+    _filePath = await FilePicker.getFilePath(
+        type: FileType.custom, allowedExtensions: ['json', 'json_signed']);
     if (_filePath == null) {
       return;
     }
     var file = File(_filePath);
     var fileData = await file.readAsString();
-    if (_fileData != null)
-      fileData = _mergeData(fileData, _fileData);
+    if (_fileData != null) fileData = _mergeData(fileData, _fileData);
     setState(() {
       _fileData = fileData;
       _signatureIndex = null;
@@ -145,8 +149,11 @@ class _MultisigState extends State<MultisigScreen> {
   void _signFile() async {
     // parse tx
     var res = json.decode(_fileData);
-    if (_signatureIndex == null || _signatureIndex < 0 || _signatureIndex >= res['proofs'].length) {
-      flushbarMsg(context, 'signature index not chosen', category: MessageCategory.Warning);
+    if (_signatureIndex == null ||
+        _signatureIndex < 0 ||
+        _signatureIndex >= res['proofs'].length) {
+      flushbarMsg(context, 'signature index not chosen',
+          category: MessageCategory.Warning);
       return;
     }
     // serialize tx
@@ -160,7 +167,8 @@ class _MultisigState extends State<MultisigScreen> {
       setState(() {
         _serializing = false;
       });
-      flushbarMsg(context, 'failed request to "$url"', category: MessageCategory.Warning);
+      flushbarMsg(context, 'failed request to "$url"',
+          category: MessageCategory.Warning);
       return;
     }
     var jsnObj = json.decode(response.body);
@@ -170,16 +178,22 @@ class _MultisigState extends State<MultisigScreen> {
     });
     // get mnemonic
     var libzap = LibZap();
-    var mnemonic = await Navigator.push<String>(context,
-      MaterialPageRoute(builder: (context) => RecoveryForm(instructions: "Enter your recovery words to sign the transaction")));
+    var mnemonic = await Navigator.push<String>(
+        context,
+        MaterialPageRoute(
+            builder: (context) => RecoveryForm(
+                instructions:
+                    "Enter your recovery words to sign the transaction")));
     if (mnemonic == null || !libzap.mnemonicCheck(mnemonic)) {
-      flushbarMsg(context, 'recovery words not valid', category: MessageCategory.Warning);
+      flushbarMsg(context, 'recovery words not valid',
+          category: MessageCategory.Warning);
       return;
     }
     //sign tx
     var sig = libzap.messageSign(mnemonic, txNonWitnessBytes);
     if (!sig.success) {
-      flushbarMsg(context, 'transaction signing failed', category: MessageCategory.Warning);
+      flushbarMsg(context, 'transaction signing failed',
+          category: MessageCategory.Warning);
       return;
     }
     res['proofs'][_signatureIndex] = base58encode(sig.signature.toList());
@@ -211,7 +225,8 @@ class _MultisigState extends State<MultisigScreen> {
     var url = '$node/transactions/broadcast';
     var response = await post(url, _fileData);
     if (response.statusCode != 200)
-      flushbarMsg(context, 'failed request to "$url"', category: MessageCategory.Warning);
+      flushbarMsg(context, 'failed request to "$url"',
+          category: MessageCategory.Warning);
     else
       flushbarMsg(context, 'successful request to "$url"');
     setState(() {
@@ -222,33 +237,42 @@ class _MultisigState extends State<MultisigScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: backButton(context, color: ZapBlack),
-        title: Text("Multisig"),
-      ),
-      body: Center(
-        child: Column( 
-          children: <Widget>[
-            SignaturePicker(_signatureSelect, _signatureSwap, _signatureDelete, _fileData, _signatureIndex),
-            RaisedButton(onPressed: _loadFile, child: Text("Load File")),
-            SwitchListTile(
-              value: !_testnet,
-              title: Text("Signing for mainnet?"),
-              onChanged: (value) {
-                setState(() {
-                  _testnet = !_testnet;
-                });
-              },
-            ),
-            RaisedButton(onPressed: _fileData != null && !_serializing ? _signFile : null, child: Text(_serializing ? "Serializing..." : "Sign")),
-            // disabled util https://github.com/miguelpruivo/flutter_file_picker/issues/234 is resolved
-            RaisedButton(/*onPressed: _fileData != null ? _saveFile : null,*/ child: Text("Save File")),
-            RaisedButton(onPressed: _fileData != null ? _shareFile : null, child: Text("Share File")),
-            RaisedButton(onPressed: _fileData != null ? _broadcastFile : null, child: Text("Broadcast File")),
-            Text(_broadcastResponse != null ? _broadcastResponse : '')
-          ],
+        appBar: AppBar(
+          leading: backButton(context, color: ZapBlack),
+          title: Text("Multisig"),
         ),
-      )
-    );
+        body: Center(
+          child: Column(
+            children: <Widget>[
+              SignaturePicker(_signatureSelect, _signatureSwap,
+                  _signatureDelete, _fileData, _signatureIndex),
+              RaisedButton(onPressed: _loadFile, child: Text("Load File")),
+              SwitchListTile(
+                value: !_testnet,
+                title: Text("Signing for mainnet?"),
+                onChanged: (value) {
+                  setState(() {
+                    _testnet = !_testnet;
+                  });
+                },
+              ),
+              RaisedButton(
+                  onPressed:
+                      _fileData != null && !_serializing ? _signFile : null,
+                  child: Text(_serializing ? "Serializing..." : "Sign")),
+              // disabled util https://github.com/miguelpruivo/flutter_file_picker/issues/234 is resolved
+              RaisedButton(
+                  /*onPressed: _fileData != null ? _saveFile : null,*/ child:
+                      Text("Save File")),
+              RaisedButton(
+                  onPressed: _fileData != null ? _shareFile : null,
+                  child: Text("Share File")),
+              RaisedButton(
+                  onPressed: _fileData != null ? _broadcastFile : null,
+                  child: Text("Broadcast File")),
+              Text(_broadcastResponse != null ? _broadcastResponse : '')
+            ],
+          ),
+        ));
   }
 }

@@ -12,8 +12,6 @@ String createHmacSig(String secret, String message) {
 class NoApiKeyException implements Exception {}
 
 void checkApiKey(String apikey, String apisecret) {
-  if (apikey == null)
-    throw NoApiKeyException();
-  if (apisecret == null)
-    throw NoApiKeyException();
+  if (apikey == null) throw NoApiKeyException();
+  if (apisecret == null) throw NoApiKeyException();
 }

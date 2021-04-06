@@ -20,8 +20,6 @@ class RewardScreen extends StatelessWidget {
         ),
         body: new Container(
             padding: new EdgeInsets.all(20.0),
-            child: RewardForm(_testnet, _seed, _fee, _max)
-        )
-    );
+            child: RewardForm(_testnet, _seed, _fee, _max)));
   }
 }

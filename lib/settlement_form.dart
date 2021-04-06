@@ -39,7 +39,8 @@ class SettlementFormState extends State<SettlementForm> {
       var fee = (widget._fee * Decimal.fromInt(100)).toInt();
       var lz = LibZap();
       if (!lz.addressCheck(_rates.settlementAddress)) {
-        flushbarMsg(context, 'unable to create settlement', category: MessageCategory.Warning);
+        flushbarMsg(context, 'unable to create settlement',
+            category: MessageCategory.Warning);
         return false;
       }
       // get amount to receive
@@ -47,7 +48,8 @@ class SettlementFormState extends State<SettlementForm> {
       var calc = await merchantSettlementCalc(amountDec);
       Navigator.pop(context);
       if (calc.amountReceive == null) {
-        flushbarMsg(context, 'unable to calculate settlement', category: MessageCategory.Warning);
+        flushbarMsg(context, 'unable to calculate settlement',
+            category: MessageCategory.Warning);
         return false;
       }
       // double check with user
@@ -56,24 +58,35 @@ class SettlementFormState extends State<SettlementForm> {
           builder: (BuildContext context) {
             return SimpleDialog(
               title: Column(children: <Widget>[
-                Text('confirm $AssetShortNameUpper settlement amount', style: TextStyle(fontSize: 16)),
-                Text('sending ${amountDec.toStringAsFixed(2)} $AssetShortNameUpper', style: TextStyle(fontSize: 16, color: ZapYellow)),
-                Text('receiving ${calc.amountReceive.toStringAsFixed(2)} NZD', style: TextStyle(fontSize: 16, color: ZapGreen)),
-                Text('admin fee ${(calc.amountReceive - amountDec).toStringAsFixed(2)} NZD', style: TextStyle(fontSize: 16, color: ZapYellow)),
+                Text('confirm $AssetShortNameUpper settlement amount',
+                    style: TextStyle(fontSize: 16)),
+                Text(
+                    'sending ${amountDec.toStringAsFixed(2)} $AssetShortNameUpper',
+                    style: TextStyle(fontSize: 16, color: ZapYellow)),
+                Text('receiving ${calc.amountReceive.toStringAsFixed(2)} NZD',
+                    style: TextStyle(fontSize: 16, color: ZapGreen)),
+                Text(
+                    'admin fee ${(calc.amountReceive - amountDec).toStringAsFixed(2)} NZD',
+                    style: TextStyle(fontSize: 16, color: ZapYellow)),
               ]),
               children: <Widget>[
                 SimpleDialogOption(
                   padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: RoundedButton(() => Navigator.pop(context, true), ZapWhite, ZapBlue, 'yes send ${amountDec.toStringAsFixed(2)} $AssetShortNameLower'),
+                  child: RoundedButton(
+                      () => Navigator.pop(context, true),
+                      ZapWhite,
+                      ZapBlue,
+                      'yes send ${amountDec.toStringAsFixed(2)} $AssetShortNameLower'),
                 ),
                 SimpleDialogOption(
                   padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: RoundedButton(() => Navigator.pop(context, false), ZapBlue, ZapWhite, 'cancel', borderColor: ZapBlue),
+                  child: RoundedButton(() => Navigator.pop(context, false),
+                      ZapBlue, ZapWhite, 'cancel',
+                      borderColor: ZapBlue),
                 )
               ],
             );
-          }
-      )) {
+          })) {
         // check pin
         if (!await pinCheck(context, await Prefs.pinGet())) {
           return false;
@@ -89,41 +102,47 @@ class SettlementFormState extends State<SettlementForm> {
         var result = await merchantSettlement(amountDec, bankToken);
         Navigator.pop(context);
         if (result.settlement == null) {
-          flushbarMsg(context, 'failed to create settlement (${result.error})', category: MessageCategory.Warning);
+          flushbarMsg(context, 'failed to create settlement (${result.error})',
+              category: MessageCategory.Warning);
           return false;
         }
         // send funds
         var libzap = LibZap();
         var deviceName = await Prefs.deviceNameGet();
-        var attachment = formatAttachment(deviceName, result.settlement.token, 'settlement');
-        var spendTx = libzap.transactionCreate(widget._seed, _rates.settlementAddress, amount, fee, attachment);
+        var attachment =
+            formatAttachment(deviceName, result.settlement.token, 'settlement');
+        var spendTx = libzap.transactionCreate(
+            widget._seed, _rates.settlementAddress, amount, fee, attachment);
         if (!spendTx.success) {
-          flushbarMsg(context, 'failed to create transaction', category: MessageCategory.Warning);
-            return false;
+          flushbarMsg(context, 'failed to create transaction',
+              category: MessageCategory.Warning);
+          return false;
         }
         showAlertDialog(context, 'sending settlement transaction...');
         var tx = await LibZap.transactionBroadcast(spendTx);
         if (tx == null) {
-          flushbarMsg(context, 'failed to broadcast transaction', category: MessageCategory.Warning);
-            Navigator.pop(context);
-            return false;
+          flushbarMsg(context, 'failed to broadcast transaction',
+              category: MessageCategory.Warning);
+          Navigator.pop(context);
+          return false;
         }
         Navigator.pop(context);
         showAlertDialog(context, 'updating settlement...');
         result = await merchantSettlementUpdate(result.settlement.token, tx.id);
         if (result.settlement == null) {
-          flushbarMsg(context, 'failed to update settlement (${result.error})', category: MessageCategory.Warning);
-            Navigator.pop(context);
-            return true;
+          flushbarMsg(context, 'failed to update settlement (${result.error})',
+              category: MessageCategory.Warning);
+          Navigator.pop(context);
+          return true;
         }
         Navigator.pop(context);
         // alert server to update merchant tx table
         merchantTx();
         return true;
       }
-    }
-    else
-      flushbarMsg(context, 'validation failed', category: MessageCategory.Warning);
+    } else
+      flushbarMsg(context, 'validation failed',
+          category: MessageCategory.Warning);
     return false;
   }
 
@@ -141,7 +160,8 @@ class SettlementFormState extends State<SettlementForm> {
       var rates = await merchantRates();
       Navigator.pop(context);
       if (rates == null) {
-        flushbarMsg(context, 'unable to get rates', category: MessageCategory.Warning);
+        flushbarMsg(context, 'unable to get rates',
+            category: MessageCategory.Warning);
         return;
       }
       // get banks
@@ -149,7 +169,8 @@ class SettlementFormState extends State<SettlementForm> {
       var banks = await merchantBanks();
       Navigator.pop(context);
       if (banks == null) {
-        flushbarMsg(context, 'unable to get bank accounts', category: MessageCategory.Warning);
+        flushbarMsg(context, 'unable to get bank accounts',
+            category: MessageCategory.Warning);
         return;
       }
       if (banks.length > 0) {
@@ -163,9 +184,10 @@ class SettlementFormState extends State<SettlementForm> {
           }
         });
       } else {
-        flushbarMsg(context, 'user has no bank accounts', category: MessageCategory.Warning);
+        flushbarMsg(context, 'user has no bank accounts',
+            category: MessageCategory.Warning);
         return;
-      } 
+      }
     }();
   }
 
@@ -176,12 +198,21 @@ class SettlementFormState extends State<SettlementForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
-          Center(heightFactor: 3, child: Text('make settlement\n  ', style: TextStyle(color: ZapWhite, fontWeight: FontWeight.bold), textAlign: TextAlign.center)),
+          Center(
+              heightFactor: 3,
+              child: Text('make settlement\n  ',
+                  style:
+                      TextStyle(color: ZapWhite, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center)),
           TextFormField(
             controller: _amountController,
             keyboardType: TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(labelText: '$AssetShortNameUpper amount',
-              suffixIcon: FlatButton(onPressed: () => _amountController.text = '${widget._max - widget._fee}', child: Text('max', style: TextStyle(color: ZapYellow)))),
+            decoration: InputDecoration(
+                labelText: '$AssetShortNameUpper amount',
+                suffixIcon: FlatButton(
+                    onPressed: () =>
+                        _amountController.text = '${widget._max - widget._fee}',
+                    child: Text('max', style: TextStyle(color: ZapYellow)))),
             validator: (value) {
               if (value.isEmpty) {
                 return 'Please enter a value';
@@ -194,13 +225,20 @@ class SettlementFormState extends State<SettlementForm> {
                 return 'Please enter a value greater then zero';
               }
               return null;
-            }, 
+            },
           ),
           DropdownButton<String>(
             isExpanded: true,
             hint: Text('bank account'),
             value: _bankAccount,
-            items: _banks == null ? null : _banks.map((e) => DropdownMenuItem(child: Text('${e.accountName} - ${e.accountNumber}'), value: e.accountNumber,)).toList(),
+            items: _banks == null
+                ? null
+                : _banks
+                    .map((e) => DropdownMenuItem(
+                          child: Text('${e.accountName} - ${e.accountNumber}'),
+                          value: e.accountNumber,
+                        ))
+                    .toList(),
             onChanged: (e) {
               setState(() {
                 _bankAccount = e;
@@ -208,17 +246,20 @@ class SettlementFormState extends State<SettlementForm> {
             },
           ),
           Padding(
-            padding: const EdgeInsets.only(top: 24.0),
-            child: RoundedButton(() async {
-              if (_bankAccount == null)
-                return;
-              if (await send(context)) {
-                Navigator.pop(context, true);
-                flushbarMsg(context, 'settlement created');
-              }
-            }, ZapWhite, ZapBlue, 'submit', minWidth: MediaQuery.of(context).size.width / 2, holePunch: true)
-          ),
-          RoundedButton(() => Navigator.pop(context, false), ZapBlue, ZapWhite, 'cancel', borderColor: ZapBlue, minWidth: MediaQuery.of(context).size.width / 2),
+              padding: const EdgeInsets.only(top: 24.0),
+              child: RoundedButton(() async {
+                if (_bankAccount == null) return;
+                if (await send(context)) {
+                  Navigator.pop(context, true);
+                  flushbarMsg(context, 'settlement created');
+                }
+              }, ZapWhite, ZapBlue, 'submit',
+                  minWidth: MediaQuery.of(context).size.width / 2,
+                  holePunch: true)),
+          RoundedButton(
+              () => Navigator.pop(context, false), ZapBlue, ZapWhite, 'cancel',
+              borderColor: ZapBlue,
+              minWidth: MediaQuery.of(context).size.width / 2),
         ],
       ),
     );

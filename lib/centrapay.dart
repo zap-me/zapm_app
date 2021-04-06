@@ -43,18 +43,13 @@ CentrapayQr centrapayParseQrcode(String data) {
 }
 
 bool centrapayValidPaymentMethod(String method, bool testnet) {
-  if (testnet && method == CentrapayPaymentMethodZapTest)
-    return true;
-  if (!testnet && method == CentrapayPaymentMethodZapMain)
-    return true;
-  if (method == CentrapayPaymentMethodTestUplink)
-    return true;
+  if (testnet && method == CentrapayPaymentMethodZapTest) return true;
+  if (!testnet && method == CentrapayPaymentMethodZapMain) return true;
+  if (method == CentrapayPaymentMethodTestUplink) return true;
   return false;
 }
 
-enum CentrapayError {
-  None, Network, Auth
-}
+enum CentrapayError { None, Network, Auth }
 
 class CentrapayPayment {
   final String ledger;
@@ -71,7 +66,8 @@ class CentrapayRequest {
   final String status;
   final Iterable<CentrapayPayment> payments;
 
-  CentrapayRequest(this.id, this.asset, this.amount, this.status, this.payments);
+  CentrapayRequest(
+      this.id, this.asset, this.amount, this.status, this.payments);
 }
 
 class CentrapayRequestInfoResult {
@@ -103,25 +99,27 @@ class CentrapayZapResult {
   CentrapayZapResult(this.zapRequired, this.zapTx, this.centrapayResult);
 }
 
-Future<http.Response> postAndCatch(String url, Map<String, dynamic> params, {bool usePost = true}) async {
+Future<http.Response> postAndCatch(String url, Map<String, dynamic> params,
+    {bool usePost = true}) async {
   assert(CentrapayApiKey != null);
   try {
     var headers = {'x-api-key': CentrapayApiKey};
     if (usePost) {
       print(':: centrapay endpoint: $url');
       print('   data: $params');
-      return await post(url, params, contentType: 'application/x-www-form-urlencoded', extraHeaders: headers);
-    }
-    else {
+      return await post(url, params,
+          contentType: 'application/x-www-form-urlencoded',
+          extraHeaders: headers);
+    } else {
       var queryString = Uri(queryParameters: params).query;
       url = url + '?' + queryString;
       print(':: centrapay endpoint: $url');
       return await get_(url, extraHeaders: headers);
     }
-  } on SocketException catch(e) {
+  } on SocketException catch (e) {
     print(e);
     return null;
-  } on TimeoutException catch(e) {
+  } on TimeoutException catch (e) {
     print(e);
     return null;
   }
@@ -141,7 +139,8 @@ Future<CentrapayRequestInfoResult> centrapayRequestInfo(CentrapayQr qr) async {
     var status = jsnObj["status"];
     var paymentMethods = List<CentrapayPayment>();
     for (var item in jsnObj["payments"]) {
-      var method = CentrapayPayment(item["ledger"], item["account"], item["amount"].toDouble());
+      var method = CentrapayPayment(
+          item["ledger"], item["account"], item["amount"].toDouble());
       paymentMethods.add(method);
     }
     var req = CentrapayRequest(id, asset, amount, status, paymentMethods);
@@ -152,9 +151,17 @@ Future<CentrapayRequestInfoResult> centrapayRequestInfo(CentrapayQr qr) async {
   return CentrapayRequestInfoResult(null, CentrapayError.Network);
 }
 
-Future<CentrapayRequestPayResult> centrapayRequestPay(CentrapayQr qr, CentrapayRequest req, CentrapayPayment payment, String authorization) async {
+Future<CentrapayRequestPayResult> centrapayRequestPay(
+    CentrapayQr qr,
+    CentrapayRequest req,
+    CentrapayPayment payment,
+    String authorization) async {
   var url = qr.baseUrl + "/payments/api/requests.pay";
-  var params = {"requestId": req.id, "ledger": payment.ledger, "authorization": authorization};
+  var params = {
+    "requestId": req.id,
+    "ledger": payment.ledger,
+    "authorization": authorization
+  };
   var response = await postAndCatch(url, params);
   if (response == null)
     return CentrapayRequestPayResult(null, CentrapayError.Network);
@@ -177,7 +184,8 @@ class CentrapayScreen extends StatefulWidget {
   final Decimal _max;
   final CentrapayQr _qr;
 
-  CentrapayScreen(this._testnet, this._seed, this._fee, this._max, this._qr) : super();
+  CentrapayScreen(this._testnet, this._seed, this._fee, this._max, this._qr)
+      : super();
 
   @override
   CentrapayScreenState createState() {
@@ -195,8 +203,7 @@ class CentrapayScreenState extends State<CentrapayScreen> {
 
   @override
   void initState() {
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => start());
+    WidgetsBinding.instance.addPostFrameCallback((_) => start());
     super.initState();
   }
 
@@ -220,13 +227,11 @@ class CentrapayScreenState extends State<CentrapayScreen> {
           }
         _msg = 'no compatible centrapay payment method found';
         flushbarMsg(context, _msg, category: MessageCategory.Warning);
-      }
-      else {
+      } else {
         _msg = 'centrapay request status: ${result.request.status}';
         flushbarMsg(context, _msg, category: MessageCategory.Warning);
       }
-    }
-    else {
+    } else {
       _msg = 'centrapay request info failed';
       flushbarMsg(context, _msg, category: MessageCategory.Warning);
     }
@@ -236,8 +241,7 @@ class CentrapayScreenState extends State<CentrapayScreen> {
   }
 
   String paymentAmount(CentrapayPayment payment) {
-    if (payment == null)
-      return '0';
+    if (payment == null) return '0';
     return (payment.amount / 100).toStringAsFixed(2);
   }
 
@@ -252,27 +256,31 @@ class CentrapayScreenState extends State<CentrapayScreen> {
     return 'UNKNOWN';
   }
 
-  Future<CentrapayZapResult> payZapAndConfirm(CentrapayRequest req, CentrapayPayment payment) async {
+  Future<CentrapayZapResult> payZapAndConfirm(
+      CentrapayRequest req, CentrapayPayment payment) async {
     switch (payment.ledger) {
       case CentrapayPaymentMethodTestUplink:
-        var res = await centrapayRequestPay(widget._qr, req, payment, DateTime.now().millisecondsSinceEpoch.toString());
+        var res = await centrapayRequestPay(widget._qr, req, payment,
+            DateTime.now().millisecondsSinceEpoch.toString());
         return CentrapayZapResult(false, null, res);
       case CentrapayPaymentMethodZapMain:
       case CentrapayPaymentMethodZapTest:
         var amount = Decimal.parse(payment.amount.toString());
-        var wr = WavesRequest(payment.account, LibZap().assetIdGet(), amount, '{"centrapay":"${req.id}"}', NO_ERROR);
+        var wr = WavesRequest(payment.account, LibZap().assetIdGet(), amount,
+            '{"centrapay":"${req.id}"}', NO_ERROR);
         var recipientUri = wr.toUri();
         var tx = await Navigator.push<Tx>(
-            context,
-            MaterialPageRoute(
-                builder: (context) => SendScreen(widget._testnet, widget._seed, widget._fee, recipientUri, widget._max)),
-          );
-        if (tx == null)
-          return CentrapayZapResult(true, null, null);
+          context,
+          MaterialPageRoute(
+              builder: (context) => SendScreen(widget._testnet, widget._seed,
+                  widget._fee, recipientUri, widget._max)),
+        );
+        if (tx == null) return CentrapayZapResult(true, null, null);
         var res = await centrapayRequestPay(widget._qr, req, payment, tx.id);
         return CentrapayZapResult(true, tx, res);
     }
-    return CentrapayZapResult(true, null, CentrapayRequestPayResult(null, CentrapayError.None));
+    return CentrapayZapResult(
+        true, null, CentrapayRequestPayResult(null, CentrapayError.None));
   }
 
   void payConfirm() async {
@@ -308,20 +316,20 @@ class CentrapayScreenState extends State<CentrapayScreen> {
     if (res.zapRequired && res.zapTx == null) {
       _msg = 'failed to send zap';
       flushbarMsg(context, _msg, category: MessageCategory.Warning);
-    } else 
+    } else
       _zapTx = res.zapTx;
-      switch (res.centrapayResult.error) {
-        case CentrapayError.None:
-          _msg = 'completed centrapay payment';
-          _confirmed = true;
-          flushbarMsg(context, _msg);
-          break;
-        case CentrapayError.Auth:
-        case CentrapayError.Network:
-          _msg = 'failed to update centrapay payment';
-          flushbarMsg(context, _msg, category: MessageCategory.Warning);
-          break;
-      }
+    switch (res.centrapayResult.error) {
+      case CentrapayError.None:
+        _msg = 'completed centrapay payment';
+        _confirmed = true;
+        flushbarMsg(context, _msg);
+        break;
+      case CentrapayError.Auth:
+      case CentrapayError.Network:
+        _msg = 'failed to update centrapay payment';
+        flushbarMsg(context, _msg, category: MessageCategory.Warning);
+        break;
+    }
     setState(() {
       _loading = false;
     });
@@ -336,43 +344,58 @@ class CentrapayScreenState extends State<CentrapayScreen> {
           backgroundColor: ZapYellow,
         ),
         body: CustomPaint(
-          painter: CustomCurve(ZapYellow, 110, 170),
-          child: Container(
-            width: MediaQuery.of(context).size.width, 
-            height: MediaQuery.of(context).size.height,
-            padding: EdgeInsets.all(20),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-              Visibility(
-                visible: _loading,
-                child: CircularProgressIndicator(),
-              ),
-              Visibility(visible: _loading, child: Container(padding: const EdgeInsets.only(top: 20.0))),
-              Visibility(
-                visible: _msg != null && _msg.isNotEmpty,
-                child: Text("$_msg"),
-              ),
-              Visibility(
-                visible: _payment != null,
-                child: Text("${paymentAmount(_payment)} ${paymentUnit(_payment)}", style: TextStyle(color: ZapBlue)),
-              ),
-              Visibility(
-                visible: !_loading && !_confirmed && _payment != null && _zapTx == null,
-                child: RoundedButton(pay, ZapWhite, ZapYellow, 'pay', minWidth: MediaQuery.of(context).size.width / 2, holePunch: true),
-              ),
-              Visibility(
-                visible: !_loading && !_confirmed && _zapTx != null,
-                child: RoundedButton(payConfirm, ZapWhite, ZapYellow, 'reconfirm payment', minWidth: MediaQuery.of(context).size.width / 2, holePunch: true),
-              ),
-              Visibility(
-                visible: !_loading,
-                child: RoundedButton(() => Navigator.pop(context, _zapTx), ZapBlue, ZapWhite, 'close', borderColor: ZapBlue, minWidth: MediaQuery.of(context).size.width / 2)
-              ),
-            ])
-          ) 
-        )
-    );
+            painter: CustomCurve(ZapYellow, 110, 170),
+            child: Container(
+                width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.height,
+                padding: EdgeInsets.all(20),
+                child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Visibility(
+                        visible: _loading,
+                        child: CircularProgressIndicator(),
+                      ),
+                      Visibility(
+                          visible: _loading,
+                          child: Container(
+                              padding: const EdgeInsets.only(top: 20.0))),
+                      Visibility(
+                        visible: _msg != null && _msg.isNotEmpty,
+                        child: Text("$_msg"),
+                      ),
+                      Visibility(
+                        visible: _payment != null,
+                        child: Text(
+                            "${paymentAmount(_payment)} ${paymentUnit(_payment)}",
+                            style: TextStyle(color: ZapBlue)),
+                      ),
+                      Visibility(
+                        visible: !_loading &&
+                            !_confirmed &&
+                            _payment != null &&
+                            _zapTx == null,
+                        child: RoundedButton(pay, ZapWhite, ZapYellow, 'pay',
+                            minWidth: MediaQuery.of(context).size.width / 2,
+                            holePunch: true),
+                      ),
+                      Visibility(
+                        visible: !_loading && !_confirmed && _zapTx != null,
+                        child: RoundedButton(payConfirm, ZapWhite, ZapYellow,
+                            'reconfirm payment',
+                            minWidth: MediaQuery.of(context).size.width / 2,
+                            holePunch: true),
+                      ),
+                      Visibility(
+                          visible: !_loading,
+                          child: RoundedButton(
+                              () => Navigator.pop(context, _zapTx),
+                              ZapBlue,
+                              ZapWhite,
+                              'close',
+                              borderColor: ZapBlue,
+                              minWidth: MediaQuery.of(context).size.width / 2)),
+                    ]))));
   }
 }

@@ -43,17 +43,20 @@ class RewardFormState extends State<RewardForm> {
               title: const Text("Confirm $AssetShortName Reward Amount"),
               children: <Widget>[
                 SimpleDialogOption(
-                  onPressed: () { Navigator.pop(context, true); },
+                  onPressed: () {
+                    Navigator.pop(context, true);
+                  },
                   child: Text("Yes send $amountText $AssetShortNameUpper"),
                 ),
                 SimpleDialogOption(
-                  onPressed: () { Navigator.pop(context, false); },
+                  onPressed: () {
+                    Navigator.pop(context, false);
+                  },
                   child: const Text("Cancel"),
                 ),
               ],
             );
-          }
-      )) {
+          })) {
         // check pin
         if (!await pinCheck(context, await Prefs.pinGet())) {
           return;
@@ -61,14 +64,15 @@ class RewardFormState extends State<RewardForm> {
         // start claim process
         var sentFunds = await Navigator.push<bool>(
           context,
-          MaterialPageRoute(builder: (context) => ClaimingForm(amountDec, widget._seed, amount, fee, msg)),
+          MaterialPageRoute(
+              builder: (context) =>
+                  ClaimingForm(amountDec, widget._seed, amount, fee, msg)),
         );
-        if (sentFunds)
-          Navigator.pop(context, true);
+        if (sentFunds) Navigator.pop(context, true);
       }
-    }
-    else
-      flushbarMsg(context, 'validation failed', category: MessageCategory.Warning);
+    } else
+      flushbarMsg(context, 'validation failed',
+          category: MessageCategory.Warning);
   }
 
   @protected
@@ -111,12 +115,12 @@ class RewardFormState extends State<RewardForm> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16.0),
             child: RaisedButton.icon(
-                onPressed: send,
-                icon: Icon(Icons.send),
-                label: Text('Submit')),
+                onPressed: send, icon: Icon(Icons.send), label: Text('Submit')),
           ),
           RaisedButton.icon(
-              onPressed: () { Navigator.pop(context, false); },
+              onPressed: () {
+                Navigator.pop(context, false);
+              },
               icon: Icon(Icons.cancel),
               label: Text('Cancel')),
         ],

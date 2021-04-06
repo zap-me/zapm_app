@@ -29,10 +29,9 @@ class ClaimCode {
 
   factory ClaimCode.generate(Decimal _amount) {
     return ClaimCode(
-      amount: _amount,
-      token: HEX.encode(secureRandom(count: 8)),
-      secret: HEX.encode(secureRandom(count: 16))
-    );
+        amount: _amount,
+        token: HEX.encode(secureRandom(count: 8)),
+        secret: HEX.encode(secureRandom(count: 16)));
   }
 }
 
@@ -60,10 +59,10 @@ ClaimCodeResult parseClaimCodeUri(String uri) {
         if (res != null) amount = Decimal.parse(res) / Decimal.fromInt(100);
       }
     }
-  }
-  else
+  } else
     error = INVALID_CLAIMCODE_URI;
-  return ClaimCodeResult(ClaimCode(amount: amount, token: token, secret: secret), error);
+  return ClaimCodeResult(
+      ClaimCode(amount: amount, token: token, secret: secret), error);
 }
 
 class Rates {
@@ -73,7 +72,12 @@ class Rates {
   final Decimal customerRate;
   final String settlementAddress;
 
-  Rates({this.salesTax, this.settlementFee, this.merchantRate, this.customerRate, this.settlementAddress});
+  Rates(
+      {this.salesTax,
+      this.settlementFee,
+      this.merchantRate,
+      this.customerRate,
+      this.settlementAddress});
 }
 
 class Bank {
@@ -93,7 +97,13 @@ class Settlement {
   final String txid;
   final String status;
 
-  Settlement({this.token, this.amount, this.amountReceive, this.bankAccount, this.txid, this.status});
+  Settlement(
+      {this.token,
+      this.amount,
+      this.amountReceive,
+      this.bankAccount,
+      this.txid,
+      this.status});
 }
 
 class ZapCalcResult {
@@ -136,7 +146,12 @@ Future<ClaimCode> merchantRegister(Decimal amount, int amountInt) async {
   var apisecret = await Prefs.merchantApiSecretGet();
   checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
-  var body = jsonEncode({"api_key": apikey, "nonce": nonce, "token": claimCode.token, "amount": amountInt});
+  var body = jsonEncode({
+    "api_key": apikey,
+    "nonce": nonce,
+    "token": claimCode.token,
+    "amount": amountInt
+  });
   var sig = createHmacSig(apisecret, body);
   var response = await post(url, body, extraHeaders: {"X-Signature": sig});
   if (response.statusCode == 200) {
@@ -152,7 +167,8 @@ Future<String> merchantCheck(ClaimCode claimCode) async {
   var apisecret = await Prefs.merchantApiSecretGet();
   checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
-  var body = jsonEncode({"api_key": apikey, "nonce": nonce, "token": claimCode.token});
+  var body =
+      jsonEncode({"api_key": apikey, "nonce": nonce, "token": claimCode.token});
   var sig = createHmacSig(apisecret, body);
   var response = await post(url, body, extraHeaders: {"X-Signature": sig});
   if (response.statusCode == 200) {
@@ -164,7 +180,11 @@ Future<String> merchantCheck(ClaimCode claimCode) async {
 Future<bool> merchantClaim(ClaimCode claimCode, String address) async {
   var baseUrl = await Prefs.merchantApiServerGet();
   var url = baseUrl + "claim";
-  var body = jsonEncode({"token": claimCode.token, "secret": claimCode.secret, "address": address});
+  var body = jsonEncode({
+    "token": claimCode.token,
+    "secret": claimCode.secret,
+    "address": address
+  });
   var response = await post(url, body);
   if (response.statusCode == 200) {
     return true;
@@ -179,7 +199,8 @@ Future<bool> merchantWatch(String address) async {
   var apisecret = await Prefs.merchantApiSecretGet();
   checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
-  var body = jsonEncode({"api_key": apikey, "nonce": nonce, "address": address});
+  var body =
+      jsonEncode({"api_key": apikey, "nonce": nonce, "address": address});
   var sig = createHmacSig(apisecret, body);
   var response = await post(url, body, extraHeaders: {"X-Signature": sig});
   if (response.statusCode == 200) {
@@ -195,7 +216,8 @@ Future<bool> merchantWalletAddress(String address) async {
   var apisecret = await Prefs.merchantApiSecretGet();
   checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
-  var body = jsonEncode({"api_key": apikey, "nonce": nonce, "address": address});
+  var body =
+      jsonEncode({"api_key": apikey, "nonce": nonce, "address": address});
   var sig = createHmacSig(apisecret, body);
   var response = await post(url, body, extraHeaders: {"X-Signature": sig});
   if (response.statusCode == 200) {
@@ -211,7 +233,10 @@ Future<bool> merchantTx() async {
   var apisecret = await Prefs.merchantApiSecretGet();
   checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
-  var body = jsonEncode({"api_key": apikey, "nonce": nonce,});
+  var body = jsonEncode({
+    "api_key": apikey,
+    "nonce": nonce,
+  });
   var sig = createHmacSig(apisecret, body);
   var response = await post(url, body, extraHeaders: {"X-Signature": sig});
   if (response.statusCode == 200) {
@@ -232,7 +257,12 @@ Future<Rates> merchantRates() async {
   var response = await post(url, body, extraHeaders: {"X-Signature": sig});
   if (response.statusCode == 200) {
     var jsnObj = json.decode(response.body);
-    return Rates(salesTax: Decimal.parse(jsnObj["sales_tax"]), settlementFee: Decimal.parse(jsnObj["settlement_fee"]), customerRate: Decimal.parse(jsnObj["customer"]), merchantRate: Decimal.parse(jsnObj["merchant"]), settlementAddress: jsnObj["settlement_address"]);
+    return Rates(
+        salesTax: Decimal.parse(jsnObj["sales_tax"]),
+        settlementFee: Decimal.parse(jsnObj["settlement_fee"]),
+        customerRate: Decimal.parse(jsnObj["customer"]),
+        merchantRate: Decimal.parse(jsnObj["merchant"]),
+        settlementAddress: jsnObj["settlement_address"]);
   }
   return null;
 }
@@ -251,10 +281,14 @@ Future<List<Bank>> merchantBanks() async {
     var jsnObj = json.decode(response.body);
     var banks = List<Bank>();
     for (var jsnObjBank in jsnObj) {
-      var bank = Bank(token: jsnObjBank["token"], accountName: jsnObjBank["account_name"], accountNumber: jsnObjBank["account_number"], defaultAccount: jsnObjBank["default_account"]);
+      var bank = Bank(
+          token: jsnObjBank["token"],
+          accountName: jsnObjBank["account_name"],
+          accountNumber: jsnObjBank["account_number"],
+          defaultAccount: jsnObjBank["default_account"]);
       banks.add(bank);
     }
-    return banks;  
+    return banks;
   }
   return null;
 }
@@ -267,12 +301,17 @@ Future<ZapCalcResult> merchantZapCalc(Decimal nzdRequired) async {
   checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var d100 = Decimal.fromInt(100);
-  var body = jsonEncode({"api_key": apikey, "nonce": nonce, "nzd_required": (nzdRequired * d100).toInt()});
+  var body = jsonEncode({
+    "api_key": apikey,
+    "nonce": nonce,
+    "nzd_required": (nzdRequired * d100).toInt()
+  });
   var sig = createHmacSig(apisecret, body);
   var response = await post(url, body, extraHeaders: {"X-Signature": sig});
   if (response.statusCode == 200) {
     var jsnObj = json.decode(response.body);
-    return ZapCalcResult(Decimal.fromInt(jsnObj["nzd_required"]) / d100, Decimal.fromInt(jsnObj["zap"]) / d100, null);
+    return ZapCalcResult(Decimal.fromInt(jsnObj["nzd_required"]) / d100,
+        Decimal.fromInt(jsnObj["zap"]) / d100, null);
   }
   var jsnObj = json.decode(response.body);
   return ZapCalcResult(null, null, jsnObj["message"]);
@@ -286,18 +325,21 @@ Future<SettlementCalcResult> merchantSettlementCalc(Decimal amount) async {
   checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var d100 = Decimal.fromInt(100);
-  var body = jsonEncode({"api_key": apikey, "nonce": nonce, "amount": (amount * d100).toInt()});
+  var body = jsonEncode(
+      {"api_key": apikey, "nonce": nonce, "amount": (amount * d100).toInt()});
   var sig = createHmacSig(apisecret, body);
   var response = await post(url, body, extraHeaders: {"X-Signature": sig});
   if (response.statusCode == 200) {
     var jsnObj = json.decode(response.body);
-    return SettlementCalcResult(Decimal.fromInt(jsnObj["amount"]) / d100, Decimal.fromInt(jsnObj["amount_receive"]) / d100, null);
+    return SettlementCalcResult(Decimal.fromInt(jsnObj["amount"]) / d100,
+        Decimal.fromInt(jsnObj["amount_receive"]) / d100, null);
   }
   var jsnObj = json.decode(response.body);
   return SettlementCalcResult(null, null, jsnObj["message"]);
 }
 
-Future<SettlementResult> merchantSettlement(Decimal amount, String bankToken) async {
+Future<SettlementResult> merchantSettlement(
+    Decimal amount, String bankToken) async {
   var baseUrl = await Prefs.merchantApiServerGet();
   var url = baseUrl + "settlement";
   var apikey = await Prefs.merchantApiKeyGet();
@@ -305,47 +347,68 @@ Future<SettlementResult> merchantSettlement(Decimal amount, String bankToken) as
   checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var d100 = Decimal.fromInt(100);
-  var body = jsonEncode({"api_key": apikey, "nonce": nonce, "bank": bankToken, "amount": (amount * d100).toInt()});
+  var body = jsonEncode({
+    "api_key": apikey,
+    "nonce": nonce,
+    "bank": bankToken,
+    "amount": (amount * d100).toInt()
+  });
   var sig = createHmacSig(apisecret, body);
   var response = await post(url, body, extraHeaders: {"X-Signature": sig});
   if (response.statusCode == 200) {
     var jsnObj = json.decode(response.body);
     return SettlementResult(
-      Settlement(token: jsnObj["token"], amount: Decimal.fromInt(jsnObj["amount"]) / d100, amountReceive: Decimal.fromInt(jsnObj["amount_receive"]) / d100, bankAccount: jsnObj["bankAccount"], txid: jsnObj["txid"], status: jsnObj["status"]),
-      null);
+        Settlement(
+            token: jsnObj["token"],
+            amount: Decimal.fromInt(jsnObj["amount"]) / d100,
+            amountReceive: Decimal.fromInt(jsnObj["amount_receive"]) / d100,
+            bankAccount: jsnObj["bankAccount"],
+            txid: jsnObj["txid"],
+            status: jsnObj["status"]),
+        null);
   }
   var jsnObj = json.decode(response.body);
   return SettlementResult(null, jsnObj["message"]);
 }
 
-Future<SettlementResult> merchantSettlementUpdate(String token, String txid) async {
+Future<SettlementResult> merchantSettlementUpdate(
+    String token, String txid) async {
   var baseUrl = await Prefs.merchantApiServerGet();
   var url = baseUrl + "settlement_set_txid";
   var apikey = await Prefs.merchantApiKeyGet();
   var apisecret = await Prefs.merchantApiSecretGet();
   checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
-  var body = jsonEncode({"api_key": apikey, "nonce": nonce, "token": token, "txid": txid});
+  var body = jsonEncode(
+      {"api_key": apikey, "nonce": nonce, "token": token, "txid": txid});
   var sig = createHmacSig(apisecret, body);
   var response = await post(url, body, extraHeaders: {"X-Signature": sig});
   if (response.statusCode == 200) {
     var jsnObj = json.decode(response.body);
     var d100 = Decimal.fromInt(100);
-    return SettlementResult( 
-      Settlement(token: jsnObj["token"], amount: Decimal.fromInt(jsnObj["amount"]) / d100, amountReceive: Decimal.fromInt(jsnObj["amount_receive"]) / d100, bankAccount: jsnObj["bankAccount"], txid: jsnObj["txid"], status: jsnObj["status"]),
-      null);
+    return SettlementResult(
+        Settlement(
+            token: jsnObj["token"],
+            amount: Decimal.fromInt(jsnObj["amount"]) / d100,
+            amountReceive: Decimal.fromInt(jsnObj["amount_receive"]) / d100,
+            bankAccount: jsnObj["bankAccount"],
+            txid: jsnObj["txid"],
+            status: jsnObj["status"]),
+        null);
   }
   var jsnObj = json.decode(response.body);
   return SettlementResult(null, jsnObj["message"]);
 }
 
-typedef TxNotificationCallback = void Function(String txid, String sender, String recipient, double amount, String attachment);
-Future<Socket> merchantSocket(TxNotificationCallback txNotificationCallback) async {
+typedef TxNotificationCallback = void Function(String txid, String sender,
+    String recipient, double amount, String attachment);
+Future<Socket> merchantSocket(
+    TxNotificationCallback txNotificationCallback) async {
   var baseUrl = await Prefs.merchantApiServerGet();
   var apikey = await Prefs.merchantApiKeyGet();
   var apisecret = await Prefs.merchantApiSecretGet();
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
- 
+
   var socket = io(baseUrl, <String, dynamic>{
     'secure': true,
     'transports': ['websocket'],
@@ -371,18 +434,20 @@ Future<Socket> merchantSocket(TxNotificationCallback txNotificationCallback) asy
   socket.on('tx', (data) {
     print(data);
     var json = jsonDecode(data);
-    txNotificationCallback(json["id"], json["sender"], json["recipient"], json["amount"].toDouble(), json["attachment"]);
+    txNotificationCallback(json["id"], json["sender"], json["recipient"],
+        json["amount"].toDouble(), json["attachment"]);
   });
   socket.on('disconnect', (_) {
     print('ws disconnect');
   });
- 
+
   return socket;
 }
 
 String toNZDAmount(Decimal amount, Rates rates) {
   if (rates != null) {
-    var fee = (amount - (amount / (Decimal.fromInt(1) + rates.merchantRate))) * (Decimal.fromInt(1) + rates.salesTax);
+    var fee = (amount - (amount / (Decimal.fromInt(1) + rates.merchantRate))) *
+        (Decimal.fromInt(1) + rates.salesTax);
     var amountNZD = amount - fee;
     return "${amountNZD.toStringAsFixed(2)} NZD";
   }
@@ -390,7 +455,10 @@ String toNZDAmount(Decimal amount, Rates rates) {
 }
 
 class ListTx extends StatelessWidget {
-  ListTx(this.onPressed, this.date, this.txid, this.amount, this.merchantRates, this.outgoing, {this.last = false}) : super();
+  ListTx(this.onPressed, this.date, this.txid, this.amount, this.merchantRates,
+      this.outgoing,
+      {this.last = false})
+      : super();
 
   final VoidCallback onPressed;
   final DateTime date;
@@ -409,35 +477,34 @@ class ListTx extends StatelessWidget {
     Widget amountWidget = Text(amountText, style: tsRight);
     if (merchantRates != null) {
       var amountNZD = Text(toNZDAmount(amount, merchantRates), style: tsRight);
-      amountWidget = Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
-        amountWidget,
-        amountNZD
-      ]);
+      amountWidget = Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[amountWidget, amountNZD]);
     }
-    var icon = outgoing ? MaterialCommunityIcons.chevron_double_up : MaterialCommunityIcons.chevron_double_down;
-    return Column(
-      children: <Widget>[
-        Divider(),
-        ListTile(
+    var icon = outgoing
+        ? MaterialCommunityIcons.chevron_double_up
+        : MaterialCommunityIcons.chevron_double_down;
+    return Column(children: <Widget>[
+      Divider(),
+      ListTile(
           onTap: onPressed,
           dense: true,
           contentPadding: EdgeInsets.symmetric(horizontal: 8),
-          leading: Column(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
-            Text(DateFormat('d MMM').format(date).toUpperCase(), style: tsLeft),
-            Text(DateFormat('yyyy').format(date), style: tsLeft),
-          ]),
+          leading: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Text(DateFormat('d MMM').format(date).toUpperCase(),
+                    style: tsLeft),
+                Text(DateFormat('yyyy').format(date), style: tsLeft),
+              ]),
           title: Text(txid),
           trailing: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
             Text(outgoing ? '- ' : '+ ', style: tsRight),
-            amountWidget, 
-            Icon(icon, color: color, size: 14)]
-          )
-        ),
-        Visibility(
-          visible: last,
-          child: Divider()
-        )
-      ]
-    );
+            amountWidget,
+            Icon(icon, color: color, size: 14)
+          ])),
+      Visibility(visible: last, child: Divider())
+    ]);
   }
 }
