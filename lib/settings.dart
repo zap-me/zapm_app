@@ -32,20 +32,20 @@ class AppVersion {
       var doc = loadYaml(pubspec);
       var version = doc["version"].toString().split("+");
       return AppVersion(version[0], version[1]);
-    }
-    else {
+    } else {
       var packageInfo = await PackageInfo.fromPlatform();
       return AppVersion(packageInfo.version, packageInfo.buildNumber);
     }
   }
-
 }
+
 class SettingsScreen extends StatefulWidget {
   final bool _pinProtectedInitial;
   final String _mnemonicOrAccount;
   final FCM _fcm;
 
-  SettingsScreen(this._pinProtectedInitial, this._mnemonicOrAccount, this._fcm) : super();
+  SettingsScreen(this._pinProtectedInitial, this._mnemonicOrAccount, this._fcm)
+      : super();
 
   @override
   _SettingsState createState() => new _SettingsState(_pinProtectedInitial);
@@ -63,7 +63,7 @@ class _SettingsState extends State<SettingsScreen> {
   String _apikey;
   String _apisecret;
   String _apiserver;
-  int _titleTaps = 0;
+  int _versionTaps = 0;
   String _paydbServer;
 
   _SettingsState(this._pinProtected) {
@@ -121,8 +121,7 @@ class _SettingsState extends State<SettingsScreen> {
   }
 
   void _toggleTestnet() async {
-    if (_secondary)
-      return;
+    if (_secondary) return;
     Prefs.testnetSet(!_testnet);
     setState(() {
       _testnet = !_testnet;
@@ -213,19 +212,21 @@ class _SettingsState extends State<SettingsScreen> {
         flushbarMsg(context, 'API KEY set');
         if (result.accountAdmin && result.walletAddress.isEmpty) {
           var address = _getWalletAddress(widget._mnemonicOrAccount);
-          var yes = await askYesNo(context, "Do you want to set the account wallet address ($address)?");
+          var yes = await askYesNo(context,
+              "Do you want to set the account wallet address ($address)?");
           if (yes) {
             var res = await merchantWalletAddress(address);
             if (res) {
               flushbarMsg(context, 'account wallet address set');
             } else {
-              flushbarMsg(context, 'failed to set account wallet address', category: MessageCategory.Warning);
+              flushbarMsg(context, 'failed to set account wallet address',
+                  category: MessageCategory.Warning);
             }
           }
         }
-      }
-      else
-        flushbarMsg(context, 'invalid QR code', category: MessageCategory.Warning);
+      } else
+        flushbarMsg(context, 'invalid QR code',
+            category: MessageCategory.Warning);
     }
   }
 
@@ -269,55 +270,69 @@ class _SettingsState extends State<SettingsScreen> {
     }
   }
 
-  void _titleTap() {
-    _titleTaps += 1;
-    if (_titleTaps > 10) {
+  void _versionTap() {
+    _versionTaps += 1;
+    if (_versionTaps > 10) {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => HiddenScreen(_testnet, widget._fcm.getToken(), widget._mnemonicOrAccount)),
+        MaterialPageRoute(
+            builder: (context) => HiddenScreen(
+                _testnet, widget._fcm.getToken(), widget._mnemonicOrAccount)),
       );
-      _titleTaps=0;
+      _versionTaps = 0;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: ListView( 
-          children: <Widget>[
-            GestureDetector(onTap: _titleTap, child: ListTile(title: Text("Version: ${_appVersion.version}"), subtitle: Text("Build: ${_appVersion.build}"))),
-            Visibility(
-              visible: AppTokenType == TokenType.Waves,
-              child:  ListTile(title: Text("Libzap Version: $_libzapVersion")),
+        body: Center(
+      child: ListView(
+        children: <Widget>[
+          GestureDetector(
+              onTap: _versionTap,
+              child: ListTile(
+                  title: Text("Version: ${_appVersion.version}"),
+                  subtitle: Text("Build: ${_appVersion.build}"))),
+          Visibility(
+            visible: AppTokenType == TokenType.Waves,
+            child: ListTile(title: Text("Libzap Version: $_libzapVersion")),
+          ),
+          Visibility(
+            visible: AppTokenType == TokenType.PayDB,
+            child: ListTile(title: Text("Server: $_paydbServer")),
+          ),
+          Container(
+            padding: const EdgeInsets.only(top: 18.0),
+            child: SwitchListTile(
+              value: _testnet,
+              title: Text("Testnet"),
+              onChanged: (value) async {
+                _toggleTestnet();
+              },
             ),
-            Visibility(
-              visible: AppTokenType == TokenType.PayDB,
-              child:  ListTile(title: Text("Server: $_paydbServer")),
-            ),
-            Container(
-              padding: const EdgeInsets.only(top: 18.0),
-              child: SwitchListTile(
-                value: _testnet,
-                title: Text("Testnet"),
-                onChanged: (value) async {
-                  _toggleTestnet();
-                },
-              ),
-            ),
-            Visibility(
+          ),
+          Visibility(
               visible: !_secondary,
-              child:  Column(
+              child: Column(
                 children: <Widget>[
                   Container(
                     padding: const EdgeInsets.only(top: 18.0),
-                    child: ListTile(title: Text("Pin Protect Settings and Spending"), trailing: _pinProtected ? Icon(Icons.lock) : Icon(Icons.lock_open),),
+                    child: ListTile(
+                      title: Text("Pin Protect Settings and Spending"),
+                      trailing: _pinProtected
+                          ? Icon(Icons.lock)
+                          : Icon(Icons.lock_open),
+                    ),
                   ),
                   Visibility(
                     visible: !_pinProtected,
                     child: Container(
                       child: ListTile(
-                        title: RaisedButton.icon(label: Text("Create Pin"), icon: Icon(Icons.lock), onPressed: _addPin),
+                        title: RaisedButton.icon(
+                            label: Text("Create Pin"),
+                            icon: Icon(Icons.lock),
+                            onPressed: _addPin),
                       ),
                     ),
                   ),
@@ -325,7 +340,10 @@ class _SettingsState extends State<SettingsScreen> {
                     visible: _pinProtected,
                     child: Container(
                       child: ListTile(
-                        title: RaisedButton.icon(label: Text("Change Pin"), icon: Icon(Icons.lock), onPressed: _changePin),
+                        title: RaisedButton.icon(
+                            label: Text("Change Pin"),
+                            icon: Icon(Icons.lock),
+                            onPressed: _changePin),
                       ),
                     ),
                   ),
@@ -333,7 +351,10 @@ class _SettingsState extends State<SettingsScreen> {
                     visible: _pinProtected,
                     child: Container(
                       child: ListTile(
-                        title: RaisedButton.icon(label: Text("Remove Pin"), icon: Icon(Icons.lock), onPressed: _removePin),
+                        title: RaisedButton.icon(
+                            label: Text("Remove Pin"),
+                            icon: Icon(Icons.lock),
+                            onPressed: _removePin),
                       ),
                     ),
                   ),
@@ -342,48 +363,88 @@ class _SettingsState extends State<SettingsScreen> {
                     child: Container(
                       padding: const EdgeInsets.only(top: 18.0),
                       child: ListTile(
-                        title: RaisedButton(child: Text("Show Recovery Words"), onPressed: () => setState(() => _showMnemonic = true)),
+                        title: RaisedButton(
+                            child: Text("Show Recovery Words"),
+                            onPressed: () =>
+                                setState(() => _showMnemonic = true)),
                       ),
                     ),
                   ),
                   Visibility(
-                    visible: _showMnemonic && AppTokenType == TokenType.Waves,
-                    child: Container(
-                      padding: const EdgeInsets.only(top: 18.0),
-                      child: ListTile(
-                        title: Text("Recovery words"),
-                        subtitle: !_secondary ? Bip39Words.fromString(widget._mnemonicOrAccount) : Text('n/a'),
-                        trailing: _mnemonicPasswordProtected ? Icon(Icons.lock) : Icon(Icons.lock_open),),
-                    )
-                  ),
+                      visible: _showMnemonic && AppTokenType == TokenType.Waves,
+                      child: Container(
+                        padding: const EdgeInsets.only(top: 18.0),
+                        child: ListTile(
+                          title: Text("Recovery words"),
+                          subtitle: !_secondary
+                              ? Bip39Words.fromString(widget._mnemonicOrAccount)
+                              : Text('n/a'),
+                          trailing: _mnemonicPasswordProtected
+                              ? Icon(Icons.lock)
+                              : Icon(Icons.lock_open),
+                        ),
+                      )),
                   Visibility(
-                    visible: !_mnemonicPasswordProtected && AppTokenType == TokenType.Waves,
+                    visible: !_mnemonicPasswordProtected &&
+                        AppTokenType == TokenType.Waves,
                     child: Container(
                       child: ListTile(
-                        title: RaisedButton.icon(label: Text("Password Protect Recovery words"), icon: Icon(Icons.lock), onPressed: _addPasswordProtection),
+                        title: RaisedButton.icon(
+                            label: Text("Password Protect Recovery words"),
+                            icon: Icon(Icons.lock),
+                            onPressed: _addPasswordProtection),
                       ),
                     ),
                   ),
                 ],
-              )
-            ),
-            Visibility(
+              )),
+          Visibility(
               visible: UseMerchantApi,
               child: Column(children: <Widget>[
                 Container(
                   padding: const EdgeInsets.only(top: 18.0),
                   child: ListTile(
-                    title: RaisedButton.icon(label: Text("Scan Api Key"), icon: Icon(MaterialCommunityIcons.qrcode_scan), onPressed: !_secondary ? _scanApikey : null),
+                    title: RaisedButton.icon(
+                        label: Text("Scan Api Key"),
+                        icon: Icon(MaterialCommunityIcons.qrcode_scan),
+                        onPressed: !_secondary ? _scanApikey : null),
                   ),
                 ),
-                ListTile(title: Text("Device Name"), subtitle: Text("$_deviceName"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: !_secondary ? _editDeviceName : null),),
-                ListTile(title: Text("Api Key"), subtitle: Text("$_apikey"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: !_secondary ? _editApikey : null),),
-                ListTile(title: Text("Api Secret"), subtitle: Text("$_apisecret"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: !_secondary ? _editApisecret : null),),
-                ListTile(title: Text("Api Server"), subtitle: Text("$_apiserver"), trailing: RaisedButton.icon(label: Text("Edit"), icon: Icon(Icons.edit), onPressed: !_secondary ? _editApiserver : null),),
-              ])
-            )],
-          ),
-        )
-    );
+                ListTile(
+                  title: Text("Device Name"),
+                  subtitle: Text("$_deviceName"),
+                  trailing: RaisedButton.icon(
+                      label: Text("Edit"),
+                      icon: Icon(Icons.edit),
+                      onPressed: !_secondary ? _editDeviceName : null),
+                ),
+                ListTile(
+                  title: Text("Api Key"),
+                  subtitle: Text("$_apikey"),
+                  trailing: RaisedButton.icon(
+                      label: Text("Edit"),
+                      icon: Icon(Icons.edit),
+                      onPressed: !_secondary ? _editApikey : null),
+                ),
+                ListTile(
+                  title: Text("Api Secret"),
+                  subtitle: Text("$_apisecret"),
+                  trailing: RaisedButton.icon(
+                      label: Text("Edit"),
+                      icon: Icon(Icons.edit),
+                      onPressed: !_secondary ? _editApisecret : null),
+                ),
+                ListTile(
+                  title: Text("Api Server"),
+                  subtitle: Text("$_apiserver"),
+                  trailing: RaisedButton.icon(
+                      label: Text("Edit"),
+                      icon: Icon(Icons.edit),
+                      onPressed: !_secondary ? _editApiserver : null),
+                ),
+              ]))
+        ],
+      ),
+    ));
   }
 }
