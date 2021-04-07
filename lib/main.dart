@@ -136,7 +136,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   bool _walletOrAcctInited = false;
   bool _walletOrAcctLoading = false;
   AppVersion _appVersion;
-  dynamic _pinExists;
+  bool _pinExists;
 
   _ZapHomePageState();
 

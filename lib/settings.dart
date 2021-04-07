@@ -276,6 +276,7 @@ class _SettingsState extends State<SettingsScreen> {
         context,
         MaterialPageRoute(builder: (context) => HiddenScreen(_testnet, widget._fcm.getToken(), widget._mnemonicOrAccount)),
       );
+      _titleTaps=0;
     }
   }
 
@@ -285,7 +286,7 @@ class _SettingsState extends State<SettingsScreen> {
       body: Center(
         child: ListView( 
           children: <Widget>[
-            ListTile(title: Text("Version: ${_appVersion.version}"), subtitle: Text("Build: ${_appVersion.build}")),
+            GestureDetector(onTap: _titleTap, child: ListTile(title: Text("Version: ${_appVersion.version}"), subtitle: Text("Build: ${_appVersion.build}"))),
             Visibility(
               visible: AppTokenType == TokenType.Waves,
               child:  ListTile(title: Text("Libzap Version: $_libzapVersion")),
