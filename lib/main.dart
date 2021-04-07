@@ -1182,7 +1182,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
       var libzap = LibZap();
       libzap.networkParamsSet(AssetIdMainnet, AssetIdTestnet, NodeUrlMainnet,
           NodeUrlTestnet, testnet);
-      if (!_wallet.isMnemonic) {
+      if (_wallet != null && !_wallet.isMnemonic) {
         if (!libzap.addressCheck(_wallet.address)) {
           testnet = !testnet;
           libzap.networkParamsSet(AssetIdMainnet, AssetIdTestnet,
