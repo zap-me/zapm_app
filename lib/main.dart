@@ -140,6 +140,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   bool _walletOrAcctLoading = false;
   AppVersion _appVersion;
   bool _pinExists;
+  TabController _tabController;
 
   _ZapHomePageState();
 
@@ -981,6 +982,10 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     // update merchant rates
     if (UseMerchantApi && await Prefs.hasMerchantApiKey())
       merchantRates().then((value) => _merchantRates = value);
+    var pinExists = await Prefs.pinExists();
+    setState(
+      () {_pinExists = pinExists;}
+    );
     return InitTokenDetailsResult.None;
   }
 
@@ -1250,7 +1255,8 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   }
 
   Widget _appScaffold(Widget body) {
-    doesPinExist();
+    final TabController tabController = DefaultTabController.of(context);
+    tabController.addListener(_initTokenDetails);
     return Scaffold(
       appBar: AppBar(
         leading: Visibility(
@@ -1446,5 +1452,4 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         ),
       ),
     );
-  }
-}
+}}
