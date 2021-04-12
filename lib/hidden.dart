@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:zapdart/utils.dart';
 
+import 'package:zapdart/utils.dart';
 import 'package:zapdart/widgets.dart';
 import 'package:zapdart/colors.dart';
 
@@ -13,8 +13,8 @@ import 'config.dart';
 
 class HiddenScreen extends StatefulWidget {
   final bool testnet;
-  final String fcmRegistrationToken;
-  final String account;
+  final String? fcmRegistrationToken;
+  final String? account;
 
   HiddenScreen(this.testnet, this.fcmRegistrationToken, this.account) : super();
 
@@ -40,8 +40,9 @@ class _HiddenState extends State<HiddenScreen> {
 
   void _paydbIssue() async {
     assert(AppTokenType == TokenType.PayDB);
+    if (widget.account == null) return;
     var result =
-        await paydbTransactionCreate(ActionIssue, widget.account, 10000, null);
+        await paydbTransactionCreate(ActionIssue, widget.account!, 10000, null);
     alert(context, 'Issue Result', '${result.error}');
   }
 

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
@@ -21,7 +22,7 @@ class GenTx {
   int timestamp;
   String sender;
   String recipient;
-  String attachment;
+  String? attachment;
   int amount;
   int fee;
 
@@ -32,8 +33,8 @@ class GenTx {
 class TransactionsScreen extends StatefulWidget {
   final String _addrOrAccount;
   final bool _testnet;
-  final String _deviceName;
-  final Rates _merchantRates;
+  final String? _deviceName;
+  final Rates? _merchantRates;
 
   TransactionsScreen(
       this._addrOrAccount, this._testnet, this._deviceName, this._merchantRates)
@@ -46,14 +47,14 @@ class TransactionsScreen extends StatefulWidget {
 enum LoadDirection { Next, Previous, Initial }
 
 class Choice {
-  const Choice({this.title, this.icon});
+  const Choice(this.title, this.icon);
 
   final String title;
   final IconData icon;
 }
 
 const List<Choice> choices = const <Choice>[
-  const Choice(title: "Export JSON", icon: Icons.save),
+  const Choice("Export JSON", Icons.save),
 ];
 
 class DownloadResult {
@@ -64,12 +65,12 @@ class DownloadResult {
 
 class _TransactionsState extends State<TransactionsScreen> {
   bool _loading = true;
-  var _txsAll = List<GenTx>();
-  var _txsFiltered = List<GenTx>();
+  var _txsAll = <GenTx>[];
+  var _txsFiltered = <GenTx>[];
   var _offset = 0;
   var _downloadCount = 100;
   var _displayCount = 10;
-  String _lastTxId;
+  String? _lastTxId;
   var _more = false;
   var _less = false;
   var _foundEnd = false;
@@ -81,50 +82,48 @@ class _TransactionsState extends State<TransactionsScreen> {
   }
 
   Future<DownloadResult> _downloadMoreTxs(int count) async {
-    List<GenTx> txs;
-    List<GenTx> txsFiltered;
+    List<GenTx> txs = [];
+    List<GenTx> txsFiltered = [];
     switch (AppTokenType) {
       case TokenType.Waves:
         var wavesTxs = await LibZap.addressTransactions(
             widget._addrOrAccount, count, _lastTxId);
-        if (wavesTxs != null) {
-          txs = List<GenTx>();
-          txsFiltered = List<GenTx>();
-          for (var tx in wavesTxs) {
-            var genTx = GenTx(tx.id, ActionTransfer, tx.timestamp, tx.sender,
-                tx.recipient, null, tx.amount, tx.fee);
-            txs.add(genTx);
-            // check asset id
-            var assetId = widget._testnet
-                ? (AssetIdTestnet != null
-                    ? AssetIdTestnet
-                    : LibZap.TESTNET_ASSET_ID)
-                : (AssetIdMainnet != null
-                    ? AssetIdMainnet
-                    : LibZap.MAINNET_ASSET_ID);
-            if (tx.assetId != assetId) continue;
-            // decode attachment
-            if (tx.attachment != null && tx.attachment.isNotEmpty)
-              tx.attachment = base58decodeString(tx.attachment);
-            genTx.attachment = tx.attachment;
-            // check device name
-            var deviceName = '';
-            try {
-              deviceName = json.decode(tx.attachment)['device_name'];
-            } catch (_) {}
-            if (widget._deviceName != null &&
-                widget._deviceName.isNotEmpty &&
-                widget._deviceName != deviceName) continue;
-            txsFiltered.add(genTx);
-          }
+        txs = <GenTx>[];
+        txsFiltered = <GenTx>[];
+        for (var tx in wavesTxs) {
+          var genTx = GenTx(tx.id, ActionTransfer, tx.timestamp, tx.sender,
+              tx.recipient, null, tx.amount, tx.fee);
+          txs.add(genTx);
+          // check asset id
+          var assetId = widget._testnet
+              ? (AssetIdTestnet != null
+                  ? AssetIdTestnet
+                  : LibZap.TESTNET_ASSET_ID)
+              : (AssetIdMainnet != null
+                  ? AssetIdMainnet
+                  : LibZap.MAINNET_ASSET_ID);
+          if (tx.assetId != assetId) continue;
+          // decode attachment
+          if (tx.attachment != null && tx.attachment!.isNotEmpty)
+            tx.attachment = base58decodeString(tx.attachment!);
+          genTx.attachment = tx.attachment;
+          // check device name
+          var deviceName = '';
+          try {
+            deviceName = json.decode(tx.attachment!)['device_name'];
+          } catch (_) {}
+          if (widget._deviceName != null &&
+              widget._deviceName!.isNotEmpty &&
+              widget._deviceName != deviceName) continue;
+          txsFiltered.add(genTx);
         }
         break;
       case TokenType.PayDB:
         var result = await paydbUserTransactions(_txsAll.length, count);
-        if (result.error == PayDbError.None) {
-          txs = List<GenTx>();
-          txsFiltered = List<GenTx>();
-          for (var tx in result.txs) {
+        if (result.txs != null && result.error == PayDbError.None) {
+          txs = <GenTx>[];
+          txsFiltered = <GenTx>[];
+          for (var tx in result.txs!) {
             var genTx = GenTx(tx.token, tx.action, tx.timestamp * 1000,
                 tx.sender, tx.recipient, tx.attachment, tx.amount, 0);
             txs.add(genTx);
@@ -132,13 +131,10 @@ class _TransactionsState extends State<TransactionsScreen> {
           }
         }
     }
-    if (txs != null) {
-      _txsAll += txs;
-      _txsFiltered += txsFiltered;
-      if (_txsAll.length > 0) _lastTxId = _txsAll[_txsAll.length - 1].id;
-      if (txs.length < count) _foundEnd = true;
-    } else
-      return null;
+    _txsAll += txs;
+    _txsFiltered += txsFiltered;
+    if (_txsAll.length > 0) _lastTxId = _txsAll[_txsAll.length - 1].id;
+    if (txs.length < count) _foundEnd = true;
     return DownloadResult(txs.length, txsFiltered.length);
   }
 
@@ -189,24 +185,26 @@ class _TransactionsState extends State<TransactionsScreen> {
     }
   }
 
+  int _buildTxListMax() {
+    return min(_txsFiltered.length - _offset, _displayCount);
+  }
+
   Widget _buildTxList(BuildContext context, int index) {
     var offsetIndex = _offset + index;
-    if (offsetIndex >= _offset + _displayCount ||
-        offsetIndex >= _txsFiltered.length) return null;
     var tx = _txsFiltered[offsetIndex];
     var outgoing = tx.sender == widget._addrOrAccount;
     var amount = Decimal.fromInt(tx.amount) / Decimal.fromInt(100);
     var amountText = "${amount.toStringAsFixed(2)} $AssetShortNameUpper";
     if (widget._merchantRates != null)
       amountText =
-          "$amountText / ${toNZDAmount(amount, widget._merchantRates)}";
+          "$amountText / ${toNZDAmount(amount, widget._merchantRates!)}";
     amountText = outgoing ? '- $amountText' : '+ $amountText';
     var fee = Decimal.fromInt(tx.fee) / Decimal.fromInt(100);
     var feeText = fee.toStringAsFixed(2);
     var color = outgoing ? ZapYellow : ZapGreen;
     var date = new DateTime.fromMillisecondsSinceEpoch(tx.timestamp);
     var dateStrLong = DateFormat('yyyy-MM-dd HH:mm').format(date);
-    String link;
+    String? link;
     if (AppTokenType == TokenType.Waves)
       link = widget._testnet
           ? 'https://wavesexplorer.com/testnet/tx/${tx.id}'
@@ -264,7 +262,7 @@ class _TransactionsState extends State<TransactionsScreen> {
                               )),
                           Visibility(
                             visible: tx.attachment != null &&
-                                tx.attachment.isNotEmpty,
+                                tx.attachment!.isNotEmpty,
                             child: ListTile(
                                 title: Text("attachment"),
                                 subtitle: Text('${tx.attachment}')),
@@ -301,7 +299,7 @@ class _TransactionsState extends State<TransactionsScreen> {
             var filename = "zap_txs.json";
             if (Platform.isAndroid || Platform.isIOS) {
               var dir = await getExternalStorageDirectory();
-              filename = dir.path + "/" + filename;
+              if (dir != null) filename = dir.path + "/" + filename;
             }
             await File(filename).writeAsString(json);
             alert(context, "Wrote JSON", filename);
@@ -350,8 +348,8 @@ class _TransactionsState extends State<TransactionsScreen> {
               Visibility(
                   visible: !_loading,
                   child: Expanded(
-                      child: new ListView.builder(
-                    itemCount: _txsFiltered.length,
+                      child: ListView.builder(
+                    itemCount: _buildTxListMax(),
                     itemBuilder: (BuildContext context, int index) =>
                         _buildTxList(context, index),
                   ))),

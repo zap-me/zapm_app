@@ -8,7 +8,6 @@
     <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
-        android:name=".Application"
         android:label="Zap Retailer"
         android:requestLegacyExternalStorage="true"
         android:icon="@mipmap/ic_launcher">

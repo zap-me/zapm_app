@@ -17,8 +17,8 @@ class AccountLogin {
 }
 
 class AccountRegisterForm extends StatefulWidget {
-  final AccountRegistration registration;
-  final String instructions;
+  final AccountRegistration? registration;
+  final String? instructions;
 
   AccountRegisterForm(this.registration, {this.instructions}) : super();
 
@@ -37,8 +37,8 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
       TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  String _imgString;
-  String _imgType;
+  String? _imgString;
+  String? _imgType;
 
   @protected
   @mustCallSuper
@@ -46,13 +46,13 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
     super.initState();
 
     if (widget.registration != null) {
-      _firstNameController.text = widget.registration.firstName;
-      _lastNameController.text = widget.registration.lastName;
-      _emailController.text = widget.registration.email;
-      _passwordController.text = widget.registration.password;
-      _passwordConfirmController.text = widget.registration.password;
-      _imgType = widget.registration.photoType;
-      _imgString = widget.registration.photo;
+      _firstNameController.text = widget.registration!.firstName;
+      _lastNameController.text = widget.registration!.lastName;
+      _emailController.text = widget.registration!.email;
+      _passwordController.text = widget.registration!.password;
+      _passwordConfirmController.text = widget.registration!.password;
+      _imgType = widget.registration!.photoType;
+      _imgString = widget.registration!.photo;
     }
   }
 
@@ -71,6 +71,8 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
             cropAspectRatio: CropAspectRatios.ratio1_1);
       },
     );
+    var editorKeyState = editorKey.currentState;
+    if (editorKeyState == null) return '';
     await showGeneralDialog(
       context: context,
       barrierColor: Colors.black12.withOpacity(0.6),
@@ -87,25 +89,25 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
               IconButton(
                 icon: const Icon(Icons.flip),
                 onPressed: () {
-                  editorKey.currentState.flip();
+                  editorKeyState.flip();
                 },
               ),
               IconButton(
                 icon: const Icon(Icons.rotate_left),
                 onPressed: () {
-                  editorKey.currentState.rotate(right: false);
+                  editorKeyState.rotate(right: false);
                 },
               ),
               IconButton(
                 icon: const Icon(Icons.rotate_right),
                 onPressed: () {
-                  editorKey.currentState.rotate(right: true);
+                  editorKeyState.rotate(right: true);
                 },
               ),
               IconButton(
                 icon: const Icon(Icons.restore),
                 onPressed: () {
-                  editorKey.currentState.reset();
+                  editorKeyState.reset();
                 },
               ),
               IconButton(
@@ -117,23 +119,26 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
         ])));
       },
     );
-    var editAction = editorKey.currentState.editAction;
-    var cropRect = editorKey.currentState.getCropRect();
-    var src = decodeImage(editorKey.currentState.rawImageData);
-    if (editAction.needCrop)
-      src = copyCrop(src, cropRect.left.toInt(), cropRect.top.toInt(),
-          cropRect.width.toInt(), cropRect.height.toInt());
-    if (editAction.needFlip) {
-      Flip mode;
-      if (editAction.flipY && editAction.flipX)
-        mode = Flip.both;
-      else if (editAction.flipY)
-        mode = Flip.horizontal;
-      else if (editAction.flipX) mode = Flip.vertical;
-      src = flip(src, mode);
+    var editAction = editorKeyState.editAction;
+    var cropRect = editorKeyState.getCropRect();
+    var src = decodeImage(editorKeyState.rawImageData);
+    if (src == null) return '';
+    if (editAction != null && cropRect != null) {
+      if (editAction.needCrop)
+        src = copyCrop(src, cropRect.left.toInt(), cropRect.top.toInt(),
+            cropRect.width.toInt(), cropRect.height.toInt());
+      if (editAction.needFlip) {
+        Flip mode = Flip.horizontal;
+        if (editAction.flipY && editAction.flipX)
+          mode = Flip.both;
+        else if (editAction.flipY)
+          mode = Flip.horizontal;
+        else if (editAction.flipX) mode = Flip.vertical;
+        src = flip(src, mode);
+      }
+      if (editAction.hasRotateAngle)
+        src = copyRotate(src, editAction.rotateAngle);
     }
-    if (editAction.hasRotateAngle)
-      src = copyRotate(src, editAction.rotateAngle);
     src = copyResize(src, width: 200, height: 200);
     var jpgBytes = encodeJpg(src, quality: 50);
     return base64Encode(jpgBytes);
@@ -142,6 +147,7 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
   void _imgFromCamera() async {
     var file = await ImagePicker()
         .getImage(source: ImageSource.camera, imageQuality: 50);
+    if (file == null) return;
     var imgString = await _imgDataEdited(file);
     setState(() {
       _imgString = imgString;
@@ -152,6 +158,7 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
   void _imgFromGallery() async {
     var file = await ImagePicker()
         .getImage(source: ImageSource.gallery, imageQuality: 50);
+    if (file == null) return;
     var imgString = await _imgDataEdited(file);
     setState(() {
       _imgString = imgString;
@@ -160,8 +167,8 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
   }
 
   Widget _imageSizeWidget() {
-    if (_imgString == null || _imgString.isEmpty) return SizedBox();
-    var kib = (_imgString.length / 1000.0).ceil();
+    if (_imgString == null || _imgString!.isEmpty) return SizedBox();
+    var kib = (_imgString!.length / 1000.0).ceil();
     return Text('$kib KiB');
   }
 
@@ -181,13 +188,14 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
                   children: <Widget>[
                     Text(widget.instructions == null
                         ? "Enter your details to register"
-                        : widget.instructions),
+                        : widget.instructions!),
                     TextFormField(
                         controller: _firstNameController,
                         decoration: InputDecoration(labelText: 'First Name'),
                         keyboardType: TextInputType.name,
                         validator: (value) {
-                          if (value.isEmpty) return 'Please enter a first name';
+                          if (value != null && value.isEmpty)
+                            return 'Please enter a first name';
                           return null;
                         }),
                     TextFormField(
@@ -195,7 +203,8 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
                         decoration: InputDecoration(labelText: 'Last Name'),
                         keyboardType: TextInputType.name,
                         validator: (value) {
-                          if (value.isEmpty) return 'Please enter a last name';
+                          if (value == null || value.isEmpty)
+                            return 'Please enter a last name';
                           return null;
                         }),
                     InputDecorator(
@@ -222,7 +231,8 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
                         decoration: InputDecoration(labelText: 'Email'),
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) {
-                          if (value.isEmpty) return 'Please enter an email';
+                          if (value == null || value.isEmpty)
+                            return 'Please enter an email';
                           if (!EmailValidator.validate(value))
                             return 'Invalid email';
                           return null;
@@ -232,7 +242,8 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
                         obscureText: true,
                         decoration: InputDecoration(labelText: 'Password'),
                         validator: (value) {
-                          if (value.isEmpty) return 'Please enter a password';
+                          if (value == null || value.isEmpty)
+                            return 'Please enter a password';
                           return null;
                         }),
                     TextFormField(
@@ -241,7 +252,7 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
                         decoration:
                             InputDecoration(labelText: 'Password Confirmation'),
                         validator: (value) {
-                          if (value.isEmpty)
+                          if (value == null || value.isEmpty)
                             return 'Please confirm your password';
                           if (value != _passwordController.text)
                             return 'Password does not match';
@@ -250,7 +261,8 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
                     RaisedButton(
                       child: Text("Ok"),
                       onPressed: () async {
-                        if (_formKey.currentState.validate()) {
+                        if (_formKey.currentState == null) return;
+                        if (_formKey.currentState!.validate()) {
                           var accountReg = AccountRegistration(
                               _firstNameController.text,
                               _lastNameController.text,
@@ -274,8 +286,8 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
 }
 
 class AccountLoginForm extends StatefulWidget {
-  final AccountLogin login;
-  final String instructions;
+  final AccountLogin? login;
+  final String? instructions;
 
   AccountLoginForm(this.login, {this.instructions}) : super();
 
@@ -296,8 +308,8 @@ class AccountLoginFormState extends State<AccountLoginForm> {
     super.initState();
 
     if (widget.login != null) {
-      _emailController.text = widget.login.email;
-      _passwordController.text = widget.login.password;
+      _emailController.text = widget.login!.email;
+      _passwordController.text = widget.login!.password;
     }
   }
 
@@ -317,13 +329,14 @@ class AccountLoginFormState extends State<AccountLoginForm> {
                   children: <Widget>[
                     Text(widget.instructions == null
                         ? "Enter your email and password to login"
-                        : widget.instructions),
+                        : widget.instructions!),
                     TextFormField(
                         controller: _emailController,
                         decoration: InputDecoration(labelText: 'Email'),
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) {
-                          if (value.isEmpty) return 'Please enter an email';
+                          if (value == null || value.isEmpty)
+                            return 'Please enter an email';
                           if (!EmailValidator.validate(value))
                             return 'Invalid email';
                           return null;
@@ -333,13 +346,15 @@ class AccountLoginFormState extends State<AccountLoginForm> {
                         obscureText: true,
                         decoration: InputDecoration(labelText: 'Password'),
                         validator: (value) {
-                          if (value.isEmpty) return 'Please enter a password';
+                          if (value == null || value.isEmpty)
+                            return 'Please enter a password';
                           return null;
                         }),
                     RaisedButton(
                       child: Text("Ok"),
                       onPressed: () {
-                        if (_formKey.currentState.validate()) {
+                        if (_formKey.currentState == null) return;
+                        if (_formKey.currentState!.validate()) {
                           var accountLogin = AccountLogin(
                               _emailController.text, _passwordController.text);
                           Navigator.of(context).pop(accountLogin);
@@ -359,7 +374,7 @@ class AccountLoginFormState extends State<AccountLoginForm> {
 
 class AccountRequestApiKeyForm extends StatefulWidget {
   final String deviceName;
-  final String instructions;
+  final String? instructions;
 
   AccountRequestApiKeyForm(this.deviceName, {this.instructions}) : super();
 
@@ -397,13 +412,14 @@ class AccountRequestApiKeyFormState extends State<AccountRequestApiKeyForm> {
                   children: <Widget>[
                     Text(widget.instructions == null
                         ? "Enter your email and device name to request your api key"
-                        : widget.instructions),
+                        : widget.instructions!),
                     TextFormField(
                         controller: _emailController,
                         decoration: InputDecoration(labelText: 'Email'),
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) {
-                          if (value.isEmpty) return 'Please enter an email';
+                          if (value == null || value.isEmpty)
+                            return 'Please enter an email';
                           if (!EmailValidator.validate(value))
                             return 'Invalid email';
                           return null;
@@ -412,14 +428,15 @@ class AccountRequestApiKeyFormState extends State<AccountRequestApiKeyForm> {
                         controller: _deviceNameController,
                         decoration: InputDecoration(labelText: 'Device Name'),
                         validator: (value) {
-                          if (value.isEmpty)
+                          if (value == null || value.isEmpty)
                             return 'Please enter a device name';
                           return null;
                         }),
                     RaisedButton(
                       child: Text("Ok"),
                       onPressed: () {
-                        if (_formKey.currentState.validate()) {
+                        if (_formKey.currentState == null) return;
+                        if (_formKey.currentState!.validate()) {
                           var req = AccountRequestApiKey(_emailController.text,
                               _deviceNameController.text);
                           Navigator.of(context).pop(req);

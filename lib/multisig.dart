@@ -16,8 +16,8 @@ class SignaturePicker extends StatelessWidget {
   final void Function(int) signatureSelect;
   final void Function(int, int) signatureSwap;
   final void Function(int) signatureDelete;
-  final String fileData;
-  final int signatureIndex;
+  final String? fileData;
+  final int? signatureIndex;
 
   SignaturePicker(this.signatureSelect, this.signatureSwap,
       this.signatureDelete, this.fileData, this.signatureIndex)
@@ -27,7 +27,7 @@ class SignaturePicker extends StatelessWidget {
   Widget build(BuildContext context) {
     var sigs = <Widget>[];
     if (fileData != null) {
-      var res = json.decode(fileData);
+      var res = json.decode(fileData!);
       for (var i = 0; i < res['proofs'].length; i++) {
         var sig = FlatButton(
             onPressed: () => signatureSelect(i),
@@ -74,11 +74,11 @@ class MultisigScreen extends StatefulWidget {
 }
 
 class _MultisigState extends State<MultisigScreen> {
-  String _filePath;
-  String _fileData;
-  int _signatureIndex;
+  String? _filePath;
+  String? _fileData;
+  int? _signatureIndex;
   bool _serializing = false;
-  String _broadcastResponse;
+  String? _broadcastResponse;
   bool _testnet = false;
 
   _MultisigState();
@@ -94,7 +94,8 @@ class _MultisigState extends State<MultisigScreen> {
   }
 
   void _signatureSwap(int index1, int index2) {
-    var jsn = json.decode(_fileData);
+    if (_fileData == null) return;
+    var jsn = json.decode(_fileData!);
     var proofs = jsn['proofs'] as List<dynamic>;
     var temp = proofs[index1];
     proofs[index1] = proofs[index2];
@@ -105,7 +106,8 @@ class _MultisigState extends State<MultisigScreen> {
   }
 
   void _signatureDelete(int index) {
-    var jsn = json.decode(_fileData);
+    if (_fileData == null) return;
+    var jsn = json.decode(_fileData!);
     (jsn['proofs'] as List<dynamic>).removeAt(index);
     setState(() {
       _fileData = jsonEncodePretty(jsn);
@@ -131,14 +133,14 @@ class _MultisigState extends State<MultisigScreen> {
   }
 
   void _loadFile() async {
-    _filePath = await FilePicker.getFilePath(
+    var res = await FilePicker.platform.pickFiles(
         type: FileType.custom, allowedExtensions: ['json', 'json_signed']);
-    if (_filePath == null) {
-      return;
-    }
-    var file = File(_filePath);
+    if (res == null) return;
+    _filePath = res.files.single.path;
+    if (_filePath == null) return;
+    var file = File(_filePath!);
     var fileData = await file.readAsString();
-    if (_fileData != null) fileData = _mergeData(fileData, _fileData);
+    if (_fileData != null) fileData = _mergeData(fileData, _fileData!);
     setState(() {
       _fileData = fileData;
       _signatureIndex = null;
@@ -148,10 +150,11 @@ class _MultisigState extends State<MultisigScreen> {
 
   void _signFile() async {
     // parse tx
-    var res = json.decode(_fileData);
+    if (_fileData == null) return;
+    var res = json.decode(_fileData!);
     if (_signatureIndex == null ||
-        _signatureIndex < 0 ||
-        _signatureIndex >= res['proofs'].length) {
+        _signatureIndex! < 0 ||
+        _signatureIndex! >= res['proofs'].length) {
       flushbarMsg(context, 'signature index not chosen',
           category: MessageCategory.Warning);
       return;
@@ -162,7 +165,7 @@ class _MultisigState extends State<MultisigScreen> {
     });
     var url = "https://zap-asset.herokuapp.com/tx_serialize";
     var body = jsonEncode({"testnet": _testnet, "tx": _fileData});
-    var response = await post(url, body);
+    var response = await httpPost(Uri.parse(url), body);
     if (response.statusCode != 200) {
       setState(() {
         _serializing = false;
@@ -202,16 +205,18 @@ class _MultisigState extends State<MultisigScreen> {
     });
   }
 
-  String _saveFile() {
+  String? _saveFile() {
+    if (_fileData == null) return null;
     var filePath = '${_filePath}_signed';
     var file = File(filePath);
-    file.writeAsStringSync(_fileData);
+    file.writeAsStringSync(_fileData!);
     flushbarMsg(context, 'saved "$filePath');
     return filePath;
   }
 
   void _shareFile() {
     var filePath = _saveFile();
+    if (filePath == null) return;
     var fileName = path.basename(filePath);
     FlutterShare.shareFile(
       title: fileName,
@@ -223,7 +228,7 @@ class _MultisigState extends State<MultisigScreen> {
   void _broadcastFile() async {
     var node = LibZap().nodeGet();
     var url = '$node/transactions/broadcast';
-    var response = await post(url, _fileData);
+    var response = await httpPost(Uri.parse(url), _fileData);
     if (response.statusCode != 200)
       flushbarMsg(context, 'failed request to "$url"',
           category: MessageCategory.Warning);
@@ -271,7 +276,7 @@ class _MultisigState extends State<MultisigScreen> {
               RaisedButton(
                   onPressed: _fileData != null ? _broadcastFile : null,
                   child: Text("Broadcast File")),
-              Text(_broadcastResponse != null ? _broadcastResponse : '')
+              Text(_broadcastResponse != null ? _broadcastResponse! : '')
             ],
           ),
         ));

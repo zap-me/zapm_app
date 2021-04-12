@@ -27,29 +27,29 @@ const UseSettlement = true;
 // enable/disable merchant api (including all references/conversions to NZD)
 const UseMerchantApi = true;
 // enable/disable a webview homepage (null = disabled)
-const String WebviewURL = null;
+const String? WebviewURL = null;
 
 // are we using the waves network or a paydb server
 const TokenType AppTokenType = TokenType.Waves;
 
 // Waves settings
 // set these two to use a different mainnet/testnet asset id pair then the default zap asset ids.
-const String AssetIdMainnet = null;
-const String AssetIdTestnet = null;
+const String? AssetIdMainnet = null;
+const String? AssetIdTestnet = null;
 // set these two to use a different mainnet/testnet node url pair then the default urls.
-const String NodeUrlMainnet = null;
-const String NodeUrlTestnet = null;
+const String? NodeUrlMainnet = null;
+const String? NodeUrlTestnet = null;
 
 // PayDB settings
-const String PayDBServerMainnet = null;
-const String PayDBServerTestnet = null;
+const String? PayDBServerMainnet = null;
+const String? PayDBServerTestnet = null;
 
 // If set the app will try to register with the premio stage server for push notifications
-const String PremioStageIndexUrl = null;
-const String PremioStageName = null;
+const String? PremioStageIndexUrl = null;
+const String? PremioStageName = null;
 // If set the app will use this api key to get info about centrapay payment requests
 // but why/how do we need an api key just to pay an invoice!!
-const String CentrapayApiKey = 'PvfgoXxDv2FCzsgVsk1izM41e5tWd7C8AGuThG9M1';
+const String? CentrapayApiKey = 'PvfgoXxDv2FCzsgVsk1izM41e5tWd7C8AGuThG9M1';
 
 void initConfig() {
   overrideTheme();

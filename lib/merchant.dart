@@ -19,19 +19,17 @@ class ClaimCode {
   final String token;
   final String secret;
 
-  ClaimCode({this.amount, this.token, this.secret});
+  ClaimCode(this.amount, this.token, this.secret);
 
-  String getAddressIfJsonMatches(Map<String, dynamic> json) {
+  String? getAddressIfJsonMatches(Map<String, dynamic> json) {
     if (token == json["token"] && secret == json["secret"])
       return json["address"];
     return null;
   }
 
   factory ClaimCode.generate(Decimal _amount) {
-    return ClaimCode(
-        amount: _amount,
-        token: HEX.encode(secureRandom(count: 8)),
-        secret: HEX.encode(secureRandom(count: 16)));
+    return ClaimCode(_amount, HEX.encode(secureRandom(count: 8)),
+        HEX.encode(secureRandom(count: 16)));
   }
 }
 
@@ -61,8 +59,7 @@ ClaimCodeResult parseClaimCodeUri(String uri) {
     }
   } else
     error = INVALID_CLAIMCODE_URI;
-  return ClaimCodeResult(
-      ClaimCode(amount: amount, token: token, secret: secret), error);
+  return ClaimCodeResult(ClaimCode(amount, token, secret), error);
 }
 
 class Rates {
@@ -72,12 +69,8 @@ class Rates {
   final Decimal customerRate;
   final String settlementAddress;
 
-  Rates(
-      {this.salesTax,
-      this.settlementFee,
-      this.merchantRate,
-      this.customerRate,
-      this.settlementAddress});
+  Rates(this.salesTax, this.settlementFee, this.merchantRate, this.customerRate,
+      this.settlementAddress);
 }
 
 class Bank {
@@ -86,7 +79,7 @@ class Bank {
   final String accountNumber;
   final bool defaultAccount;
 
-  Bank({this.token, this.accountName, this.accountNumber, this.defaultAccount});
+  Bank(this.token, this.accountName, this.accountNumber, this.defaultAccount);
 }
 
 class Settlement {
@@ -97,34 +90,29 @@ class Settlement {
   final String txid;
   final String status;
 
-  Settlement(
-      {this.token,
-      this.amount,
-      this.amountReceive,
-      this.bankAccount,
-      this.txid,
-      this.status});
+  Settlement(this.token, this.amount, this.amountReceive, this.bankAccount,
+      this.txid, this.status);
 }
 
 class ZapCalcResult {
-  final Decimal nzdRequired;
-  final Decimal zap;
-  final String error;
+  final Decimal? nzdRequired;
+  final Decimal? zap;
+  final String? error;
 
   ZapCalcResult(this.nzdRequired, this.zap, this.error);
 }
 
 class SettlementCalcResult {
-  final Decimal amount;
-  final Decimal amountReceive;
-  final String error;
+  final Decimal? amount;
+  final Decimal? amountReceive;
+  final String? error;
 
   SettlementCalcResult(this.amount, this.amountReceive, this.error);
 }
 
 class SettlementResult {
-  final Settlement settlement;
-  final String error;
+  final Settlement? settlement;
+  final String? error;
 
   SettlementResult(this.settlement, this.error);
 }
@@ -138,7 +126,7 @@ List<int> secureRandom({count: 32}) {
   return List<int>.generate(count, (i) => random.nextInt(256));
 }
 
-Future<ClaimCode> merchantRegister(Decimal amount, int amountInt) async {
+Future<ClaimCode?> merchantRegister(Decimal amount, int amountInt) async {
   var claimCode = ClaimCode.generate(amount);
   var baseUrl = await Prefs.merchantApiServerGet();
   var url = baseUrl + "register";
@@ -152,15 +140,16 @@ Future<ClaimCode> merchantRegister(Decimal amount, int amountInt) async {
     "token": claimCode.token,
     "amount": amountInt
   });
-  var sig = createHmacSig(apisecret, body);
-  var response = await post(url, body, extraHeaders: {"X-Signature": sig});
+  var sig = createHmacSig(apisecret!, body);
+  var response =
+      await httpPost(Uri.parse(url), body, extraHeaders: {"X-Signature": sig});
   if (response.statusCode == 200) {
     return claimCode;
   }
   return null;
 }
 
-Future<String> merchantCheck(ClaimCode claimCode) async {
+Future<String?> merchantCheck(ClaimCode claimCode) async {
   var baseUrl = await Prefs.merchantApiServerGet();
   var url = baseUrl + "check";
   var apikey = await Prefs.merchantApiKeyGet();
@@ -169,8 +158,9 @@ Future<String> merchantCheck(ClaimCode claimCode) async {
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body =
       jsonEncode({"api_key": apikey, "nonce": nonce, "token": claimCode.token});
-  var sig = createHmacSig(apisecret, body);
-  var response = await post(url, body, extraHeaders: {"X-Signature": sig});
+  var sig = createHmacSig(apisecret!, body);
+  var response =
+      await httpPost(Uri.parse(url), body, extraHeaders: {"X-Signature": sig});
   if (response.statusCode == 200) {
     return claimCode.getAddressIfJsonMatches(json.decode(response.body));
   }
@@ -185,7 +175,7 @@ Future<bool> merchantClaim(ClaimCode claimCode, String address) async {
     "secret": claimCode.secret,
     "address": address
   });
-  var response = await post(url, body);
+  var response = await httpPost(Uri.parse(url), body);
   if (response.statusCode == 200) {
     return true;
   }
@@ -201,8 +191,9 @@ Future<bool> merchantWatch(String address) async {
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body =
       jsonEncode({"api_key": apikey, "nonce": nonce, "address": address});
-  var sig = createHmacSig(apisecret, body);
-  var response = await post(url, body, extraHeaders: {"X-Signature": sig});
+  var sig = createHmacSig(apisecret!, body);
+  var response =
+      await httpPost(Uri.parse(url), body, extraHeaders: {"X-Signature": sig});
   if (response.statusCode == 200) {
     return true;
   }
@@ -218,8 +209,9 @@ Future<bool> merchantWalletAddress(String address) async {
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body =
       jsonEncode({"api_key": apikey, "nonce": nonce, "address": address});
-  var sig = createHmacSig(apisecret, body);
-  var response = await post(url, body, extraHeaders: {"X-Signature": sig});
+  var sig = createHmacSig(apisecret!, body);
+  var response =
+      await httpPost(Uri.parse(url), body, extraHeaders: {"X-Signature": sig});
   if (response.statusCode == 200) {
     return true;
   }
@@ -237,15 +229,16 @@ Future<bool> merchantTx() async {
     "api_key": apikey,
     "nonce": nonce,
   });
-  var sig = createHmacSig(apisecret, body);
-  var response = await post(url, body, extraHeaders: {"X-Signature": sig});
+  var sig = createHmacSig(apisecret!, body);
+  var response =
+      await httpPost(Uri.parse(url), body, extraHeaders: {"X-Signature": sig});
   if (response.statusCode == 200) {
     return true;
   }
   return false;
 }
 
-Future<Rates> merchantRates() async {
+Future<Rates?> merchantRates() async {
   var baseUrl = await Prefs.merchantApiServerGet();
   var url = baseUrl + "rates";
   var apikey = await Prefs.merchantApiKeyGet();
@@ -253,21 +246,22 @@ Future<Rates> merchantRates() async {
   checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce});
-  var sig = createHmacSig(apisecret, body);
-  var response = await post(url, body, extraHeaders: {"X-Signature": sig});
+  var sig = createHmacSig(apisecret!, body);
+  var response =
+      await httpPost(Uri.parse(url), body, extraHeaders: {"X-Signature": sig});
   if (response.statusCode == 200) {
     var jsnObj = json.decode(response.body);
     return Rates(
-        salesTax: Decimal.parse(jsnObj["sales_tax"]),
-        settlementFee: Decimal.parse(jsnObj["settlement_fee"]),
-        customerRate: Decimal.parse(jsnObj["customer"]),
-        merchantRate: Decimal.parse(jsnObj["merchant"]),
-        settlementAddress: jsnObj["settlement_address"]);
+        Decimal.parse(jsnObj["sales_tax"]),
+        Decimal.parse(jsnObj["settlement_fee"]),
+        Decimal.parse(jsnObj["customer"]),
+        Decimal.parse(jsnObj["merchant"]),
+        jsnObj["settlement_address"]);
   }
   return null;
 }
 
-Future<List<Bank>> merchantBanks() async {
+Future<List<Bank>?> merchantBanks() async {
   var baseUrl = await Prefs.merchantApiServerGet();
   var url = baseUrl + "banks";
   var apikey = await Prefs.merchantApiKeyGet();
@@ -275,17 +269,15 @@ Future<List<Bank>> merchantBanks() async {
   checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce});
-  var sig = createHmacSig(apisecret, body);
-  var response = await post(url, body, extraHeaders: {"X-Signature": sig});
+  var sig = createHmacSig(apisecret!, body);
+  var response =
+      await httpPost(Uri.parse(url), body, extraHeaders: {"X-Signature": sig});
   if (response.statusCode == 200) {
     var jsnObj = json.decode(response.body);
-    var banks = List<Bank>();
+    var banks = <Bank>[];
     for (var jsnObjBank in jsnObj) {
-      var bank = Bank(
-          token: jsnObjBank["token"],
-          accountName: jsnObjBank["account_name"],
-          accountNumber: jsnObjBank["account_number"],
-          defaultAccount: jsnObjBank["default_account"]);
+      var bank = Bank(jsnObjBank["token"], jsnObjBank["account_name"],
+          jsnObjBank["account_number"], jsnObjBank["default_account"]);
       banks.add(bank);
     }
     return banks;
@@ -306,8 +298,9 @@ Future<ZapCalcResult> merchantZapCalc(Decimal nzdRequired) async {
     "nonce": nonce,
     "nzd_required": (nzdRequired * d100).toInt()
   });
-  var sig = createHmacSig(apisecret, body);
-  var response = await post(url, body, extraHeaders: {"X-Signature": sig});
+  var sig = createHmacSig(apisecret!, body);
+  var response =
+      await httpPost(Uri.parse(url), body, extraHeaders: {"X-Signature": sig});
   if (response.statusCode == 200) {
     var jsnObj = json.decode(response.body);
     return ZapCalcResult(Decimal.fromInt(jsnObj["nzd_required"]) / d100,
@@ -327,8 +320,9 @@ Future<SettlementCalcResult> merchantSettlementCalc(Decimal amount) async {
   var d100 = Decimal.fromInt(100);
   var body = jsonEncode(
       {"api_key": apikey, "nonce": nonce, "amount": (amount * d100).toInt()});
-  var sig = createHmacSig(apisecret, body);
-  var response = await post(url, body, extraHeaders: {"X-Signature": sig});
+  var sig = createHmacSig(apisecret!, body);
+  var response =
+      await httpPost(Uri.parse(url), body, extraHeaders: {"X-Signature": sig});
   if (response.statusCode == 200) {
     var jsnObj = json.decode(response.body);
     return SettlementCalcResult(Decimal.fromInt(jsnObj["amount"]) / d100,
@@ -353,18 +347,19 @@ Future<SettlementResult> merchantSettlement(
     "bank": bankToken,
     "amount": (amount * d100).toInt()
   });
-  var sig = createHmacSig(apisecret, body);
-  var response = await post(url, body, extraHeaders: {"X-Signature": sig});
+  var sig = createHmacSig(apisecret!, body);
+  var response =
+      await httpPost(Uri.parse(url), body, extraHeaders: {"X-Signature": sig});
   if (response.statusCode == 200) {
     var jsnObj = json.decode(response.body);
     return SettlementResult(
         Settlement(
-            token: jsnObj["token"],
-            amount: Decimal.fromInt(jsnObj["amount"]) / d100,
-            amountReceive: Decimal.fromInt(jsnObj["amount_receive"]) / d100,
-            bankAccount: jsnObj["bankAccount"],
-            txid: jsnObj["txid"],
-            status: jsnObj["status"]),
+            jsnObj["token"],
+            Decimal.fromInt(jsnObj["amount"]) / d100,
+            Decimal.fromInt(jsnObj["amount_receive"]) / d100,
+            jsnObj["bankAccount"],
+            jsnObj["txid"],
+            jsnObj["status"]),
         null);
   }
   var jsnObj = json.decode(response.body);
@@ -381,19 +376,20 @@ Future<SettlementResult> merchantSettlementUpdate(
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode(
       {"api_key": apikey, "nonce": nonce, "token": token, "txid": txid});
-  var sig = createHmacSig(apisecret, body);
-  var response = await post(url, body, extraHeaders: {"X-Signature": sig});
+  var sig = createHmacSig(apisecret!, body);
+  var response =
+      await httpPost(Uri.parse(url), body, extraHeaders: {"X-Signature": sig});
   if (response.statusCode == 200) {
     var jsnObj = json.decode(response.body);
     var d100 = Decimal.fromInt(100);
     return SettlementResult(
         Settlement(
-            token: jsnObj["token"],
-            amount: Decimal.fromInt(jsnObj["amount"]) / d100,
-            amountReceive: Decimal.fromInt(jsnObj["amount_receive"]) / d100,
-            bankAccount: jsnObj["bankAccount"],
-            txid: jsnObj["txid"],
-            status: jsnObj["status"]),
+            jsnObj["token"],
+            Decimal.fromInt(jsnObj["amount"]) / d100,
+            Decimal.fromInt(jsnObj["amount_receive"]) / d100,
+            jsnObj["bankAccount"],
+            jsnObj["txid"],
+            jsnObj["status"]),
         null);
   }
   var jsnObj = json.decode(response.body);
@@ -415,7 +411,7 @@ Future<Socket> merchantSocket(
   });
   socket.on('connect', (_) {
     print('ws connect');
-    var sig = createHmacSig(apisecret, nonce.toString());
+    var sig = createHmacSig(apisecret!, nonce.toString());
     var auth = {"signature": sig, "api_key": apikey, "nonce": nonce};
     socket.emit('auth', auth);
   });
@@ -445,13 +441,10 @@ Future<Socket> merchantSocket(
 }
 
 String toNZDAmount(Decimal amount, Rates rates) {
-  if (rates != null) {
-    var fee = (amount - (amount / (Decimal.fromInt(1) + rates.merchantRate))) *
-        (Decimal.fromInt(1) + rates.salesTax);
-    var amountNZD = amount - fee;
-    return "${amountNZD.toStringAsFixed(2)} NZD";
-  }
-  return "";
+  var fee = (amount - (amount / (Decimal.fromInt(1) + rates.merchantRate))) *
+      (Decimal.fromInt(1) + rates.salesTax);
+  var amountNZD = amount - fee;
+  return "${amountNZD.toStringAsFixed(2)} NZD";
 }
 
 class ListTx extends StatelessWidget {
@@ -464,7 +457,7 @@ class ListTx extends StatelessWidget {
   final DateTime date;
   final String txid;
   final Decimal amount;
-  final Rates merchantRates;
+  final Rates? merchantRates;
   final bool outgoing;
   final bool last;
 
@@ -476,7 +469,7 @@ class ListTx extends StatelessWidget {
     var amountText = '${amount.toStringAsFixed(2)} $AssetShortNameUpper';
     Widget amountWidget = Text(amountText, style: tsRight);
     if (merchantRates != null) {
-      var amountNZD = Text(toNZDAmount(amount, merchantRates), style: tsRight);
+      var amountNZD = Text(toNZDAmount(amount, merchantRates!), style: tsRight);
       amountWidget = Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,

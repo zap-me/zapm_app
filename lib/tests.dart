@@ -7,7 +7,7 @@ import 'package:zapdart/libzap.dart';
 
 class WorkStatus extends StatefulWidget {
   final String workName;
-  final void Function(SendPort) entryPoint;
+  final void Function(SendPort?) entryPoint;
 
   WorkStatus(this.workName, this.entryPoint) : super();
 
@@ -19,8 +19,8 @@ class _WorkStatusState extends State<WorkStatus> {
   String _action = "";
   bool _running = false;
   String _output = "";
-  ReceivePort _receivePort;
-  Isolate _isolate;
+  ReceivePort? _receivePort;
+  Isolate? _isolate;
 
   _WorkStatusState();
 
@@ -38,16 +38,16 @@ class _WorkStatusState extends State<WorkStatus> {
       });
       // start isolate
       _receivePort = ReceivePort();
-      _isolate = await Isolate.spawn(widget.entryPoint, _receivePort.sendPort);
-      _receivePort.listen(_handleMessage, onDone: () {
+      _isolate = await Isolate.spawn(widget.entryPoint, _receivePort?.sendPort);
+      _receivePort?.listen(_handleMessage, onDone: () {
         print("done!");
       });
     } else {
       _action = "Start ${widget.workName}";
       // stop isolate
       if (_isolate != null) {
-        _receivePort.close();
-        _isolate.kill(priority: Isolate.immediate);
+        _receivePort?.close();
+        _isolate?.kill(priority: Isolate.immediate);
         _isolate = null;
       }
     }
@@ -85,24 +85,24 @@ class TestsScreen extends StatefulWidget {
 class _TestsState extends State<TestsScreen> {
   _TestsState();
 
-  static void _mnemonicTest(SendPort sendPort) async {
+  static void _mnemonicTest(SendPort? sendPort) async {
     var libzap = LibZap();
     var count = 0;
     var mnemonics = HashMap();
     while (true) {
       var mnemonic = libzap.mnemonicCreate();
       if (mnemonics.containsKey(mnemonic)) {
-        sendPort.send("ERROR: $mnemonic already exists");
+        sendPort?.send("ERROR: $mnemonic already exists");
         break;
       } else {
         mnemonics[mnemonic] = 1;
       }
-      if (count % 1000 == 0) sendPort.send("$count - '$mnemonic'");
+      if (count % 1000 == 0) sendPort?.send("$count - '$mnemonic'");
       count += 1;
     }
   }
 
-  static void _addrTest(SendPort sendPort) async {
+  static void _addrTest(SendPort? sendPort) async {
     var libzap = LibZap();
     var count = 0;
     var addrs = HashMap();
@@ -110,13 +110,13 @@ class _TestsState extends State<TestsScreen> {
       var addr = libzap.seedAddress(count.toString());
       if (addrs.containsKey(addr)) {
         var originalSeed = addrs[addr];
-        sendPort.send(
+        sendPort?.send(
             "ERROR: $originalSeed and $count make the same address ($addr)");
         break;
       } else {
         addrs[addr] = count;
       }
-      if (count % 1000 == 0) sendPort.send("$count - $addr");
+      if (count % 1000 == 0) sendPort?.send("$count - $addr");
       count += 1;
     }
   }

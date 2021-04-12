@@ -20,7 +20,7 @@ class WavesSendingForm extends StatefulWidget {
 
 class WavesSendingFormState extends State<WavesSendingForm> {
   bool _sending = true;
-  Tx _tx;
+  Tx? _tx;
 
   void send() async {
     // broadcast tx
@@ -37,7 +37,7 @@ class WavesSendingFormState extends State<WavesSendingForm> {
 
   @override
   void initState() {
-    WidgetsBinding.instance.addPostFrameCallback((_) => send());
+    WidgetsBinding.instance?.addPostFrameCallback((_) => send());
     super.initState();
   }
 
@@ -88,7 +88,7 @@ class WavesSendingFormState extends State<WavesSendingForm> {
 class PayDbSendingForm extends StatefulWidget {
   final String _recipient;
   final int _amount;
-  final String _attachment;
+  final String? _attachment;
 
   PayDbSendingForm(this._recipient, this._amount, this._attachment) : super();
 
@@ -100,7 +100,7 @@ class PayDbSendingForm extends StatefulWidget {
 
 class PayDbSendingFormState extends State<PayDbSendingForm> {
   bool _sending = true;
-  PayDbTx _tx;
+  PayDbTx? _tx;
 
   void send() async {
     var result = await paydbTransactionCreate(
@@ -113,7 +113,7 @@ class PayDbSendingFormState extends State<PayDbSendingForm> {
 
   @override
   void initState() {
-    WidgetsBinding.instance.addPostFrameCallback((_) => send());
+    WidgetsBinding.instance?.addPostFrameCallback((_) => send());
     super.initState();
   }
 
