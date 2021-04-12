@@ -26,19 +26,21 @@ class SettlementForm extends StatefulWidget {
 class SettlementFormState extends State<SettlementForm> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = new TextEditingController();
-  Rates _rates;
-  List<Bank> _banks;
-  String _bankAccount;
+  Rates? _rates;
+  List<Bank> _banks = [];
+  String? _bankAccount;
 
   Future<bool> send(BuildContext context) async {
-    if (_formKey.currentState.validate()) {
+    if (_formKey.currentState == null || _rates == null)
+      return false;
+    if (_formKey.currentState!.validate()) {
       // send parameters
       var amountText = _amountController.text;
       var amountDec = Decimal.parse(amountText);
       var amount = (amountDec * Decimal.fromInt(100)).toInt();
       var fee = (widget._fee * Decimal.fromInt(100)).toInt();
       var lz = LibZap();
-      if (!lz.addressCheck(_rates.settlementAddress)) {
+      if (!lz.addressCheck(_rates!.settlementAddress)) {
         flushbarMsg(context, 'unable to create settlement',
             category: MessageCategory.Warning);
         return false;
@@ -53,7 +55,7 @@ class SettlementFormState extends State<SettlementForm> {
         return false;
       }
       // double check with user
-      if (await showDialog<bool>(
+      var yesSend = await showDialog<bool>(
           context: context,
           builder: (BuildContext context) {
             return SimpleDialog(
@@ -63,10 +65,10 @@ class SettlementFormState extends State<SettlementForm> {
                 Text(
                     'sending ${amountDec.toStringAsFixed(2)} $AssetShortNameUpper',
                     style: TextStyle(fontSize: 16, color: ZapYellow)),
-                Text('receiving ${calc.amountReceive.toStringAsFixed(2)} NZD',
+                Text('receiving ${calc.amountReceive!.toStringAsFixed(2)} NZD',
                     style: TextStyle(fontSize: 16, color: ZapGreen)),
                 Text(
-                    'admin fee ${(calc.amountReceive - amountDec).toStringAsFixed(2)} NZD',
+                    'admin fee ${(calc.amountReceive! - amountDec).toStringAsFixed(2)} NZD',
                     style: TextStyle(fontSize: 16, color: ZapYellow)),
               ]),
               children: <Widget>[
@@ -86,7 +88,8 @@ class SettlementFormState extends State<SettlementForm> {
                 )
               ],
             );
-          })) {
+          });
+      if (yesSend != null && yesSend) {
         // check pin
         if (!await pinCheck(context, await Prefs.pinGet())) {
           return false;
@@ -110,9 +113,9 @@ class SettlementFormState extends State<SettlementForm> {
         var libzap = LibZap();
         var deviceName = await Prefs.deviceNameGet();
         var attachment =
-            formatAttachment(deviceName, result.settlement.token, 'settlement');
+            formatAttachment(deviceName, result.settlement!.token, 'settlement');
         var spendTx = libzap.transactionCreate(
-            widget._seed, _rates.settlementAddress, amount, fee, attachment);
+            widget._seed, _rates!.settlementAddress, amount, fee, attachment);
         if (!spendTx.success) {
           flushbarMsg(context, 'failed to create transaction',
               category: MessageCategory.Warning);
@@ -128,7 +131,7 @@ class SettlementFormState extends State<SettlementForm> {
         }
         Navigator.pop(context);
         showAlertDialog(context, 'updating settlement...');
-        result = await merchantSettlementUpdate(result.settlement.token, tx.id);
+        result = await merchantSettlementUpdate(result.settlement!.token, tx.id);
         if (result.settlement == null) {
           flushbarMsg(context, 'failed to update settlement (${result.error})',
               category: MessageCategory.Warning);
@@ -214,7 +217,7 @@ class SettlementFormState extends State<SettlementForm> {
                         _amountController.text = '${widget._max - widget._fee}',
                     child: Text('max', style: TextStyle(color: ZapYellow)))),
             validator: (value) {
-              if (value.isEmpty) {
+              if (value == null || value.isEmpty) {
                 return 'Please enter a value';
               }
               final dv = Decimal.parse(value);
@@ -231,9 +234,7 @@ class SettlementFormState extends State<SettlementForm> {
             isExpanded: true,
             hint: Text('bank account'),
             value: _bankAccount,
-            items: _banks == null
-                ? null
-                : _banks
+            items: _banks
                     .map((e) => DropdownMenuItem(
                           child: Text('${e.accountName} - ${e.accountNumber}'),
                           value: e.accountNumber,

@@ -12,19 +12,22 @@ class WavesWallet {
   final String address;
 
   WavesWallet.mnemonic(this.mnemonic, this.address);
-  WavesWallet.justAddress(this.address) : mnemonic = null;
+  WavesWallet.justAddress(this.address) : mnemonic = '';
+  WavesWallet.empty() : mnemonic = '', address = '';
 
-  bool get isMnemonic => mnemonic != null && mnemonic.isNotEmpty;
-  bool get isAddress => !isMnemonic && address != null && address.isNotEmpty;
+  bool get isEmpty => mnemonic.isEmpty && address.isEmpty;
+  bool get isMnemonic => mnemonic != null && mnemonic!.isNotEmpty;
+  bool get isAddress => !isMnemonic && address != null && address!.isNotEmpty;
 }
 
 class PayDbAccount {
   final String email;
-  final String photo;
-  final String photoType;
+  final String? photo;
+  final String? photoType;
   final Iterable<PayDbPermission> permissions;
 
   PayDbAccount(this.email, this.photo, this.photoType, this.permissions);
+  PayDbAccount.empty() : email = '', photo = null, photoType = null, permissions = [];
 }
 
 class PrefHelper {
@@ -69,18 +72,24 @@ class PrefHelper {
     }
   }
 
-  Future<void> setString(String key, String value) async {
+  Future<void> setString(String key, String? value) async {
     if (Platform.isAndroid || Platform.isIOS) {
       final prefs = await SharedPreferences.getInstance();
-      prefs.setString(key, value);
+      if (value == null)
+        prefs.remove(key);
+      else
+        prefs.setString(key, value);
     } else {
       var config = await fromFile();
-      config.set(_section, key, value);
+      if (value == null)
+        config.removeOption(_section, key);
+      else
+        config.set(_section, key, value);
       await toFile(config);
     }
   }
 
-  Future<String> getString(String key, String defaultValue) async {
+  Future<String?> getString(String key, String? defaultValue) async {
     if (Platform.isAndroid || Platform.isIOS) {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getString(key) ?? defaultValue;
@@ -98,13 +107,13 @@ class Prefs {
     return key;
   }
 
-  static Future<String> getStringNetworkSpecific(
-      String key, String defaultValue) async {
+  static Future<String?> getStringNetworkSpecific(
+      String key, String? defaultValue) async {
     final prefs = PrefHelper();
     return prefs.getString(await getKeyNetworkSpecific(key), defaultValue);
   }
 
-  static Future<bool> setStringNetworkSpecific(String key, String value) async {
+  static Future<bool> setStringNetworkSpecific(String key, String? value) async {
     final prefs = PrefHelper();
     prefs.setString(await getKeyNetworkSpecific(key), value);
     return true;
@@ -124,12 +133,12 @@ class Prefs {
         AssetIdMainnet, AssetIdTestnet, NodeUrlMainnet, NodeUrlTestnet, value);
   }
 
-  static Future<String> pinGet() async {
+  static Future<String?> pinGet() async {
     final prefs = PrefHelper();
     return await prefs.getString("pin", null);
   }
 
-  static Future<bool> pinSet(String value) async {
+  static Future<bool> pinSet(String? value) async {
     final prefs = PrefHelper();
     await prefs.setString("pin", value);
     return true;
@@ -140,21 +149,21 @@ class Prefs {
     return pin != null && pin != '';
   }
 
-  static Future<String> addressGet() async {
+  static Future<String?> addressGet() async {
     return await getStringNetworkSpecific("address", null);
   }
 
-  static Future<bool> addressSet(String value) async {
+  static Future<bool> addressSet(String? value) async {
     await setStringNetworkSpecific("address", value);
     return true;
   }
 
-  static Future<String> mnemonicGet() async {
+  static Future<String?> mnemonicGet() async {
     final prefs = PrefHelper();
     return await prefs.getString("mnemonic", null);
   }
 
-  static Future<bool> mnemonicSet(String value) async {
+  static Future<bool> mnemonicSet(String? value) async {
     final prefs = PrefHelper();
     await prefs.setString("mnemonic", value);
     return true;
@@ -162,43 +171,43 @@ class Prefs {
 
   static Future<bool> mnemonicPasswordProtectedGet() async {
     var iv = await cryptoIVGet();
-    return iv != null;
+    return iv != null && iv.isNotEmpty;
   }
 
-  static Future<String> cryptoIVGet() async {
+  static Future<String?> cryptoIVGet() async {
     final prefs = PrefHelper();
     return await prefs.getString("IV", null);
   }
 
-  static Future<bool> cryptoIVSet(String value) async {
+  static Future<bool> cryptoIVSet(String? value) async {
     final prefs = PrefHelper();
     await prefs.setString("IV", value);
     return true;
   }
 
-  static Future<String> deviceNameGet() async {
+  static Future<String?> deviceNameGet() async {
     return await getStringNetworkSpecific("deviceName", null);
   }
 
-  static Future<bool> deviceNameSet(String value) async {
+  static Future<bool> deviceNameSet(String? value) async {
     await setStringNetworkSpecific("deviceName", value);
     return true;
   }
 
-  static Future<String> merchantApiKeyGet() async {
+  static Future<String?> merchantApiKeyGet() async {
     return await getStringNetworkSpecific("apikey", null);
   }
 
-  static Future<bool> merchantApiKeySet(String value) async {
+  static Future<bool> merchantApiKeySet(String? value) async {
     await setStringNetworkSpecific("apikey", value);
     return true;
   }
 
-  static Future<String> merchantApiSecretGet() async {
+  static Future<String?> merchantApiSecretGet() async {
     return await getStringNetworkSpecific("apisecret", null);
   }
 
-  static Future<bool> merchantApiSecretSet(String value) async {
+  static Future<bool> merchantApiSecretSet(String? value) async {
     await setStringNetworkSpecific("apisecret", value);
     return true;
   }
@@ -209,7 +218,7 @@ class Prefs {
     return server;
   }
 
-  static Future<bool> merchantApiServerSet(String value) async {
+  static Future<bool> merchantApiServerSet(String? value) async {
     await setStringNetworkSpecific("apiserver", value);
     return true;
   }
@@ -222,20 +231,20 @@ class Prefs {
     return true;
   }
 
-  static Future<String> paydbApiKeyGet() async {
+  static Future<String?> paydbApiKeyGet() async {
     return await getStringNetworkSpecific("paydb_apikey", null);
   }
 
-  static Future<bool> paydbApiKeySet(String value) async {
+  static Future<bool> paydbApiKeySet(String? value) async {
     await setStringNetworkSpecific("paydb_apikey", value);
     return true;
   }
 
-  static Future<String> paydbApiSecretGet() async {
+  static Future<String?> paydbApiSecretGet() async {
     return await getStringNetworkSpecific("paydb_apisecret", null);
   }
 
-  static Future<bool> paydbApiSecretSet(String value) async {
+  static Future<bool> paydbApiSecretSet(String? value) async {
     await setStringNetworkSpecific("paydb_apisecret", value);
     return true;
   }

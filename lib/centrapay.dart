@@ -30,7 +30,7 @@ class CentrapayQr {
   CentrapayQr(this.reqId, this.baseUrl);
 }
 
-CentrapayQr centrapayParseQrcode(String data) {
+CentrapayQr? centrapayParseQrcode(String? data) {
   if (data != null && data.isNotEmpty) {
     if (data.indexOf(CENTRAPAY_QR_BASE_URI) == 0)
       // return requestId part of url
@@ -71,7 +71,7 @@ class CentrapayRequest {
 }
 
 class CentrapayRequestInfoResult {
-  final CentrapayRequest request;
+  final CentrapayRequest? request;
   final CentrapayError error;
 
   CentrapayRequestInfoResult(this.request, this.error);
@@ -85,7 +85,7 @@ class CentrapayPaymentResult {
 }
 
 class CentrapayRequestPayResult {
-  final CentrapayPaymentResult payment;
+  final CentrapayPaymentResult? payment;
   final CentrapayError error;
 
   CentrapayRequestPayResult(this.payment, this.error);
@@ -93,13 +93,13 @@ class CentrapayRequestPayResult {
 
 class CentrapayZapResult {
   final bool zapRequired;
-  final Tx zapTx;
+  final Tx? zapTx;
   final CentrapayRequestPayResult centrapayResult;
 
   CentrapayZapResult(this.zapRequired, this.zapTx, this.centrapayResult);
 }
 
-Future<http.Response> postAndCatch(String url, Map<String, dynamic> params,
+Future<http.Response?> postAndCatch(String url, Map<String, dynamic> params,
     {bool usePost = true}) async {
   assert(CentrapayApiKey != null);
   try {
@@ -107,14 +107,14 @@ Future<http.Response> postAndCatch(String url, Map<String, dynamic> params,
     if (usePost) {
       print(':: centrapay endpoint: $url');
       print('   data: $params');
-      return await post(url, params,
+      return await httpPost(Uri.parse(url), params,
           contentType: 'application/x-www-form-urlencoded',
           extraHeaders: headers);
     } else {
       var queryString = Uri(queryParameters: params).query;
       url = url + '?' + queryString;
       print(':: centrapay endpoint: $url');
-      return await get_(url, extraHeaders: headers);
+      return await httpGet(Uri.parse(url), extraHeaders: headers);
     }
   } on SocketException catch (e) {
     print(e);
@@ -137,7 +137,7 @@ Future<CentrapayRequestInfoResult> centrapayRequestInfo(CentrapayQr qr) async {
     var asset = jsnObj["denomination"]["asset"];
     var amount = jsnObj["denomination"]["amount"];
     var status = jsnObj["status"];
-    var paymentMethods = List<CentrapayPayment>();
+    var paymentMethods = <CentrapayPayment>[];
     for (var item in jsnObj["payments"]) {
       var method = CentrapayPayment(
           item["ledger"], item["account"], item["amount"].toDouble());
@@ -195,15 +195,15 @@ class CentrapayScreen extends StatefulWidget {
 
 class CentrapayScreenState extends State<CentrapayScreen> {
   bool _loading = false;
-  String _msg;
-  CentrapayRequest _req;
-  CentrapayPayment _payment;
-  Tx _zapTx;
+  String? _msg;
+  CentrapayRequest? _req;
+  CentrapayPayment? _payment;
+  Tx? _zapTx;
   bool _confirmed = false;
 
   @override
   void initState() {
-    WidgetsBinding.instance.addPostFrameCallback((_) => start());
+    WidgetsBinding.instance?.addPostFrameCallback((_) => start());
     super.initState();
   }
 
@@ -215,9 +215,9 @@ class CentrapayScreenState extends State<CentrapayScreen> {
     var result = await centrapayRequestInfo(widget._qr);
     _msg = '';
     if (result.error == CentrapayError.None) {
-      if (result.request.status == CentrapayRequestStatusNew) {
+      if (result.request != null && result.request?.status == CentrapayRequestStatusNew) {
         _req = result.request;
-        for (var item in result.request.payments)
+        for (var item in result.request!.payments)
           if (centrapayValidPaymentMethod(item.ledger, widget._testnet)) {
             setState(() {
               _loading = false;
@@ -226,26 +226,26 @@ class CentrapayScreenState extends State<CentrapayScreen> {
             return;
           }
         _msg = 'no compatible centrapay payment method found';
-        flushbarMsg(context, _msg, category: MessageCategory.Warning);
+        flushbarMsg(context, _msg!, category: MessageCategory.Warning);
       } else {
-        _msg = 'centrapay request status: ${result.request.status}';
-        flushbarMsg(context, _msg, category: MessageCategory.Warning);
+        _msg = 'centrapay request status: ${result.request?.status}';
+        flushbarMsg(context, _msg!, category: MessageCategory.Warning);
       }
     } else {
       _msg = 'centrapay request info failed';
-      flushbarMsg(context, _msg, category: MessageCategory.Warning);
+      flushbarMsg(context, _msg!, category: MessageCategory.Warning);
     }
     setState(() {
       _loading = false;
     });
   }
 
-  String paymentAmount(CentrapayPayment payment) {
+  String paymentAmount(CentrapayPayment? payment) {
     if (payment == null) return '0';
     return (payment.amount / 100).toStringAsFixed(2);
   }
 
-  String paymentUnit(CentrapayPayment payment) {
+  String paymentUnit(CentrapayPayment? payment) {
     switch (payment?.ledger) {
       case CentrapayPaymentMethodZapMain:
       case CentrapayPaymentMethodZapTest:
@@ -275,7 +275,7 @@ class CentrapayScreenState extends State<CentrapayScreen> {
               builder: (context) => SendScreen(widget._testnet, widget._seed,
                   widget._fee, recipientUri, widget._max)),
         );
-        if (tx == null) return CentrapayZapResult(true, null, null);
+        if (tx == null) return CentrapayZapResult(true, null, CentrapayRequestPayResult(null, CentrapayError.Network));
         var res = await centrapayRequestPay(widget._qr, req, payment, tx.id);
         return CentrapayZapResult(true, tx, res);
     }
@@ -284,21 +284,23 @@ class CentrapayScreenState extends State<CentrapayScreen> {
   }
 
   void payConfirm() async {
+    if (_req == null || _payment == null || _zapTx == null)
+      return;
     setState(() {
       _loading = true;
       _msg = 'confirming payment..';
     });
-    var res = await centrapayRequestPay(widget._qr, _req, _payment, _zapTx.id);
+    var res = await centrapayRequestPay(widget._qr, _req!, _payment!, _zapTx!.id);
     switch (res.error) {
       case CentrapayError.None:
         _msg = 'completed centrapay payment';
         _confirmed = true;
-        flushbarMsg(context, _msg);
+        flushbarMsg(context, _msg!);
         break;
       case CentrapayError.Auth:
       case CentrapayError.Network:
         _msg = 'failed to update centrapay payment';
-        flushbarMsg(context, _msg, category: MessageCategory.Warning);
+        flushbarMsg(context, _msg!, category: MessageCategory.Warning);
         break;
     }
     setState(() {
@@ -307,27 +309,29 @@ class CentrapayScreenState extends State<CentrapayScreen> {
   }
 
   void pay() async {
+    if (_req == null || _payment == null)
+      return;
     setState(() {
       _loading = true;
       _msg = 'paying request..';
     });
-    var res = await payZapAndConfirm(_req, _payment);
+    var res = await payZapAndConfirm(_req!, _payment!);
     _msg = '';
     if (res.zapRequired && res.zapTx == null) {
       _msg = 'failed to send zap';
-      flushbarMsg(context, _msg, category: MessageCategory.Warning);
+      flushbarMsg(context, _msg!, category: MessageCategory.Warning);
     } else
       _zapTx = res.zapTx;
     switch (res.centrapayResult.error) {
       case CentrapayError.None:
         _msg = 'completed centrapay payment';
         _confirmed = true;
-        flushbarMsg(context, _msg);
+        flushbarMsg(context, _msg!);
         break;
       case CentrapayError.Auth:
       case CentrapayError.Network:
         _msg = 'failed to update centrapay payment';
-        flushbarMsg(context, _msg, category: MessageCategory.Warning);
+        flushbarMsg(context, _msg!, category: MessageCategory.Warning);
         break;
     }
     setState(() {
@@ -362,7 +366,7 @@ class CentrapayScreenState extends State<CentrapayScreen> {
                           child: Container(
                               padding: const EdgeInsets.only(top: 20.0))),
                       Visibility(
-                        visible: _msg != null && _msg.isNotEmpty,
+                        visible: _msg != null && _msg!.isNotEmpty,
                         child: Text("$_msg"),
                       ),
                       Visibility(

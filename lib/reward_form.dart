@@ -27,7 +27,9 @@ class RewardFormState extends State<RewardForm> {
   final _msgController = new TextEditingController();
 
   void send() async {
-    if (_formKey.currentState.validate()) {
+    if (_formKey.currentState == null)
+      return;
+    if (_formKey.currentState!.validate()) {
       // send parameters
       var amountText = _amountController.text;
       var amountDec = Decimal.parse(amountText);
@@ -35,7 +37,7 @@ class RewardFormState extends State<RewardForm> {
       var fee = (widget._fee * Decimal.fromInt(100)).toInt();
       var msg = _msgController.text;
       // double check with user
-      if (await showDialog<bool>(
+      var yesSend = await showDialog<bool>(
           context: context,
           builder: (BuildContext context) {
             return SimpleDialog(
@@ -55,7 +57,8 @@ class RewardFormState extends State<RewardForm> {
                 ),
               ],
             );
-          })) {
+          });
+      if (yesSend != null && yesSend) {
         // check pin
         if (!await pinCheck(context, await Prefs.pinGet())) {
           return;
@@ -67,7 +70,7 @@ class RewardFormState extends State<RewardForm> {
               builder: (context) =>
                   ClaimingForm(amountDec, widget._seed, amount, fee, msg)),
         );
-        if (sentFunds) Navigator.pop(context, true);
+        if (sentFunds != null && sentFunds) Navigator.pop(context, true);
       }
     } else
       flushbarMsg(context, 'validation failed',
@@ -93,7 +96,7 @@ class RewardFormState extends State<RewardForm> {
             keyboardType: TextInputType.numberWithOptions(decimal: true),
             decoration: new InputDecoration(labelText: 'Amount'),
             validator: (value) {
-              if (value.isEmpty) {
+              if (value == null || value.isEmpty) {
                 return 'Please enter a value';
               }
               final dv = Decimal.parse(value);

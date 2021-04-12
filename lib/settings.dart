@@ -4,7 +4,6 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:package_info/package_info.dart';
 import 'package:yaml/yaml.dart';
-import 'package:qrcode_reader/qrcode_reader.dart';
 
 import 'package:zapdart/libzap.dart';
 import 'package:zapdart/utils.dart';
@@ -19,6 +18,7 @@ import 'prefs.dart';
 import 'hidden.dart';
 import 'firebase.dart';
 import 'paydb.dart';
+import 'qrscan.dart';
 
 class AppVersion {
   final String version;
@@ -41,8 +41,8 @@ class AppVersion {
 
 class SettingsScreen extends StatefulWidget {
   final bool _pinProtectedInitial;
-  final String _mnemonicOrAccount;
-  final FCM _fcm;
+  final String? _mnemonicOrAccount;
+  final FCM? _fcm;
 
   SettingsScreen(this._pinProtectedInitial, this._mnemonicOrAccount, this._fcm)
       : super();
@@ -53,18 +53,18 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsState extends State<SettingsScreen> {
   bool _secondary = true;
-  bool _pinProtected;
+  bool _pinProtected = true;
   bool _showMnemonic = false;
   bool _mnemonicPasswordProtected = true;
-  AppVersion _appVersion;
+  AppVersion? _appVersion;
   int _libzapVersion = -1;
   bool _testnet = false;
-  String _deviceName;
-  String _apikey;
-  String _apisecret;
-  String _apiserver;
+  String? _deviceName;
+  String? _apikey;
+  String? _apisecret;
+  String? _apiserver;
   int _titleTaps = 0;
-  String _paydbServer;
+  String? _paydbServer;
 
   _SettingsState(this._pinProtected) {
     _initSettings();
@@ -133,7 +133,7 @@ class _SettingsState extends State<SettingsScreen> {
     var pin = await Navigator.push<String>(
       context,
       MaterialPageRoute(
-          builder: (context) => PinEntryScreen(null, 'Enter New Pin')),
+          builder: (context) => PinEntryScreen('', 'Enter New Pin')),
     );
     if (pin != null) {
       var pin2 = await Navigator.push<String>(
@@ -153,6 +153,8 @@ class _SettingsState extends State<SettingsScreen> {
 
   void _changePin() async {
     var pin = await Prefs.pinGet();
+    if (pin == null) 
+      return;
     var pin2 = await Navigator.push<String>(
       context,
       MaterialPageRoute(
@@ -165,6 +167,8 @@ class _SettingsState extends State<SettingsScreen> {
 
   void _removePin() async {
     var pin = await Prefs.pinGet();
+    if (pin == null) 
+      return;
     var pin2 = await Navigator.push<String>(
       context,
       MaterialPageRoute(
@@ -181,9 +185,11 @@ class _SettingsState extends State<SettingsScreen> {
 
   void _addPasswordProtection() async {
     assert(AppTokenType == TokenType.Waves);
+    if (widget._mnemonicOrAccount == null) 
+      return;
     var password = await askSetMnemonicPassword(context);
     if (password != null) {
-      var res = encryptMnemonic(widget._mnemonicOrAccount, password);
+      var res = encryptMnemonic(widget._mnemonicOrAccount!, password);
       await Prefs.cryptoIVSet(res.iv);
       await Prefs.mnemonicSet(res.encryptedMnemonic);
       setState(() {
@@ -193,7 +199,7 @@ class _SettingsState extends State<SettingsScreen> {
   }
 
   void _scanApikey() async {
-    var value = await new QRCodeReader().scan();
+    var value = await QrScan.scan(context);
     if (value != null) {
       var result = parseApiKeyUri(value);
       if (result.error == NO_ERROR) {
@@ -210,8 +216,8 @@ class _SettingsState extends State<SettingsScreen> {
             _apiserver = result.apiserver;
         });
         flushbarMsg(context, 'API KEY set');
-        if (result.accountAdmin && result.walletAddress.isEmpty) {
-          var address = _getWalletAddress(widget._mnemonicOrAccount);
+        if (result.accountAdmin && result.walletAddress.isEmpty && widget._mnemonicOrAccount != null) {
+          var address = _getWalletAddress(widget._mnemonicOrAccount!);
           var yes = await askYesNo(context,
               "Do you want to set the account wallet address ($address)?");
           if (yes) {
@@ -277,9 +283,15 @@ class _SettingsState extends State<SettingsScreen> {
         context,
         MaterialPageRoute(
             builder: (context) => HiddenScreen(
-                _testnet, widget._fcm.getToken(), widget._mnemonicOrAccount)),
+                _testnet, widget._fcm?.getToken(), widget._mnemonicOrAccount)),
       );
     }
+  }
+
+  Widget _recoveryWords() {
+    if (!_secondary && widget._mnemonicOrAccount != null)
+      return Bip39Words.fromString(widget._mnemonicOrAccount!);
+    return Text('n/a');
   }
 
   @override
@@ -293,8 +305,8 @@ class _SettingsState extends State<SettingsScreen> {
           child: ListView(
             children: <Widget>[
               ListTile(
-                  title: Text("Version: ${_appVersion.version}"),
-                  subtitle: Text("Build: ${_appVersion.build}")),
+                  title: Text("Version: ${_appVersion?.version}"),
+                  subtitle: Text("Build: ${_appVersion?.build}")),
               Visibility(
                 visible: AppTokenType == TokenType.Waves,
                 child: ListTile(title: Text("Libzap Version: $_libzapVersion")),
@@ -379,10 +391,7 @@ class _SettingsState extends State<SettingsScreen> {
                             padding: const EdgeInsets.only(top: 18.0),
                             child: ListTile(
                               title: Text("Recovery words"),
-                              subtitle: !_secondary
-                                  ? Bip39Words.fromString(
-                                      widget._mnemonicOrAccount)
-                                  : Text('n/a'),
+                              subtitle: _recoveryWords(),
                               trailing: _mnemonicPasswordProtected
                                   ? Icon(Icons.lock)
                                   : Icon(Icons.lock_open),

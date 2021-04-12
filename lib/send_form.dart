@@ -2,7 +2,6 @@ import 'dart:core';
 import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
 import 'package:flutter_icons/flutter_icons.dart';
-import 'package:qrcode_reader/qrcode_reader.dart';
 
 import 'package:zapdart/utils.dart';
 import 'package:zapdart/libzap.dart';
@@ -13,6 +12,7 @@ import 'config.dart';
 import 'sending_form.dart';
 import 'prefs.dart';
 import 'paydb.dart';
+import 'qrscan.dart';
 
 class SendForm extends StatefulWidget {
   final bool _testnet;
@@ -36,8 +36,8 @@ class SendFormState extends State<SendForm> {
   final _recipientController = TextEditingController();
   final _amountController = TextEditingController();
   final _msgController = TextEditingController();
-  String _attachment;
-  Widget _recipientImage;
+  String _attachment = '';
+  Widget? _recipientImage;
 
   bool setRecipientOrUri(String recipientOrUri) {
     switch (AppTokenType) {
@@ -69,7 +69,8 @@ class SendFormState extends State<SendForm> {
           _recipientController.text = parts.account;
           updateRecipient(parts.account);
           _amountController.text = parts.amount.toString();
-          _attachment = Uri.decodeFull(parts.attachment);
+          if (parts.attachment != null)
+            _attachment = Uri.decodeFull(parts.attachment!);
           _msgController.text = '';
           updateAttachment(null);
           return true;
@@ -84,9 +85,9 @@ class SendFormState extends State<SendForm> {
       var recipientImage;
       if (paydbRecipientCheck(recipient)) {
         var result = await paydbUserInfo(email: recipient);
-        if (result.error == PayDbError.None)
+        if (result.error == PayDbError.None && result.info != null)
           recipientImage =
-              paydbAccountImage(result.info.photo, result.info.photoType);
+              paydbAccountImage(result.info!.photo, result.info!.photoType);
       }
       setState(() {
         _recipientImage = recipientImage;
@@ -94,7 +95,7 @@ class SendFormState extends State<SendForm> {
     }
   }
 
-  void updateAttachment(String msg) async {
+  void updateAttachment(String? msg) async {
     var deviceName = await Prefs.deviceNameGet();
     setState(() {
       _attachment = formatAttachment(deviceName, msg, null,
@@ -103,7 +104,9 @@ class SendFormState extends State<SendForm> {
   }
 
   void send() async {
-    if (_formKey.currentState.validate()) {
+    if (_formKey.currentState == null)
+      return;
+    if (_formKey.currentState!.validate()) {
       // send parameters
       var recipient = _recipientController.text;
       var amountText = _amountController.text;
@@ -111,7 +114,7 @@ class SendFormState extends State<SendForm> {
       var amount = (amountDec * Decimal.fromInt(100)).toInt();
       var fee = (widget._fee * Decimal.fromInt(100)).toInt();
       // double check with user
-      if (await showDialog<bool>(
+      var yesSend = await showDialog<bool>(
           context: context,
           builder: (BuildContext context) {
             return SimpleDialog(
@@ -133,7 +136,8 @@ class SendFormState extends State<SendForm> {
                 ),
               ],
             );
-          })) {
+          });
+      if (yesSend != null && yesSend) {
         // check pin
         if (!await pinCheck(context, await Prefs.pinGet())) {
           return;
@@ -203,7 +207,7 @@ class SendFormState extends State<SendForm> {
                 labelText: 'recipient',
                 suffixIcon: FlatButton.icon(
                     onPressed: () {
-                      var qrCode = QRCodeReader().scan();
+                      var qrCode = QrScan.scan(context);
                       qrCode.then((value) {
                         if (value == null || !setRecipientOrUri(value))
                           flushbarMsg(context, 'invalid QR code',
@@ -214,7 +218,7 @@ class SendFormState extends State<SendForm> {
                         size: 14, color: ZapYellow),
                     label: Text('scan', style: TextStyle(color: ZapYellow)))),
             validator: (value) {
-              if (value.isEmpty) {
+              if (value == null || value.isEmpty) {
                 return 'Please enter a value';
               }
               switch (AppTokenType) {
@@ -243,7 +247,7 @@ class SendFormState extends State<SendForm> {
                         _amountController.text = '${widget._max - widget._fee}',
                     child: Text('max', style: TextStyle(color: ZapYellow)))),
             validator: (value) {
-              if (value.isEmpty) {
+              if (value == null || value.isEmpty) {
                 return 'Please enter a value';
               }
               final dv = Decimal.parse(value);

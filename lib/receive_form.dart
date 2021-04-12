@@ -14,7 +14,7 @@ import 'merchant.dart';
 import 'paydb.dart';
 
 typedef TxNotificationCallback = void Function(String txid, String sender,
-    String recipient, double amount, String attachment);
+    String recipient, double amount, String? attachment);
 
 class ReceiveForm extends StatefulWidget {
   final bool _testnet;
@@ -38,12 +38,12 @@ class ReceiveFormState extends State<ReceiveForm> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _uriController = TextEditingController();
-  String _uri;
+  String? _uri;
   String _amountType = UseMerchantApi ? 'nzd' : AssetShortNameLower;
   bool _validAmount = true;
-  StreamSubscription<String> _uriSub;
-  List<String> _receivedTxs = List<String>();
-  Timer _checkReceivedTxTimer;
+  StreamSubscription<String>? _uriSub;
+  List<String> _receivedTxs = <String>[];
+  Timer? _checkReceivedTxTimer;
   final int _initialTimestamp =
       (DateTime.now().millisecondsSinceEpoch / 1000).round();
 
@@ -66,10 +66,11 @@ class ReceiveFormState extends State<ReceiveForm> {
       } on NoApiKeyException {
         return NO_API_KEY;
       }
-      if (res == null) {
+      if (res.error != null) {
         return API_FAILED;
       }
-      amount = res.zap;
+      if (res.zap != null)
+        amount = res.zap!;
     }
     switch (AppTokenType) {
       case TokenType.Waves:
@@ -79,13 +80,12 @@ class ReceiveFormState extends State<ReceiveForm> {
       case TokenType.PayDB:
         return PayDbUri(widget._addressOrAccount, amount, null).toUri();
     }
-    return null;
   }
 
   void updateUriUi() {
     setState(() {
       _uri = API_LOADING;
-      _uriController.text = _uri;
+      _uriController.text = _uri!;
     });
 
     _uriSub?.cancel();
@@ -112,8 +112,8 @@ class ReceiveFormState extends State<ReceiveForm> {
         break;
       case TokenType.PayDB:
         var res = await paydbUserTransactions(0, 10);
-        if (res.error == PayDbError.None) {
-          for (var tx in res.txs) {
+        if (res.error == PayDbError.None && res.txs != null) {
+          for (var tx in res.txs!) {
             if (_receivedTxs.contains(tx.token)) continue;
             if (tx.action != ActionTransfer) continue;
             if (tx.timestamp < _initialTimestamp) continue;
@@ -143,7 +143,7 @@ class ReceiveFormState extends State<ReceiveForm> {
   @mustCallSuper
   void dispose() {
     super.dispose();
-    _checkReceivedTxTimer.cancel();
+    _checkReceivedTxTimer?.cancel();
   }
 
   @override
@@ -164,8 +164,8 @@ class ReceiveFormState extends State<ReceiveForm> {
             Center(
                 child: Card(
                     margin: EdgeInsets.all(20),
-                    child: validQrData() && _validAmount
-                        ? QrWidget(_uri, size: 240, version: 10)
+                    child: validQrData() && _validAmount && _uri != null
+                        ? QrWidget(_uri!, size: 240, version: 10)
                         : Container(
                             width: 240,
                             height: 240,
@@ -198,10 +198,10 @@ class ReceiveFormState extends State<ReceiveForm> {
                           style: TextStyle(color: ZapGreen)))),
               style: _validAmount ? null : TextStyle(color: ZapRed),
               validator: (value) {
-                if (value.isEmpty) {
+                if (value != null && value.isEmpty) {
                   return 'Please enter a value';
                 }
-                final dv = Decimal.parse(value);
+                final dv = Decimal.parse(value!);
                 if (dv <= Decimal.fromInt(0)) {
                   return 'Please enter a value greater then zero';
                 }

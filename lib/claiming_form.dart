@@ -31,16 +31,15 @@ class ClaimingFormState extends State<ClaimingForm> {
   bool _init = false;
   bool _checking = true;
   bool _sentFunds = false;
-  String _uri;
-  Timer _timer;
-  ClaimCode _claimCode =
-      ClaimCode(amount: Decimal.fromInt(0), token: "", secret: "");
+  String? _uri;
+  Timer? _timer;
+  ClaimCode? _claimCode;
 
   Future check(Timer timer) async {
-    if (!_checking || !_init) return;
-    var addr = await merchantCheck(_claimCode);
+    if (!_checking || !_init || _claimCode == null) return;
+    var addr = await merchantCheck(_claimCode!);
     if (addr != null) {
-      _timer.cancel();
+      timer.cancel();
       setState(() {
         _checking = false;
       });
@@ -50,10 +49,12 @@ class ClaimingFormState extends State<ClaimingForm> {
       var spendTx = libzap.transactionCreate(
           widget._seed, addr, widget._amount, widget._fee, attachment);
       if (spendTx.success) {
-        _sentFunds = await Navigator.push<bool>(
+        var sentFunds = await Navigator.push<bool>(
           context,
           MaterialPageRoute(builder: (context) => WavesSendingForm(spendTx)),
         );
+        if (sentFunds != null)
+          _sentFunds = sentFunds;
       } else
         flushbarMsg(context, 'failed to create transaction',
             category: MessageCategory.Warning);
@@ -75,13 +76,19 @@ class ClaimingFormState extends State<ClaimingForm> {
         return;
       }
       // create uri
-      var uri = claimCodeUri(_claimCode);
+      var uri = claimCodeUri(_claimCode!);
       setState(() {
         _uri = uri;
         _init = true;
       });
       _timer = Timer.periodic(Duration(seconds: 1), check);
     });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -102,11 +109,11 @@ class ClaimingFormState extends State<ClaimingForm> {
                 child: Container(padding: const EdgeInsets.only(top: 20.0))),
             Visibility(
               visible: _init,
-              child: Text(_claimCode.token),
+              child: Text(_claimCode == null ? '' : _claimCode!.token),
             ),
             Visibility(
               visible: _init,
-              child: QrWidget(_uri, size: 260, version: 6),
+              child: QrWidget(_uri == null ? '' : _uri!, size: 260, version: 6),
             ),
             Visibility(
                 visible: _checking,

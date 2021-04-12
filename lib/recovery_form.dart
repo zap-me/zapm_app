@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:zapdart/bip39widget.dart';
 
 class RecoveryForm extends StatefulWidget {
-  final String instructions;
+  final String? instructions;
 
   RecoveryForm({this.instructions}) : super();
 
@@ -14,7 +14,7 @@ class RecoveryForm extends StatefulWidget {
 }
 
 class RecoveryFormState extends State<RecoveryForm> {
-  String _mnemonic;
+  String? _mnemonic;
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +30,7 @@ class RecoveryFormState extends State<RecoveryForm> {
               children: <Widget>[
                 Text(widget.instructions == null
                     ? "Enter your recovery words to recover your account"
-                    : widget.instructions),
+                    : widget.instructions!),
                 Bip39Entry((words) => _mnemonic = words.join(' ')),
                 RaisedButton(
                   child: Text("Ok"),
