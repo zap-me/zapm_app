@@ -174,13 +174,6 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     return '...';
   }
 
-  void doesPinExist() async {
-    var pinExists = await Prefs.pinExists();
-    setState(() {
-      _pinExists = pinExists;
-    });
-  }
-
   String _mnemonicOrAccount() {
     switch (AppTokenType) {
       case TokenType.Waves:
