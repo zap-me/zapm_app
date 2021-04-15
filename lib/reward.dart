@@ -5,8 +5,9 @@ import 'config.dart';
 import 'reward_form.dart';
 
 class RewardScreen extends StatelessWidget {
-  RewardScreen(this._seed, this._fee, this._max) : super();
+  RewardScreen(this._testnet, this._seed, this._fee, this._max) : super();
 
+  final bool _testnet;
   final String _seed;
   final Decimal _fee;
   final Decimal _max;
@@ -19,6 +20,8 @@ class RewardScreen extends StatelessWidget {
         ),
         body: new Container(
             padding: new EdgeInsets.all(20.0),
-            child: RewardForm(_seed, _fee, _max)));
+            child: RewardForm(_testnet, _seed, _fee, _max)
+        )
+    );
   }
 }

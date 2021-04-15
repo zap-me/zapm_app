@@ -17,10 +17,9 @@ class AccountLogin {
 }
 
 class AccountRegisterForm extends StatefulWidget {
-  final AccountRegistration? registration;
-  final String? instructions;
-
-  AccountRegisterForm(this.registration, {this.instructions}) : super();
+  final String instructions;
+  
+  AccountRegisterForm({this.instructions}) : super();
 
   @override
   AccountRegisterFormState createState() {
@@ -33,27 +32,16 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _passwordConfirmController =
-      TextEditingController();
+  final TextEditingController _passwordConfirmController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  String? _imgString;
-  String? _imgType;
+  String _imgString;
+  String _imgType;
 
   @protected
   @mustCallSuper
   void initState() {
     super.initState();
-
-    if (widget.registration != null) {
-      _firstNameController.text = widget.registration!.firstName;
-      _lastNameController.text = widget.registration!.lastName;
-      _emailController.text = widget.registration!.email;
-      _passwordController.text = widget.registration!.password;
-      _passwordConfirmController.text = widget.registration!.password;
-      _imgType = widget.registration!.photoType;
-      _imgString = widget.registration!.photo;
-    }
   }
 
   Future<String> _imgDataEdited(PickedFile file) async {
@@ -71,83 +59,82 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
             cropAspectRatio: CropAspectRatios.ratio1_1);
       },
     );
-    var editorKeyState = editorKey.currentState;
-    if (editorKeyState == null) return '';
     await showGeneralDialog(
       context: context,
       barrierColor: Colors.black12.withOpacity(0.6),
       barrierDismissible: false,
       pageBuilder: (context, __, ___) {
         return SizedBox.expand(
-            child: Scaffold(
-                body: Column(children: [
-          Expanded(child: imageEditor),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            mainAxisSize: MainAxisSize.max,
-            children: <Widget>[
-              IconButton(
-                icon: const Icon(Icons.flip),
-                onPressed: () {
-                  editorKeyState.flip();
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.rotate_left),
-                onPressed: () {
-                  editorKeyState.rotate(right: false);
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.rotate_right),
-                onPressed: () {
-                  editorKeyState.rotate(right: true);
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.restore),
-                onPressed: () {
-                  editorKeyState.reset();
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.done),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ],
-          ),
-        ])));
+          child: Scaffold(body: Column(children: [
+            Expanded(child: imageEditor),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              mainAxisSize: MainAxisSize.max,
+              children: <Widget>[
+                IconButton(
+                  icon: const Icon(Icons.crop),
+                  onPressed: () {
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.flip),
+                  onPressed: () {
+                    editorKey.currentState.flip();
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.rotate_left),
+                  onPressed: () {
+                    editorKey.currentState.rotate(right: false);
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.rotate_right),
+                  onPressed: () {
+                    editorKey.currentState.rotate(right: true);
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.restore),
+                  onPressed: () {
+                    editorKey.currentState.reset();
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.done),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+          ]))
+        );
       },
     );
-    var editAction = editorKeyState.editAction;
-    var cropRect = editorKeyState.getCropRect();
-    var src = decodeImage(editorKeyState.rawImageData);
-    if (src == null) return '';
-    if (editAction != null && cropRect != null) {
-      if (editAction.needCrop)
-        src = copyCrop(src, cropRect.left.toInt(), cropRect.top.toInt(),
-            cropRect.width.toInt(), cropRect.height.toInt());
-      if (editAction.needFlip) {
-        Flip mode = Flip.horizontal;
-        if (editAction.flipY && editAction.flipX)
-          mode = Flip.both;
-        else if (editAction.flipY)
-          mode = Flip.horizontal;
-        else if (editAction.flipX) mode = Flip.vertical;
-        src = flip(src, mode);
-      }
-      if (editAction.hasRotateAngle)
-        src = copyRotate(src, editAction.rotateAngle);
+    var editAction = editorKey.currentState.editAction;
+    var cropRect = editorKey.currentState.getCropRect();
+    var src = decodeImage(editorKey.currentState.rawImageData);
+    if (editAction.needCrop)
+      src = copyCrop(src, cropRect.left.toInt(), cropRect.top.toInt(),
+          cropRect.width.toInt(), cropRect.height.toInt());
+    if (editAction.needFlip) {
+      Flip mode;
+      if (editAction.flipY && editAction.flipX)
+        mode = Flip.both;
+      else if (editAction.flipY)
+        mode = Flip.horizontal;
+      else if (editAction.flipX)
+        mode = Flip.vertical;
+      src = flip(src, mode);
     }
-    src = copyResize(src, width: 200, height: 200);
+    if (editAction.hasRotateAngle)
+      src = copyRotate(src, editAction.rotateAngle);
+    src = copyResize(src, width: 200);
     var jpgBytes = encodeJpg(src, quality: 50);
     return base64Encode(jpgBytes);
   }
-
+  
   void _imgFromCamera() async {
-    var file = await ImagePicker()
-        .getImage(source: ImageSource.camera, imageQuality: 50);
-    if (file == null) return;
+    var file = await ImagePicker().getImage(source: ImageSource.camera, imageQuality: 50);
     var imgString = await _imgDataEdited(file);
     setState(() {
       _imgString = imgString;
@@ -156,9 +143,7 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
   }
 
   void _imgFromGallery() async {
-    var file = await ImagePicker()
-        .getImage(source: ImageSource.gallery, imageQuality: 50);
-    if (file == null) return;
+    var file = await  ImagePicker().getImage(source: ImageSource.gallery, imageQuality: 50);
     var imgString = await _imgDataEdited(file);
     setState(() {
       _imgString = imgString;
@@ -167,129 +152,103 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
   }
 
   Widget _imageSizeWidget() {
-    if (_imgString == null || _imgString!.isEmpty) return SizedBox();
-    var kib = (_imgString!.length / 1000.0).ceil();
+    if (_imgString == null || _imgString.isEmpty)
+      return SizedBox();
+    var kib = (_imgString.length / 1000.0).ceil();
     return Text('$kib KiB');
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: PreferredSize(
-          child: Container(),
-          preferredSize: Size(0, 0),
-        ),
-        body: Form(
-            key: _formKey,
-            child: Container(
-                padding: EdgeInsets.all(20),
-                child: Center(
-                    child: Column(
-                  children: <Widget>[
-                    Text(widget.instructions == null
-                        ? "Enter your details to register"
-                        : widget.instructions!),
-                    TextFormField(
-                        controller: _firstNameController,
-                        decoration: InputDecoration(labelText: 'First Name'),
-                        keyboardType: TextInputType.name,
-                        validator: (value) {
-                          if (value != null && value.isEmpty)
-                            return 'Please enter a first name';
-                          return null;
-                        }),
-                    TextFormField(
-                        controller: _lastNameController,
-                        decoration: InputDecoration(labelText: 'Last Name'),
-                        keyboardType: TextInputType.name,
-                        validator: (value) {
-                          if (value == null || value.isEmpty)
-                            return 'Please enter a last name';
-                          return null;
-                        }),
-                    InputDecorator(
-                      decoration: InputDecoration(labelText: 'Profile Image'),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(children: [
-                            paydbAccountImage(_imgString, _imgType),
-                            SizedBox(width: 25),
-                            IconButton(
-                                icon: Icon(Icons.folder_open),
-                                onPressed: _imgFromGallery),
-                            IconButton(
-                                icon: Icon(Icons.camera),
-                                onPressed: _imgFromCamera),
-                            _imageSizeWidget(),
-                          ]),
-                        ],
-                      ),
-                    ),
-                    TextFormField(
-                        controller: _emailController,
-                        decoration: InputDecoration(labelText: 'Email'),
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (value) {
-                          if (value == null || value.isEmpty)
-                            return 'Please enter an email';
-                          if (!EmailValidator.validate(value))
-                            return 'Invalid email';
-                          return null;
-                        }),
-                    TextFormField(
-                        controller: _passwordController,
-                        obscureText: true,
-                        decoration: InputDecoration(labelText: 'Password'),
-                        validator: (value) {
-                          if (value == null || value.isEmpty)
-                            return 'Please enter a password';
-                          return null;
-                        }),
-                    TextFormField(
-                        controller: _passwordConfirmController,
-                        obscureText: true,
-                        decoration:
-                            InputDecoration(labelText: 'Password Confirmation'),
-                        validator: (value) {
-                          if (value == null || value.isEmpty)
-                            return 'Please confirm your password';
-                          if (value != _passwordController.text)
-                            return 'Password does not match';
-                          return null;
-                        }),
-                    RaisedButton(
-                      child: Text("Ok"),
-                      onPressed: () async {
-                        if (_formKey.currentState == null) return;
-                        if (_formKey.currentState!.validate()) {
-                          var accountReg = AccountRegistration(
-                              _firstNameController.text,
-                              _lastNameController.text,
-                              _emailController.text,
-                              _passwordController.text,
-                              _imgString,
-                              _imgType);
-                          Navigator.of(context).pop(accountReg);
-                        }
-                      },
-                    ),
-                    RaisedButton(
-                      child: Text("Cancel"),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                  ],
-                )))));
+      appBar: PreferredSize(child: Container(), preferredSize: Size(0, 0),),
+      body: Form(key: _formKey,
+        child: Container(padding: EdgeInsets.all(20), child: Center(child: Column(
+          children: <Widget>[
+            Text(widget.instructions == null ? "Enter your details to register" : widget.instructions),
+            TextFormField(controller: _firstNameController,
+              decoration: InputDecoration(labelText: 'First Name'),
+              keyboardType: TextInputType.name,
+              validator: (value) {
+                if (value.isEmpty)
+                  return 'Please enter a first name';
+                return null;
+            }),
+            TextFormField(controller: _lastNameController,
+              decoration: InputDecoration(labelText: 'Last Name'),
+              keyboardType: TextInputType.name,
+              validator: (value) {
+                if (value.isEmpty)
+                  return 'Please enter a last name';
+                return null;
+            }),
+            InputDecorator(decoration: InputDecoration(labelText: 'Profile Image'),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(children: [
+                    paydbAccountImage(_imgString, _imgType),
+                    SizedBox(width: 25),
+                    IconButton(icon: Icon(Icons.folder_open), onPressed: _imgFromGallery),
+                    IconButton(icon: Icon(Icons.camera), onPressed: _imgFromCamera),
+                    _imageSizeWidget(),
+                  ]),
+                ],
+              ),
+            ),
+            TextFormField(controller: _emailController,
+              decoration: InputDecoration(labelText: 'Email'),
+              keyboardType: TextInputType.emailAddress,
+              validator: (value) {
+                if (value.isEmpty)
+                  return 'Please enter an email';
+                if (!EmailValidator.validate(value))
+                  return 'Invalid email';
+                return null;
+            }),
+            TextFormField(controller: _passwordController, obscureText: true,
+              decoration: InputDecoration(labelText: 'Password'),
+              validator: (value) {
+                if (value.isEmpty)
+                  return 'Please enter a password';
+                return null;
+            }),
+            TextFormField(controller: _passwordConfirmController, obscureText: true,
+              decoration: InputDecoration(labelText: 'Password Confirmation'),
+              validator: (value) {
+                if (value.isEmpty)
+                  return 'Please confirm your password';
+                if (value != _passwordController.text)
+                  return 'Password does not match';
+                return null;
+            }),
+            RaisedButton(
+              child: Text("Ok"),
+              onPressed: () async {
+                if (_formKey.currentState.validate()) {
+                  var accountReg = AccountRegistration(_firstNameController.text, _lastNameController.text, _emailController.text, _passwordController.text,
+                    _imgString, _imgType);
+                  Navigator.of(context).pop(accountReg);
+                }
+              },
+            ),
+            RaisedButton(
+              child: Text("Cancel"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        )))
+      )
+    );
   }
 }
 
 class AccountLoginForm extends StatefulWidget {
-  final AccountLogin? login;
-  final String? instructions;
-
-  AccountLoginForm(this.login, {this.instructions}) : super();
+  final String instructions;
+  
+  AccountLoginForm({this.instructions}) : super();
 
   @override
   AccountLoginFormState createState() {
@@ -302,80 +261,57 @@ class AccountLoginFormState extends State<AccountLoginForm> {
   final TextEditingController _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  @protected
-  @mustCallSuper
-  void initState() {
-    super.initState();
-
-    if (widget.login != null) {
-      _emailController.text = widget.login!.email;
-      _passwordController.text = widget.login!.password;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: PreferredSize(
-          child: Container(),
-          preferredSize: Size(0, 0),
-        ),
-        body: Form(
-            key: _formKey,
-            child: Container(
-                padding: EdgeInsets.all(20),
-                child: Center(
-                    child: Column(
-                  children: <Widget>[
-                    Text(widget.instructions == null
-                        ? "Enter your email and password to login"
-                        : widget.instructions!),
-                    TextFormField(
-                        controller: _emailController,
-                        decoration: InputDecoration(labelText: 'Email'),
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (value) {
-                          if (value == null || value.isEmpty)
-                            return 'Please enter an email';
-                          if (!EmailValidator.validate(value))
-                            return 'Invalid email';
-                          return null;
-                        }),
-                    TextFormField(
-                        controller: _passwordController,
-                        obscureText: true,
-                        decoration: InputDecoration(labelText: 'Password'),
-                        validator: (value) {
-                          if (value == null || value.isEmpty)
-                            return 'Please enter a password';
-                          return null;
-                        }),
-                    RaisedButton(
-                      child: Text("Ok"),
-                      onPressed: () {
-                        if (_formKey.currentState == null) return;
-                        if (_formKey.currentState!.validate()) {
-                          var accountLogin = AccountLogin(
-                              _emailController.text, _passwordController.text);
-                          Navigator.of(context).pop(accountLogin);
-                        }
-                      },
-                    ),
-                    RaisedButton(
-                      child: Text("Cancel"),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                  ],
-                )))));
+      appBar: PreferredSize(child: Container(), preferredSize: Size(0, 0),),
+      body: Form(key: _formKey,
+        child: Container(padding: EdgeInsets.all(20), child: Center(child: Column(
+          children: <Widget>[
+            Text(widget.instructions == null ? "Enter your email and password to login" : widget.instructions),
+            TextFormField(controller: _emailController,
+              decoration: InputDecoration(labelText: 'Email'),
+              keyboardType: TextInputType.emailAddress,
+              validator: (value) {
+                if (value.isEmpty)
+                  return 'Please enter an email';
+                if (!EmailValidator.validate(value))
+                  return 'Invalid email';
+                return null;
+              }),
+            TextFormField(controller: _passwordController, obscureText: true,
+              decoration: InputDecoration(labelText: 'Password'),
+              validator: (value) {
+                if (value.isEmpty)
+                  return 'Please enter a password';
+                return null;
+              }),
+            RaisedButton(
+              child: Text("Ok"),
+              onPressed: () {
+                if (_formKey.currentState.validate()) {
+                  var accountLogin = AccountLogin(_emailController.text, _passwordController.text);
+                  Navigator.of(context).pop(accountLogin);
+                }
+              },
+            ),
+            RaisedButton(
+              child: Text("Cancel"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        )))
+      )
+    );
   }
 }
 
 class AccountRequestApiKeyForm extends StatefulWidget {
   final String deviceName;
-  final String? instructions;
-
+  final String instructions;
+  
   AccountRequestApiKeyForm(this.deviceName, {this.instructions}) : super();
 
   @override
@@ -399,57 +335,46 @@ class AccountRequestApiKeyFormState extends State<AccountRequestApiKeyForm> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: PreferredSize(
-          child: Container(),
-          preferredSize: Size(0, 0),
-        ),
-        body: Form(
-            key: _formKey,
-            child: Container(
-                padding: EdgeInsets.all(20),
-                child: Center(
-                    child: Column(
-                  children: <Widget>[
-                    Text(widget.instructions == null
-                        ? "Enter your email and device name to request your api key"
-                        : widget.instructions!),
-                    TextFormField(
-                        controller: _emailController,
-                        decoration: InputDecoration(labelText: 'Email'),
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (value) {
-                          if (value == null || value.isEmpty)
-                            return 'Please enter an email';
-                          if (!EmailValidator.validate(value))
-                            return 'Invalid email';
-                          return null;
-                        }),
-                    TextFormField(
-                        controller: _deviceNameController,
-                        decoration: InputDecoration(labelText: 'Device Name'),
-                        validator: (value) {
-                          if (value == null || value.isEmpty)
-                            return 'Please enter a device name';
-                          return null;
-                        }),
-                    RaisedButton(
-                      child: Text("Ok"),
-                      onPressed: () {
-                        if (_formKey.currentState == null) return;
-                        if (_formKey.currentState!.validate()) {
-                          var req = AccountRequestApiKey(_emailController.text,
-                              _deviceNameController.text);
-                          Navigator.of(context).pop(req);
-                        }
-                      },
-                    ),
-                    RaisedButton(
-                      child: Text("Cancel"),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                  ],
-                )))));
+      appBar: PreferredSize(child: Container(), preferredSize: Size(0, 0),),
+      body: Form(key: _formKey,
+        child: Container(padding: EdgeInsets.all(20), child: Center(child: Column(
+          children: <Widget>[
+            Text(widget.instructions == null ? "Enter your email and device name to request your api key" : widget.instructions),
+            TextFormField(controller: _emailController,
+              decoration: InputDecoration(labelText: 'Email'),
+              keyboardType: TextInputType.emailAddress,
+              validator: (value) {
+                if (value.isEmpty)
+                  return 'Please enter an email';
+                if (!EmailValidator.validate(value))
+                  return 'Invalid email';
+                return null;
+              }),
+            TextFormField(controller: _deviceNameController,
+              decoration: InputDecoration(labelText: 'Device Name'),
+              validator: (value) {
+                if (value.isEmpty)
+                  return 'Please enter a device name';
+                return null;
+              }),
+            RaisedButton(
+              child: Text("Ok"),
+              onPressed: () {
+                if (_formKey.currentState.validate()) {
+                  var req = AccountRequestApiKey(_emailController.text, _deviceNameController.text);
+                  Navigator.of(context).pop(req);
+                }
+              },
+            ),
+            RaisedButton(
+              child: Text("Cancel"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        )))
+      )
+    );
   }
 }

@@ -4,12 +4,13 @@ import 'dart:io';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:qrcode_reader/qrcode_reader.dart';
 import 'package:decimal/decimal.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:uni_links2/uni_links.dart';
+import 'package:uni_links/uni_links.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:device_info/device_info.dart';
 import 'package:audioplayers/audio_cache.dart';
@@ -34,7 +35,6 @@ import 'recovery_form.dart';
 import 'centrapay.dart';
 import 'firebase.dart';
 import 'paydb.dart';
-import 'qrscan.dart';
 
 void main() {
   // See https://github.com/flutter/flutter/wiki/Desktop-shells#target-platform-override
@@ -58,7 +58,7 @@ void main() {
 /// a supported platform (iOS for macOS, Android for Linux and Windows).
 /// Otherwise, do nothing.
 void _setTargetPlatformForDesktop() {
-  TargetPlatform? targetPlatform;
+  TargetPlatform targetPlatform;
   if (Platform.isMacOS) {
     targetPlatform = TargetPlatform.iOS;
   } else if (Platform.isLinux || Platform.isWindows) {
@@ -100,7 +100,7 @@ class MyApp extends StatelessWidget {
 }
 
 class ZapHomePage extends StatefulWidget {
-  ZapHomePage(this.title, {Key? key}) : super(key: key);
+  ZapHomePage({Key key, this.title}) : super(key: key);
 
   final String title;
 
@@ -123,18 +123,18 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   StreamSubscription _uniLinksSub; // uni links subscription
 
   bool _testnet = true;
-  WavesWallet _wallet = WavesWallet.empty();
-  PayDbAccount _account = PayDbAccount.empty();
+  WavesWallet _wallet;
+  PayDbAccount _account;
   Decimal _fee = Decimal.parse("0.01");
   Decimal _balance = Decimal.fromInt(-1);
   String _balanceText = "...";
   bool _updatingBalance = true;
   bool _showAlerts = true;
-  List<String> _alerts = <String>[];
-  Rates? _merchantRates;
-  Uri? _previousUniUri;
+  List<String> _alerts = List<String>();
+  Rates _merchantRates;
+  Uri _previousUniUri;
   final Lock _previousUniUriLock = Lock();
-  FCM? _fcm;
+  FCM _fcm;
   final audioPlayer = AudioCache();
   bool _walletOrAcctInited = false;
   bool _walletOrAcctLoading = false;
@@ -148,7 +148,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   void initState() {
     _init();
     // add WidgetsBindingObserver
-    WidgetsBinding.instance?.addObserver(this);
+    WidgetsBinding.instance.addObserver(this);
     super.initState();
   }
 
@@ -159,6 +159,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
       case TokenType.PayDB:
         return 'account';
     }
+    return null;
   }
 
   String _addrOrAccountValue() {
@@ -176,13 +177,11 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   String _mnemonicOrAccount() {
     switch (AppTokenType) {
       case TokenType.Waves:
-        if (_wallet.isMnemonic) return _wallet.mnemonic;
-        break;
+        return _wallet.mnemonic;
       case TokenType.PayDB:
-        if (_account.email.isNotEmpty) return _account.email;
-        break;
+        return _account.email;
     }
-    return '...';
+    return null;
   }
 
   Widget _profileImage() {
@@ -194,6 +193,17 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
             child: paydbAccountImage(_account?.photo, _account?.photoType),
             padding: EdgeInsets.only(right: 20));
     }
+    return SizedBox();
+  }
+
+  String _addressOrAccount() {
+    switch (AppTokenType) {
+      case TokenType.Waves:
+        return _wallet.address;
+      case TokenType.PayDB:
+        return _account.email;
+    }
+    return null;
   }
 
   Future<bool> processUri(Uri uri) async {
@@ -244,7 +254,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
           uri.pathSegments[0] == 'claim_payment') {
         var scheme = 'https';
         if (uri.queryParameters.containsKey('scheme'))
-          scheme = uri.queryParameters['scheme']!;
+          scheme = uri.queryParameters['scheme'];
         var url = uri.replace(scheme: scheme);
         var body = {};
         var recipient;
@@ -268,7 +278,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         var failed = false;
         showAlertDialog(context, 'claiming payment..');
         try {
-          var response = await httpPost(url, body);
+          var response = await post(url.toString(), body);
           if (response.statusCode == 200)
             resultText = 'claimed funds to $recipient';
           else {
@@ -327,7 +337,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     }
 
     // Attach a listener to catch any links when app is running in the background
-    _uniLinksSub = uriLinkStream.listen((Uri? uri) async {
+    _uniLinksSub = getUriLinksStream().listen((Uri uri) async {
       await _previousUniUriLock.synchronized(() async {
         if (_previousUniUri != uri) {
           // this seems to be invoked twice so ignore the second one
@@ -347,7 +357,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   @override
   void dispose() {
     // remove WidgetsBindingObserver
-    WidgetsBinding.instance?.removeObserver(this);
+    WidgetsBinding.instance.removeObserver(this);
     // close socket
     if (_merchantSocket != null) _merchantSocket.close();
     // close uni links subscription
@@ -368,7 +378,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     // convert amount to NZD
     if (_merchantRates != null) {
       var amountDec = Decimal.parse(amount.toString());
-      amountString += " / ${toNZDAmount(amountDec, _merchantRates!)}";
+      amountString += " / ${toNZDAmount(amountDec, _merchantRates)}";
     }
     // decode attachment
     if (attachment != null && attachment.isNotEmpty)
@@ -439,9 +449,9 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
 
   Future<NoWalletAction> _noWalletDialog(BuildContext context) async {
     assert(AppTokenType == TokenType.Waves);
-    var res = await showDialog<NoWalletAction>(
+    return await showDialog<NoWalletAction>(
         context: context,
-        barrierDismissible: false,
+        barrierDismissible: true,
         builder: (BuildContext context) {
           return SimpleDialog(
             title: const Text(UseMerchantApi
@@ -478,15 +488,13 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
             ],
           );
         });
-    if (res != null) return res;
-    return NoWalletAction.RecoverMnemonic;
   }
 
   Future<bool> _directLoginAccountDialog(BuildContext context) async {
     assert(AppTokenType == TokenType.PayDB);
-    var res = await showDialog<bool>(
+    return await showDialog<bool>(
         context: context,
-        barrierDismissible: false,
+        barrierDismissible: true,
         builder: (BuildContext context) {
           return SimpleDialog(
             title: const Text("User registration in process"),
@@ -509,14 +517,13 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
             ],
           );
         });
-    return res != null && res;
   }
 
   Future<bool> _waitApiKeyAccountDialog(BuildContext context) async {
     assert(AppTokenType == TokenType.PayDB);
-    var res = await showDialog<bool>(
+    return await showDialog<bool>(
         context: context,
-        barrierDismissible: false,
+        barrierDismissible: true,
         builder: (BuildContext context) {
           return SimpleDialog(
             title: const Text("API KEY request in process"),
@@ -540,13 +547,12 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
             ],
           );
         });
-    return res != null && res;
   }
 
   Future<NoAccountAction> _noAccountDialog(BuildContext context) async {
     assert(AppTokenType == TokenType.PayDB);
     var server = await paydbServer();
-    var res = await showDialog<NoAccountAction>(
+    return await showDialog<NoAccountAction>(
         context: context,
         barrierDismissible: true,
         builder: (BuildContext context) {
@@ -577,14 +583,13 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
             ],
           );
         });
-    if (res != null) return res;
-    return NoAccountAction.Login;
   }
 
   Future<String> _recoverMnemonic(BuildContext context) {
     return Navigator.push<String>(
         context, MaterialPageRoute(builder: (context) => RecoveryForm()));
   }
+
   Future<String> _recoverSeed(BuildContext context) async {
     String seed = "";
     return showDialog<String>(
@@ -627,21 +632,19 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     assert(AppTokenType == TokenType.Waves);
     var libzap = LibZap();
     while (true) {
-      String? mnemonic;
-      String? address;
+      String mnemonic;
+      String address;
       setState(() => _walletOrAcctLoading = false);
       var action = await _noWalletDialog(context);
       setState(() => _walletOrAcctLoading = true);
       switch (action) {
         case NoWalletAction.CreateMnemonic:
           mnemonic = libzap.mnemonicCreate();
-          if (mnemonic != null)
-            // show warning for new mnemonic
-            await Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => NewMnemonicForm(mnemonic!)),
-            );
+          // show warning for new mnemonic
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => NewMnemonicForm(mnemonic)),
+          );
           break;
         case NoWalletAction.RecoverMnemonic:
           // recover mnemonic
@@ -663,7 +666,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
           mnemonic = await _recoverSeed(context);
           break;
         case NoWalletAction.ScanMerchantApiKey:
-          var value = await QrScan.scan(context);
+          var value = await new QRCodeReader().scan();
           if (value != null) {
             var result = parseApiKeyUri(value);
             if (result.error == NO_ERROR) {
@@ -677,7 +680,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
               await Prefs.deviceNameSet(result.deviceName);
               await Prefs.merchantApiKeySet(result.apikey);
               await Prefs.merchantApiSecretSet(result.apisecret);
-              if (result.apiserver.isNotEmpty)
+              if (result.apiserver != null || result.apiserver.isNotEmpty)
                 await Prefs.merchantApiServerSet(result.apiserver);
               flushbarMsg(context, 'API KEY set');
               address = result.walletAddress;
@@ -710,7 +713,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     return '$device - $date';
   }
 
-  Future<String?> _paydbLogin(AccountLogin login) async {
+  Future<String> _paydbLogin(AccountLogin login) async {
     var deviceName = await _deviceName();
     var result =
         await paydbApiKeyCreate(login.email, login.password, deviceName);
@@ -725,10 +728,8 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         break;
       case PayDbError.None:
         // write api key
-        if (result.apikey != null) {
-          await Prefs.paydbApiKeySet(result.apikey!.token);
-          await Prefs.paydbApiSecretSet(result.apikey!.secret);
-        }
+        await Prefs.paydbApiKeySet(result.apikey.token);
+        await Prefs.paydbApiSecretSet(result.apikey.secret);
         return login.email;
     }
     return null;
@@ -748,10 +749,8 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         break;
       case PayDbError.None:
         // write api key
-        if (result.apikey != null) {
-          await Prefs.paydbApiKeySet(result.apikey!.token);
-          await Prefs.paydbApiSecretSet(result.apikey!.secret);
-        }
+        await Prefs.paydbApiKeySet(result.apikey.token);
+        await Prefs.paydbApiSecretSet(result.apikey.secret);
         return req.email;
     }
     return null;
@@ -765,7 +764,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     }
     assert(await paydbServer() != null);
     while (true) {
-      String? accountEmail;
+      String accountEmail;
       setState(() => _walletOrAcctLoading = false);
       var action = await _noAccountDialog(context);
       setState(() => _walletOrAcctLoading = true);
@@ -819,18 +818,15 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
                   "A network error occured when trying to login");
               break;
             case PayDbError.None:
-              assert(result.token != null);
-              while (await _waitApiKeyAccountDialog(context)) {
+              if (await _waitApiKeyAccountDialog(context))
                 // claim api key
-                accountEmail = await _paydbApiKeyClaim(req, result.token!);
-                if (accountEmail != null) break;
-              }
+                accountEmail = await _paydbApiKeyClaim(req, result.token);
               break;
           }
           break;
       }
       if (accountEmail != null && accountEmail.isNotEmpty) {
-        _account = PayDbAccount(accountEmail, '', '', []);
+        _account = PayDbAccount(accountEmail, null, null, []);
         await alert(context, "Login successful", ":)");
         break;
       }
@@ -907,7 +903,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     switch (AppTokenType) {
       case TokenType.Waves:
         // check mnemonic
-        if (_wallet.isEmpty) {
+        if (_wallet == null) {
           var libzap = LibZap();
           var mnemonic = await Prefs.mnemonicGet();
           if (mnemonic != null && mnemonic.isNotEmpty) {
@@ -920,8 +916,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
                   continue;
                 }
                 var iv = await Prefs.cryptoIVGet();
-                var decryptedMnemonic =
-                    decryptMnemonic(mnemonic!, iv!, password);
+                var decryptedMnemonic = decryptMnemonic(mnemonic, iv, password);
                 if (decryptedMnemonic == null) {
                   await alert(context, "Could not decrypt recovery words",
                       "the password entered is probably wrong");
@@ -1138,12 +1133,13 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
       case TokenType.Waves:
         switch (cap) {
           case Capability.Receive:
-            return _wallet.address.isNotEmpty;
+            return _wallet != null;
           case Capability.Balance:
           case Capability.History:
           case Capability.Spend:
-            return _wallet.isMnemonic;
+            return _wallet != null && _wallet.isMnemonic;
         }
+        break;
       case TokenType.PayDB:
         if (_account == null) return false;
         switch (cap) {
@@ -1156,7 +1152,9 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
           case Capability.Spend:
             return _account.permissions.contains(PayDbPermission.transfer);
         }
+        break;
     }
+    return false;
   }
 
   Future<bool> _setTestnet() async {
