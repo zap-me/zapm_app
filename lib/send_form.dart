@@ -2,7 +2,6 @@ import 'dart:core';
 import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
 import 'package:flutter_icons/flutter_icons.dart';
-import 'package:qrcode_reader/qrcode_reader.dart';
 
 import 'package:zapdart/utils.dart';
 import 'package:zapdart/libzap.dart';
@@ -13,6 +12,7 @@ import 'config.dart';
 import 'sending_form.dart';
 import 'prefs.dart';
 import 'paydb.dart';
+import 'qrscan.dart';
 
 class SendForm extends StatefulWidget {
   final bool _testnet;
@@ -21,7 +21,9 @@ class SendForm extends StatefulWidget {
   final String _recipientOrUri;
   final Decimal _max;
 
-  SendForm(this._testnet, this._mnemonicOrAccount, this._fee, this._recipientOrUri, this._max) : super();
+  SendForm(this._testnet, this._mnemonicOrAccount, this._fee,
+      this._recipientOrUri, this._max)
+      : super();
 
   @override
   SendFormState createState() {
@@ -34,8 +36,8 @@ class SendFormState extends State<SendForm> {
   final _recipientController = TextEditingController();
   final _amountController = TextEditingController();
   final _msgController = TextEditingController();
-  String _attachment;
-  Widget _recipientImage;
+  String? _attachment = '';
+  Widget? _recipientImage;
 
   bool setRecipientOrUri(String recipientOrUri) {
     switch (AppTokenType) {
@@ -44,8 +46,7 @@ class SendFormState extends State<SendForm> {
         if (result == recipientOrUri) {
           _recipientController.text = recipientOrUri;
           return true;
-        }
-        else if (result != null) {
+        } else if (result != null) {
           var parts = parseWavesUri(widget._testnet, recipientOrUri);
           _recipientController.text = parts.address;
           updateRecipient(parts.address);
@@ -68,14 +69,14 @@ class SendFormState extends State<SendForm> {
           _recipientController.text = parts.account;
           updateRecipient(parts.account);
           _amountController.text = parts.amount.toString();
-          _attachment = Uri.decodeFull(parts.attachment);
+          if (parts.attachment != null)
+            _attachment = Uri.decodeFull(parts.attachment!);
           _msgController.text = '';
           updateAttachment(null);
           return true;
         }
         return false;
     }
-    return false;
   }
 
   void updateRecipient(String recipient) async {
@@ -83,8 +84,9 @@ class SendFormState extends State<SendForm> {
       var recipientImage;
       if (paydbRecipientCheck(recipient)) {
         var result = await paydbUserInfo(email: recipient);
-        if (result.error == PayDbError.None)
-          recipientImage = paydbAccountImage(result.info.photo, result.info.photoType);
+        if (result.error == PayDbError.None && result.info != null)
+          recipientImage =
+              paydbAccountImage(result.info!.photo, result.info!.photoType);
       }
       setState(() {
         _recipientImage = recipientImage;
@@ -92,15 +94,17 @@ class SendFormState extends State<SendForm> {
     }
   }
 
-  void updateAttachment(String msg) async {
+  void updateAttachment(String? msg) async {
     var deviceName = await Prefs.deviceNameGet();
     setState(() {
-      _attachment = formatAttachment(deviceName, msg, null, currentAttachment: _attachment);      
+      _attachment = formatAttachment(deviceName, msg, null,
+          currentAttachment: _attachment);
     });
   }
 
   void send() async {
-    if (_formKey.currentState.validate()) {
+    if (_formKey.currentState == null) return;
+    if (_formKey.currentState!.validate()) {
       // send parameters
       var recipient = _recipientController.text;
       var amountText = _amountController.text;
@@ -108,7 +112,7 @@ class SendFormState extends State<SendForm> {
       var amount = (amountDec * Decimal.fromInt(100)).toInt();
       var fee = (widget._fee * Decimal.fromInt(100)).toInt();
       // double check with user
-      if (await showDialog<bool>(
+      var yesSend = await showDialog<bool>(
           context: context,
           builder: (BuildContext context) {
             return SimpleDialog(
@@ -116,16 +120,22 @@ class SendFormState extends State<SendForm> {
               children: <Widget>[
                 SimpleDialogOption(
                   padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: RoundedButton(() => Navigator.pop(context, true), ZapWhite, ZapYellow, 'yes send ${amountDec.toStringAsFixed(2)} $AssetShortNameLower'),
+                  child: RoundedButton(
+                      () => Navigator.pop(context, true),
+                      ZapWhite,
+                      ZapYellow,
+                      'yes send ${amountDec.toStringAsFixed(2)} $AssetShortNameLower'),
                 ),
                 SimpleDialogOption(
                   padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: RoundedButton(() => Navigator.pop(context, false), ZapBlue, ZapWhite, 'cancel', borderColor: ZapBlue),
+                  child: RoundedButton(() => Navigator.pop(context, false),
+                      ZapBlue, ZapWhite, 'cancel',
+                      borderColor: ZapBlue),
                 ),
               ],
             );
-          }
-      )) {
+          });
+      if (yesSend != null && yesSend) {
         // check pin
         if (!await pinCheck(context, await Prefs.pinGet())) {
           return;
@@ -134,31 +144,33 @@ class SendFormState extends State<SendForm> {
           case TokenType.Waves:
             // create tx
             var libzap = LibZap();
-            var spendTx = libzap.transactionCreate(widget._mnemonicOrAccount, recipient, amount, fee, _attachment);
+            var spendTx = libzap.transactionCreate(
+                widget._mnemonicOrAccount, recipient, amount, fee, _attachment);
             if (spendTx.success) {
               var tx = await Navigator.push<Tx>(
                 context,
-                MaterialPageRoute(builder: (context) => WavesSendingForm(spendTx)),
+                MaterialPageRoute(
+                    builder: (context) => WavesSendingForm(spendTx)),
               );
-              if (tx != null)
-                Navigator.pop(context, tx);
-            }
-            else
-              flushbarMsg(context, 'failed to create transaction', category: MessageCategory.Warning);
+              if (tx != null) Navigator.pop(context, tx);
+            } else
+              flushbarMsg(context, 'failed to create transaction',
+                  category: MessageCategory.Warning);
             break;
           case TokenType.PayDB:
             var tx = await Navigator.push<PayDbTx>(
               context,
-              MaterialPageRoute(builder: (context) => PayDbSendingForm(recipient, amount, _attachment)),
+              MaterialPageRoute(
+                  builder: (context) =>
+                      PayDbSendingForm(recipient, amount, _attachment)),
             );
-            if (tx != null)
-              Navigator.pop(context, tx);
+            if (tx != null) Navigator.pop(context, tx);
             break;
         }
       }
-    }
-    else
-      flushbarMsg(context, 'validation failed', category: MessageCategory.Warning);
+    } else
+      flushbarMsg(context, 'validation failed',
+          category: MessageCategory.Warning);
   }
 
   @protected
@@ -175,30 +187,36 @@ class SendFormState extends State<SendForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
-          Center(heightFactor: 3, child: Text('send $AssetShortNameLower\n  ', style: TextStyle(color: ZapWhite, fontWeight: FontWeight.bold), textAlign: TextAlign.center)),
+          Center(
+              heightFactor: 3,
+              child: Text('send $AssetShortNameLower\n  ',
+                  style:
+                      TextStyle(color: ZapWhite, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center)),
           Visibility(
-            visible: _recipientImage != null,
-            child: Container(
-              child: _recipientImage
-          )),
+              visible: _recipientImage != null,
+              child: Container(child: _recipientImage)),
           TextFormField(
             controller: _recipientController,
-            keyboardType: AppTokenType == TokenType.PayDB ? TextInputType.emailAddress : TextInputType.text,
-            decoration: InputDecoration(labelText: 'recipient',
-              suffixIcon: FlatButton.icon(
-                onPressed: () {
-                  var qrCode = QRCodeReader().scan();
-                  qrCode.then((value) {
-                    if (value == null || !setRecipientOrUri(value))
-                      flushbarMsg(context, 'invalid QR code', category: MessageCategory.Warning);
-                  });
-                },
-                icon: Icon(MaterialCommunityIcons.qrcode_scan, size: 14, color: ZapYellow),
-                label: Text('scan', style: TextStyle(color: ZapYellow))
-              )
-            ),
+            keyboardType: AppTokenType == TokenType.PayDB
+                ? TextInputType.emailAddress
+                : TextInputType.text,
+            decoration: InputDecoration(
+                labelText: 'recipient',
+                suffixIcon: FlatButton.icon(
+                    onPressed: () {
+                      var qrCode = QrScan.scan(context);
+                      qrCode.then((value) {
+                        if (value == null || !setRecipientOrUri(value))
+                          flushbarMsg(context, 'invalid QR code',
+                              category: MessageCategory.Warning);
+                      });
+                    },
+                    icon: Icon(MaterialCommunityIcons.qrcode_scan,
+                        size: 14, color: ZapYellow),
+                    label: Text('scan', style: TextStyle(color: ZapYellow)))),
             validator: (value) {
-              if (value.isEmpty) {
+              if (value == null || value.isEmpty) {
                 return 'Please enter a value';
               }
               switch (AppTokenType) {
@@ -220,10 +238,14 @@ class SendFormState extends State<SendForm> {
           TextFormField(
             controller: _amountController,
             keyboardType: TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(labelText: '$AssetShortNameUpper amount',
-              suffixIcon: FlatButton(onPressed: () => _amountController.text = '${widget._max - widget._fee}', child: Text('max', style: TextStyle(color: ZapYellow)))),
+            decoration: InputDecoration(
+                labelText: '$AssetShortNameUpper amount',
+                suffixIcon: FlatButton(
+                    onPressed: () =>
+                        _amountController.text = '${widget._max - widget._fee}',
+                    child: Text('max', style: TextStyle(color: ZapYellow)))),
             validator: (value) {
-              if (value.isEmpty) {
+              if (value == null || value.isEmpty) {
                 return 'Please enter a value';
               }
               final dv = Decimal.parse(value);
@@ -234,7 +256,7 @@ class SendFormState extends State<SendForm> {
                 return 'Please enter a value greater then zero';
               }
               return null;
-            }, 
+            },
           ),
           TextFormField(
             controller: _msgController,
@@ -242,12 +264,19 @@ class SendFormState extends State<SendForm> {
             decoration: InputDecoration(labelText: 'message'),
             onChanged: updateAttachment,
           ),
-          Text(_attachment != null ? _attachment : '', style: TextStyle(color: ZapBlackLight)),
+          Text(_attachment != null ? _attachment! : '',
+              style: TextStyle(color: ZapBlackLight)),
           Padding(
             padding: const EdgeInsets.only(top: 24.0),
-            child: RoundedButton(send, ZapWhite, ZapYellow, 'send $AssetShortNameLower', minWidth: MediaQuery.of(context).size.width / 2, holePunch: true),
+            child: RoundedButton(
+                send, ZapWhite, ZapYellow, 'send $AssetShortNameLower',
+                minWidth: MediaQuery.of(context).size.width / 2,
+                holePunch: true),
           ),
-          RoundedButton(() => Navigator.pop(context, null), ZapBlue, ZapWhite, 'cancel', borderColor: ZapBlue, minWidth: MediaQuery.of(context).size.width / 2),
+          RoundedButton(
+              () => Navigator.pop(context, null), ZapBlue, ZapWhite, 'cancel',
+              borderColor: ZapBlue,
+              minWidth: MediaQuery.of(context).size.width / 2),
         ],
       ),
     );

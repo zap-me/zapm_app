@@ -13,7 +13,7 @@ import 'config.dart';
 import 'prefs.dart';
 import 'package:zapdart/utils.dart';
 
-Future<String> _server() async {
+Future<String?> _server() async {
   var testnet = await Prefs.testnetGet();
   return testnet ? PayDBServerTestnet : PayDBServerMainnet;
 }
@@ -22,24 +22,19 @@ const ActionIssue = 'issue';
 const ActionTransfer = 'transfer';
 const ActionDestroy = 'destroy';
 
-enum PayDbError {
-  None, Network, Auth
-}
+enum PayDbError { None, Network, Auth }
 
-enum PayDbPermission {
-  receive, balance, history, transfer, issue
-}
+enum PayDbPermission { receive, balance, history, transfer, issue }
 
 class PayDbUri {
   final String account;
   final Decimal amount;
-  final String attachment;
+  final String? attachment;
 
   PayDbUri(this.account, this.amount, this.attachment);
 
   String _addPart(String current, String part) {
-    if (current.isEmpty)
-      return '?$part';
+    if (current.isEmpty) return '?$part';
     return '$current&$part';
   }
 
@@ -49,19 +44,20 @@ class PayDbUri {
       var amountCents = amount * Decimal.fromInt(100);
       queryParts = _addPart(queryParts, 'amount=$amountCents');
     }
-    if (attachment != null && attachment.isNotEmpty)
+    if (attachment != null && attachment!.isNotEmpty)
       queryParts = _addPart(queryParts, 'attachment=$attachment');
     return 'premiopay://$account$queryParts';
   }
 
-  static PayDbUri parse(String uri) {
+  static PayDbUri? parse(String uri) {
     //
     // premiopay://<email>?amount=<AMOUNT_CENTS>&attachment=<ATTACHMENT>
     //
     var account = '';
     var amount = Decimal.fromInt(0);
     var attachment = '';
-    if (uri.length > 12 && uri.substring(0, 12).toLowerCase() == 'premiopay://') {
+    if (uri.length > 12 &&
+        uri.substring(0, 12).toLowerCase() == 'premiopay://') {
       var parts = uri.substring(12).split('?');
       if (parts.length == 1 || parts.length == 2) {
         account = parts[0];
@@ -88,10 +84,11 @@ class AccountRegistration {
   final String lastName;
   final String email;
   final String password;
-  final String photo;
-  final String photoType;
+  final String? photo;
+  final String? photoType;
 
-  AccountRegistration(this.firstName, this.lastName, this.email, this.password, this.photo, this.photoType);
+  AccountRegistration(this.firstName, this.lastName, this.email, this.password,
+      this.photo, this.photoType);
 }
 
 class AccountRequestApiKey {
@@ -104,15 +101,16 @@ class AccountRequestApiKey {
 class UserInfo {
   final String email;
   final int balance;
-  final String photo;
-  final String photoType;
+  final String? photo;
+  final String? photoType;
   final Iterable<PayDbPermission> permissions;
 
-  UserInfo(this.email, this.balance, this.photo, this.photoType, this.permissions);
+  UserInfo(
+      this.email, this.balance, this.photo, this.photoType, this.permissions);
 }
 
 class UserInfoResult {
-  final UserInfo info;
+  final UserInfo? info;
   final PayDbError error;
 
   UserInfoResult(this.info, this.error);
@@ -126,14 +124,14 @@ class PayDbApiKey {
 }
 
 class PayDbApiKeyResult {
-  final PayDbApiKey apikey;
+  final PayDbApiKey? apikey;
   final PayDbError error;
 
   PayDbApiKeyResult(this.apikey, this.error);
 }
 
 class PayDbApiKeyRequestResult {
-  final String token;
+  final String? token;
   final PayDbError error;
 
   PayDbApiKeyRequestResult(this.token, this.error);
@@ -146,104 +144,129 @@ class PayDbTx {
   final String sender;
   final String recipient;
   final int amount;
-  final String attachment;
+  final String? attachment;
 
-  PayDbTx(this.token, this.action, this.timestamp, this.sender, this.recipient, this.amount, this.attachment);
+  PayDbTx(this.token, this.action, this.timestamp, this.sender, this.recipient,
+      this.amount, this.attachment);
 }
 
 class PayDbUserTxsResult {
-  final Iterable<PayDbTx> txs;
+  final Iterable<PayDbTx>? txs;
   final PayDbError error;
 
   PayDbUserTxsResult(this.txs, this.error);
 }
 
 class PayDbTxResult {
-  final PayDbTx tx;
+  final PayDbTx? tx;
   final PayDbError error;
 
   PayDbTxResult(this.tx, this.error);
 }
 
-Future<http.Response> postAndCatch(String url, String body, {Map<String, String> extraHeaders}) async {
+Future<http.Response?> postAndCatch(String url, String body,
+    {Map<String, String>? extraHeaders}) async {
   try {
-    return await post(url, body, extraHeaders: extraHeaders);
-  } on SocketException catch(e) {
+    return await httpPost(Uri.parse(url), body, extraHeaders: extraHeaders);
+  } on SocketException catch (e) {
     print(e);
     return null;
-  } on TimeoutException catch(e) {
+  } on TimeoutException catch (e) {
     print(e);
     return null;
-  } on http.ClientException catch(e) {
+  } on http.ClientException catch (e) {
     print(e);
     return null;
-  } on ArgumentError catch(e) {
+  } on ArgumentError catch (e) {
+    print(e);
+    return null;
+  } on HandshakeException catch (e) {
     print(e);
     return null;
   }
 }
 
-Widget paydbAccountImage(String imgString, String imgType, {double size = 70, double borderRadius = 13.5,
-double dropShadowOffsetX = 0, double dropShadowOffsetY = 3, double dropShadowSpreadRadius = 5, double dropShadowBlurRadius = 7}) {
+Widget paydbAccountImage(String? imgString, String? imgType,
+    {double size = 70,
+    double borderRadius = 10,
+    double dropShadowOffsetX = 0,
+    double dropShadowOffsetY = 3,
+    double dropShadowSpreadRadius = 5,
+    double dropShadowBlurRadius = 7}) {
   if (imgString != null && imgString.isNotEmpty) {
     if (imgType == 'raster')
       // if image is raster then apply corner radius and drop shadow
       return Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(borderRadius), 
-          boxShadow: [BoxShadow(
-            color: Colors.grey.withOpacity(0.5),
-            spreadRadius: dropShadowSpreadRadius,
-            blurRadius: dropShadowBlurRadius,
-            offset: Offset(dropShadowOffsetX, dropShadowOffsetY),
-          )],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(borderRadius),
-          child: Image.memory(base64Decode(imgString), width: size, height: size))
-      );
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(borderRadius),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.5),
+                spreadRadius: dropShadowSpreadRadius,
+                blurRadius: dropShadowBlurRadius,
+                offset: Offset(dropShadowOffsetX, dropShadowOffsetY),
+              )
+            ],
+          ),
+          child: ClipRRect(
+              borderRadius: BorderRadius.circular(borderRadius),
+              //TODO: BoxFit.cover should not be necesary if the crop aspect ratio is 1/1 (*shrug*)
+              child: Image.memory(
+                base64Decode(imgString),
+                width: size,
+                height: size,
+                fit: BoxFit.cover,
+              )));
     if (imgType == 'svg')
       return SvgPicture.string(imgString, width: size, height: size);
   }
   return SvgPicture.asset('assets/user.svg', width: size, height: size);
 }
 
-Future<String> paydbServer() async {
+Future<String?> paydbServer() async {
   return await _server();
 }
 
-String paydbParseRecipient(String value) {
-  if (EmailValidator.validate(value))
-    return value;
+String? paydbParseRecipient(String value) {
+  if (EmailValidator.validate(value)) return value;
   return null;
 }
 
 bool paydbParseValid(String recipientOrUri) {
-  return (paydbParseRecipient(recipientOrUri) != null || PayDbUri.parse(recipientOrUri) != null);
+  return (paydbParseRecipient(recipientOrUri) != null ||
+      PayDbUri.parse(recipientOrUri) != null);
 }
 
 Future<PayDbError> paydbUserRegister(AccountRegistration reg) async {
   var baseUrl = await _server();
+  if (baseUrl == null) return PayDbError.Network;
   var url = baseUrl + "user_register";
-  var body = jsonEncode({"first_name": reg.firstName, "last_name": reg.lastName, "email": reg.email, "password": reg.password, "photo": reg.photo, "photo_type": reg.photoType});
+  var body = jsonEncode({
+    "first_name": reg.firstName,
+    "last_name": reg.lastName,
+    "email": reg.email,
+    "password": reg.password,
+    "photo": reg.photo,
+    "photo_type": reg.photoType
+  });
   var response = await postAndCatch(url, body);
-  if (response == null)
-    return PayDbError.Network;
+  if (response == null) return PayDbError.Network;
   if (response.statusCode == 200) {
     return PayDbError.None;
-  } else if (response.statusCode == 400)
-    return PayDbError.Auth;
+  } else if (response.statusCode == 400) return PayDbError.Auth;
   print(response.statusCode);
   return PayDbError.Network;
 }
 
-Future<PayDbApiKeyResult> paydbApiKeyCreate(String email, String password, String deviceName) async {
+Future<PayDbApiKeyResult> paydbApiKeyCreate(
+    String email, String password, String deviceName) async {
   var baseUrl = await _server();
+  if (baseUrl == null) return PayDbApiKeyResult(null, PayDbError.Network);
   var url = baseUrl + "api_key_create";
-  var body = jsonEncode({"email": email, "password": password, "device_name": deviceName});
+  var body = jsonEncode(
+      {"email": email, "password": password, "device_name": deviceName});
   var response = await postAndCatch(url, body);
-  if (response == null)
-    return PayDbApiKeyResult(null, PayDbError.Network);
+  if (response == null) return PayDbApiKeyResult(null, PayDbError.Network);
   if (response.statusCode == 200) {
     var jsnObj = json.decode(response.body);
     var info = PayDbApiKey(jsnObj["token"], jsnObj["secret"]);
@@ -254,8 +277,11 @@ Future<PayDbApiKeyResult> paydbApiKeyCreate(String email, String password, Strin
   return PayDbApiKeyResult(null, PayDbError.Network);
 }
 
-Future<PayDbApiKeyRequestResult> paydbApiKeyRequest(String email, String deviceName) async {
+Future<PayDbApiKeyRequestResult> paydbApiKeyRequest(
+    String email, String deviceName) async {
   var baseUrl = await _server();
+  if (baseUrl == null)
+    return PayDbApiKeyRequestResult(null, PayDbError.Network);
   var url = baseUrl + "api_key_request";
   var body = jsonEncode({"email": email, "device_name": deviceName});
   var response = await postAndCatch(url, body);
@@ -273,11 +299,11 @@ Future<PayDbApiKeyRequestResult> paydbApiKeyRequest(String email, String deviceN
 
 Future<PayDbApiKeyResult> paydbApiKeyClaim(String token) async {
   var baseUrl = await _server();
+  if (baseUrl == null) return PayDbApiKeyResult(null, PayDbError.Network);
   var url = baseUrl + "api_key_claim";
   var body = jsonEncode({"token": token});
   var response = await postAndCatch(url, body);
-  if (response == null)
-    return PayDbApiKeyResult(null, PayDbError.Network);
+  if (response == null) return PayDbApiKeyResult(null, PayDbError.Network);
   if (response.statusCode == 200) {
     var jsnObj = json.decode(response.body);
     var info = PayDbApiKey(jsnObj["token"], jsnObj["secret"]);
@@ -288,26 +314,27 @@ Future<PayDbApiKeyResult> paydbApiKeyClaim(String token) async {
   return PayDbApiKeyResult(null, PayDbError.Network);
 }
 
-Future<UserInfoResult> paydbUserInfo({String email}) async {
+Future<UserInfoResult> paydbUserInfo({String? email}) async {
   var baseUrl = await _server();
+  if (baseUrl == null) return UserInfoResult(null, PayDbError.Network);
   var url = baseUrl + "user_info";
   var apikey = await Prefs.paydbApiKeyGet();
   var apisecret = await Prefs.paydbApiSecretGet();
   checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce, "email": email});
-  var sig = createHmacSig(apisecret, body);
-  var response = await postAndCatch(url, body, extraHeaders: {"X-Signature": sig});
-  if (response == null)
-    return UserInfoResult(null, PayDbError.Network);
+  var sig = createHmacSig(apisecret!, body);
+  var response =
+      await postAndCatch(url, body, extraHeaders: {"X-Signature": sig});
+  if (response == null) return UserInfoResult(null, PayDbError.Network);
   if (response.statusCode == 200) {
     var jsnObj = json.decode(response.body);
-    var perms = List<PayDbPermission>();
+    var perms = <PayDbPermission>[];
     for (var permName in jsnObj["permissions"])
       for (var perm in PayDbPermission.values)
-        if (describeEnum(perm) == permName) 
-          perms.add(perm);
-    var info = UserInfo(jsnObj["email"], jsnObj["balance"], jsnObj["photo"], jsnObj["photo_type"], perms);
+        if (describeEnum(perm) == permName) perms.add(perm);
+    var info = UserInfo(jsnObj["email"], jsnObj["balance"], jsnObj["photo"],
+        jsnObj["photo_type"], perms);
     return UserInfoResult(info, PayDbError.None);
   } else if (response.statusCode == 400)
     return UserInfoResult(null, PayDbError.Auth);
@@ -316,24 +343,27 @@ Future<UserInfoResult> paydbUserInfo({String email}) async {
 }
 
 PayDbTx parseTx(dynamic jsn) {
-  return PayDbTx(jsn["token"], jsn["action"], jsn["timestamp"], jsn["sender"], jsn["recipient"], jsn["amount"], jsn["attachment"]);
+  return PayDbTx(jsn["token"], jsn["action"], jsn["timestamp"], jsn["sender"],
+      jsn["recipient"], jsn["amount"], jsn["attachment"]);
 }
 
 Future<PayDbUserTxsResult> paydbUserTransactions(int offset, int limit) async {
   var baseUrl = await _server();
+  if (baseUrl == null) return PayDbUserTxsResult(null, PayDbError.Network);
   var url = baseUrl + "user_transactions";
   var apikey = await Prefs.paydbApiKeyGet();
   var apisecret = await Prefs.paydbApiSecretGet();
   checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
-  var body = jsonEncode({"api_key": apikey, "nonce": nonce, "offset": offset, "limit": limit});
-  var sig = createHmacSig(apisecret, body);
-  var response = await postAndCatch(url, body, extraHeaders: {"X-Signature": sig});
-  if (response == null)
-    return PayDbUserTxsResult(null, PayDbError.Network);
+  var body = jsonEncode(
+      {"api_key": apikey, "nonce": nonce, "offset": offset, "limit": limit});
+  var sig = createHmacSig(apisecret!, body);
+  var response =
+      await postAndCatch(url, body, extraHeaders: {"X-Signature": sig});
+  if (response == null) return PayDbUserTxsResult(null, PayDbError.Network);
   if (response.statusCode == 200) {
     var jsnObj = json.decode(response.body);
-    var txs = List<PayDbTx>();
+    var txs = <PayDbTx>[];
     for (var tx in jsnObj["txs"]) {
       txs.add(parseTx(tx));
     }
@@ -347,22 +377,31 @@ Future<PayDbUserTxsResult> paydbUserTransactions(int offset, int limit) async {
 bool paydbRecipientCheck(String recipient) {
   // check valid email address (from https://stackoverflow.com/a/61512807/206529)
   return RegExp(
-    r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$')
-    .hasMatch(recipient);
+          r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$')
+      .hasMatch(recipient);
 }
 
-Future<PayDbTxResult> paydbTransactionCreate(String action, String recipient, int amount, String attachment) async {
+Future<PayDbTxResult> paydbTransactionCreate(
+    String action, String recipient, int amount, String? attachment) async {
   var baseUrl = await _server();
+  if (baseUrl == null) return PayDbTxResult(null, PayDbError.Network);
   var url = baseUrl + "transaction_create";
   var apikey = await Prefs.paydbApiKeyGet();
   var apisecret = await Prefs.paydbApiSecretGet();
   checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
-  var body = jsonEncode({"api_key": apikey, "nonce": nonce, "action": action, "recipient": recipient, "amount": amount, "attachment": attachment});
-  var sig = createHmacSig(apisecret, body);
-  var response = await postAndCatch(url, body, extraHeaders: {"X-Signature": sig});
-  if (response == null)
-    return PayDbTxResult(null, PayDbError.Network);
+  var body = jsonEncode({
+    "api_key": apikey,
+    "nonce": nonce,
+    "action": action,
+    "recipient": recipient,
+    "amount": amount,
+    "attachment": attachment
+  });
+  var sig = createHmacSig(apisecret!, body);
+  var response =
+      await postAndCatch(url, body, extraHeaders: {"X-Signature": sig});
+  if (response == null) return PayDbTxResult(null, PayDbError.Network);
   if (response.statusCode == 200) {
     var jsnObj = json.decode(response.body);
     var tx = parseTx(jsnObj["tx"]);
