@@ -900,6 +900,10 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
 
   Future<InitTokenDetailsResult> _initTokenDetails() async {
     _alerts.clear();
+    var pinExists = await Prefs.pinExists();
+    setState(
+      () {_pinExists = pinExists;}
+    );
     // check apikey
     if (UseMerchantApi && !await Prefs.hasMerchantApiKey())
       setState(() => _alerts.add('No Retailer API KEY set'));
@@ -960,12 +964,6 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
                 result.info.photoType, result.info.permissions);
             break;
           case PayDbError.Auth:
-            var yes = await askYesNo(
-                context, 'Authentication failed, delete credentials?');
-            if (yes) {
-              await Prefs.paydbApiKeySet(null);
-              await Prefs.paydbApiKeySet(null);
-            }
             return InitTokenDetailsResult.Auth;
           case PayDbError.Network:
             await alert(context, "Network error",
@@ -982,10 +980,6 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     // update merchant rates
     if (UseMerchantApi && await Prefs.hasMerchantApiKey())
       merchantRates().then((value) => _merchantRates = value);
-    var pinExists = await Prefs.pinExists();
-    setState(
-      () {_pinExists = pinExists;}
-    );
     return InitTokenDetailsResult.None;
   }
 
