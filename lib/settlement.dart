@@ -20,17 +20,13 @@ class SettlementScreen extends StatelessWidget {
           leading: backButton(context),
           title: Text('settlement', style: TextStyle(color: ZapWhite)),
           backgroundColor: ZapBlue,
-
         ),
         body: CustomPaint(
-          painter: CustomCurve(ZapBlue, 110, 170),
-          child: Container(
-            width: MediaQuery.of(context).size.width, 
-            height: MediaQuery.of(context).size.height,
-            padding: EdgeInsets.all(20),
-            child: SettlementForm(_seed, _fee, _max)
-          ) 
-        )
-    );
+            painter: CustomCurve(ZapBlue, 110, 170),
+            child: Container(
+                width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.height,
+                padding: EdgeInsets.all(20),
+                child: SettlementForm(_seed, _fee, _max))));
   }
 }
