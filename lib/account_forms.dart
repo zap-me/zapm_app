@@ -7,6 +7,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:image/image.dart';
 
+import 'package:zapdart/widgets.dart';
+
 import 'paydb.dart';
 
 class AccountLogin {
@@ -258,7 +260,7 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
                             return 'Password does not match';
                           return null;
                         }),
-                    RaisedButton(
+                    raisedButton(
                       child: Text("Ok"),
                       onPressed: () async {
                         if (_formKey.currentState == null) return;
@@ -274,7 +276,7 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
                         }
                       },
                     ),
-                    RaisedButton(
+                    raisedButton(
                       child: Text("Cancel"),
                       onPressed: () {
                         Navigator.of(context).pop();
@@ -350,7 +352,7 @@ class AccountLoginFormState extends State<AccountLoginForm> {
                             return 'Please enter a password';
                           return null;
                         }),
-                    RaisedButton(
+                    raisedButton(
                       child: Text("Ok"),
                       onPressed: () {
                         if (_formKey.currentState == null) return;
@@ -361,7 +363,7 @@ class AccountLoginFormState extends State<AccountLoginForm> {
                         }
                       },
                     ),
-                    RaisedButton(
+                    raisedButton(
                       child: Text("Cancel"),
                       onPressed: () {
                         Navigator.of(context).pop();
@@ -432,7 +434,7 @@ class AccountRequestApiKeyFormState extends State<AccountRequestApiKeyForm> {
                             return 'Please enter a device name';
                           return null;
                         }),
-                    RaisedButton(
+                    raisedButton(
                       child: Text("Ok"),
                       onPressed: () {
                         if (_formKey.currentState == null) return;
@@ -443,7 +445,7 @@ class AccountRequestApiKeyFormState extends State<AccountRequestApiKeyForm> {
                         }
                       },
                     ),
-                    RaisedButton(
+                    raisedButton(
                       child: Text("Cancel"),
                       onPressed: () {
                         Navigator.of(context).pop();

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:zapdart/bip39widget.dart';
+import 'package:zapdart/widgets.dart';
 
 class RecoveryForm extends StatefulWidget {
   final String? instructions;
@@ -32,7 +33,7 @@ class RecoveryFormState extends State<RecoveryForm> {
                     ? "Enter your recovery words to recover your account"
                     : widget.instructions!),
                 Bip39Entry((words) => _mnemonic = words.join(' ')),
-                RaisedButton(
+                raisedButton(
                   child: Text("Ok"),
                   onPressed: () {
                     Navigator.of(context).pop(_mnemonic);

@@ -158,7 +158,7 @@ class _TransactionsState extends State<TransactionsScreen> {
       var failed = false;
       while (true) {
         var res = await _downloadMoreTxs(_downloadCount);
-        if (res == null) {
+        if (res.downloadCount == 0) {
           flushbarMsg(context, 'failed to load transactions',
               category: MessageCategory.Warning);
           failed = true;
@@ -287,7 +287,7 @@ class _TransactionsState extends State<TransactionsScreen> {
         });
         while (true) {
           var txs = await _downloadMoreTxs(_downloadCount);
-          if (txs == null) {
+          if (txs.downloadCount == 0) {
             flushbarMsg(context, 'failed to load transactions',
                 category: MessageCategory.Warning);
             setState(() {

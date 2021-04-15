@@ -340,7 +340,7 @@ class _SettingsState extends State<SettingsScreen> {
                         visible: !_pinProtected,
                         child: Container(
                           child: ListTile(
-                            title: RaisedButton.icon(
+                            title: raisedButtonIcon(
                                 label: Text("Create Pin"),
                                 icon: Icon(Icons.lock),
                                 onPressed: _addPin),
@@ -351,7 +351,7 @@ class _SettingsState extends State<SettingsScreen> {
                         visible: _pinProtected,
                         child: Container(
                           child: ListTile(
-                            title: RaisedButton.icon(
+                            title: raisedButtonIcon(
                                 label: Text("Change Pin"),
                                 icon: Icon(Icons.lock),
                                 onPressed: _changePin),
@@ -362,7 +362,7 @@ class _SettingsState extends State<SettingsScreen> {
                         visible: _pinProtected,
                         child: Container(
                           child: ListTile(
-                            title: RaisedButton.icon(
+                            title: raisedButtonIcon(
                                 label: Text("Remove Pin"),
                                 icon: Icon(Icons.lock),
                                 onPressed: _removePin),
@@ -375,7 +375,7 @@ class _SettingsState extends State<SettingsScreen> {
                         child: Container(
                           padding: const EdgeInsets.only(top: 18.0),
                           child: ListTile(
-                            title: RaisedButton(
+                            title: raisedButton(
                                 child: Text("Show Recovery Words"),
                                 onPressed: () =>
                                     setState(() => _showMnemonic = true)),
@@ -400,7 +400,7 @@ class _SettingsState extends State<SettingsScreen> {
                             AppTokenType == TokenType.Waves,
                         child: Container(
                           child: ListTile(
-                            title: RaisedButton.icon(
+                            title: raisedButtonIcon(
                                 label: Text("Password Protect Recovery words"),
                                 icon: Icon(Icons.lock),
                                 onPressed: _addPasswordProtection),
@@ -415,7 +415,7 @@ class _SettingsState extends State<SettingsScreen> {
                     Container(
                       padding: const EdgeInsets.only(top: 18.0),
                       child: ListTile(
-                        title: RaisedButton.icon(
+                        title: raisedButtonIcon(
                             label: Text("Scan Api Key"),
                             icon: Icon(MaterialCommunityIcons.qrcode_scan),
                             onPressed: !_secondary ? _scanApikey : null),
@@ -424,7 +424,7 @@ class _SettingsState extends State<SettingsScreen> {
                     ListTile(
                       title: Text("Device Name"),
                       subtitle: Text("$_deviceName"),
-                      trailing: RaisedButton.icon(
+                      trailing: raisedButtonIcon(
                           label: Text("Edit"),
                           icon: Icon(Icons.edit),
                           onPressed: !_secondary ? _editDeviceName : null),
@@ -432,7 +432,7 @@ class _SettingsState extends State<SettingsScreen> {
                     ListTile(
                       title: Text("Api Key"),
                       subtitle: Text("$_apikey"),
-                      trailing: RaisedButton.icon(
+                      trailing: raisedButtonIcon(
                           label: Text("Edit"),
                           icon: Icon(Icons.edit),
                           onPressed: !_secondary ? _editApikey : null),
@@ -440,7 +440,7 @@ class _SettingsState extends State<SettingsScreen> {
                     ListTile(
                       title: Text("Api Secret"),
                       subtitle: Text("$_apisecret"),
-                      trailing: RaisedButton.icon(
+                      trailing: raisedButtonIcon(
                           label: Text("Edit"),
                           icon: Icon(Icons.edit),
                           onPressed: !_secondary ? _editApisecret : null),
@@ -448,7 +448,7 @@ class _SettingsState extends State<SettingsScreen> {
                     ListTile(
                       title: Text("Api Server"),
                       subtitle: Text("$_apiserver"),
-                      trailing: RaisedButton.icon(
+                      trailing: raisedButtonIcon(
                           label: Text("Edit"),
                           icon: Icon(Icons.edit),
                           onPressed: !_secondary ? _editApiserver : null),

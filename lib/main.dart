@@ -607,12 +607,9 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
             ],
           ),
           actions: <Widget>[
-            FlatButton(
-              child: Text("Ok"),
-              onPressed: () {
-                Navigator.of(context).pop(seed);
-              },
-            ),
+            raisedButton(
+                child: Text("Ok"),
+                onPressed: () => Navigator.of(context).pop(seed)),
           ],
         );
       },

@@ -203,7 +203,7 @@ class SendFormState extends State<SendForm> {
                 : TextInputType.text,
             decoration: InputDecoration(
                 labelText: 'recipient',
-                suffixIcon: FlatButton.icon(
+                suffixIcon: flatButtonIcon(
                     onPressed: () {
                       var qrCode = QrScan.scan(context);
                       qrCode.then((value) {
@@ -240,7 +240,7 @@ class SendFormState extends State<SendForm> {
             keyboardType: TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
                 labelText: '$AssetShortNameUpper amount',
-                suffixIcon: FlatButton(
+                suffixIcon: flatButton(
                     onPressed: () =>
                         _amountController.text = '${widget._max - widget._fee}',
                     child: Text('max', style: TextStyle(color: ZapYellow)))),

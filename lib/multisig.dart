@@ -29,7 +29,7 @@ class SignaturePicker extends StatelessWidget {
     if (fileData != null) {
       var res = json.decode(fileData!);
       for (var i = 0; i < res['proofs'].length; i++) {
-        var sig = FlatButton(
+        var sig = flatButton(
             onPressed: () => signatureSelect(i),
             child: //Flexible(child:
                 Text(res['proofs'][i],
@@ -251,7 +251,7 @@ class _MultisigState extends State<MultisigScreen> {
             children: <Widget>[
               SignaturePicker(_signatureSelect, _signatureSwap,
                   _signatureDelete, _fileData, _signatureIndex),
-              RaisedButton(onPressed: _loadFile, child: Text("Load File")),
+              raisedButton(onPressed: _loadFile, child: Text("Load File")),
               SwitchListTile(
                 value: !_testnet,
                 title: Text("Signing for mainnet?"),
@@ -261,19 +261,19 @@ class _MultisigState extends State<MultisigScreen> {
                   });
                 },
               ),
-              RaisedButton(
+              raisedButton(
                   onPressed:
                       _fileData != null && !_serializing ? _signFile : null,
                   child: Text(_serializing ? "Serializing..." : "Sign")),
               // disabled util https://github.com/miguelpruivo/flutter_file_picker/issues/234 is resolved
-              RaisedButton(
+              raisedButton(
                   /*onPressed: _fileData != null ? _saveFile : null,*/ onPressed:
                       null,
                   child: Text("Save File")),
-              RaisedButton(
+              raisedButton(
                   onPressed: _fileData != null ? _shareFile : null,
                   child: Text("Share File")),
-              RaisedButton(
+              raisedButton(
                   onPressed: _fileData != null ? _broadcastFile : null,
                   child: Text("Broadcast File")),
               Text(_broadcastResponse != null ? _broadcastResponse! : '')
