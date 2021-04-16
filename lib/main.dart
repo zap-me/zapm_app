@@ -79,23 +79,21 @@ class MyApp extends StatelessWidget {
           var currentFocus = FocusScope.of(context);
           if (!currentFocus.hasPrimaryFocus &&
               currentFocus.focusedChild != null) {
-            FocusManager.instance.primaryFocus.unfocus();
+            FocusManager.instance.primaryFocus?.unfocus();
           }
         },
         child: MaterialApp(
-            //debugShowCheckedModeBanner: false,
-            title: AppTitle,
-            theme: ThemeData(
-              brightness: ZapBrightness,
-              primaryColor: ZapWhite,
-              accentColor: ZapBlue,
-              textTheme: ZapTextThemer(Theme.of(context).textTheme),
-              primaryTextTheme: ZapTextThemer(Theme.of(context).textTheme),
-            ),
-            home: DefaultTabController(
-              length: WebviewURL == null ? 2 : 3,
-              child: ZapHomePage(title: AppTitle),
-            )));
+          //debugShowCheckedModeBanner: false,
+          title: AppTitle,
+          theme: ThemeData(
+            brightness: ZapBrightness,
+            primaryColor: ZapWhite,
+            accentColor: ZapBlue,
+            textTheme: ZapTextThemer(Theme.of(context).textTheme),
+            primaryTextTheme: ZapTextThemer(Theme.of(context).textTheme),
+          ),
+          home: ZapHomePage(AppTitle),
+        ));
   }
 }
 
@@ -119,8 +117,8 @@ enum Capability { Receive, Balance, History, Spend }
 enum InitTokenDetailsResult { None, NoData, Auth, Network }
 
 class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
-  Socket _merchantSocket; // merchant portal websocket
-  StreamSubscription _uniLinksSub; // uni links subscription
+  Socket? _merchantSocket; // merchant portal websocket
+  StreamSubscription? _uniLinksSub; // uni links subscription
 
   bool _testnet = true;
   WavesWallet _wallet = WavesWallet.empty();
@@ -138,9 +136,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   final audioPlayer = AudioCache();
   bool _walletOrAcctInited = false;
   bool _walletOrAcctLoading = false;
-  AppVersion _appVersion;
-  bool _pinExists;
-  TabController _tabController;
+  AppVersion? _appVersion;
 
   _ZapHomePageState();
 
@@ -164,10 +160,10 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   String _addrOrAccountValue() {
     switch (AppTokenType) {
       case TokenType.Waves:
-        if (_wallet != null) return _wallet.address;
+        if (_wallet.address.isNotEmpty) return _wallet.address;
         break;
       case TokenType.PayDB:
-        if (_account != null) return _account.email;
+        if (_account.email.isNotEmpty) return _account.email;
         break;
     }
     return '...';
@@ -191,7 +187,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         return SizedBox();
       case TokenType.PayDB:
         return Padding(
-            child: paydbAccountImage(_account?.photo, _account?.photoType),
+            child: paydbAccountImage(_account.photo, _account.photoType),
             padding: EdgeInsets.only(right: 20));
     }
   }
@@ -250,14 +246,14 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         var recipient;
         switch (AppTokenType) {
           case TokenType.Waves:
-            if (_wallet.address == null)
+            if (_wallet.address.isNotEmpty)
               throw FormatException(
                   'wallet address must be valid to claim payment');
             recipient = _wallet.address;
             body = {'recipient': recipient, 'asset_id': LibZap().assetIdGet()};
             break;
           case TokenType.PayDB:
-            if (_account.email == null)
+            if (_account.email.isNotEmpty)
               throw FormatException(
                   'account email must be valid to claim payment');
             recipient = _account.email;
@@ -331,7 +327,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
       await _previousUniUriLock.synchronized(() async {
         if (_previousUniUri != uri) {
           // this seems to be invoked twice so ignore the second one
-          if (!await processUri(uri))
+          if (uri != null && !await processUri(uri))
             flushbarMsg(context, 'invalid URL',
                 category: MessageCategory.Warning);
           _previousUniUri = uri;
@@ -349,9 +345,9 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     // remove WidgetsBindingObserver
     WidgetsBinding.instance?.removeObserver(this);
     // close socket
-    if (_merchantSocket != null) _merchantSocket.close();
+    _merchantSocket?.close();
     // close uni links subscription
-    if (_uniLinksSub != null) _uniLinksSub.cancel();
+    _uniLinksSub?.cancel();
     super.dispose();
   }
 
@@ -363,7 +359,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   }
 
   void _txNotification(String txid, String sender, String recipient,
-      double amount, String attachment) {
+      double amount, String? attachment) {
     var amountString = "${amount.toStringAsFixed(2)} $AssetShortNameUpper";
     // convert amount to NZD
     if (_merchantRates != null) {
@@ -375,7 +371,6 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
       try {
         attachment = base58decodeString(attachment);
       } catch (_) {}
-    ;
     // play audio file
     audioPlayer.play('chaching.mp3');
     // show user overview of new tx
@@ -424,7 +419,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   void _watchAddress() async {
     assert(AppTokenType == TokenType.Waves);
     // do nothing if the address, apikey or apisecret is not set
-    if (_wallet == null) return;
+    if (_wallet.address.isEmpty) return;
     if (!await Prefs.hasMerchantApiKey()) return;
     // register to watch our address
     if (!await merchantWatch(_wallet.address)) {
@@ -433,7 +428,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
       return;
     }
     // create socket to receive tx alerts
-    if (_merchantSocket != null) _merchantSocket.close();
+    _merchantSocket?.close();
     _merchantSocket = await merchantSocket(_txNotification);
   }
 
@@ -581,11 +576,12 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     return NoAccountAction.Login;
   }
 
-  Future<String> _recoverMnemonic(BuildContext context) {
+  Future<String?> _recoverMnemonic(BuildContext context) {
     return Navigator.push<String>(
         context, MaterialPageRoute(builder: (context) => RecoveryForm()));
   }
-  Future<String> _recoverSeed(BuildContext context) async {
+
+  Future<String?> _recoverSeed(BuildContext context) async {
     String seed = "";
     return showDialog<String>(
       context: context,
@@ -611,12 +607,9 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
             ],
           ),
           actions: <Widget>[
-            FlatButton(
-              child: Text("Ok"),
-              onPressed: () {
-                Navigator.of(context).pop(seed);
-              },
-            ),
+            raisedButton(
+                child: Text("Ok"),
+                onPressed: () => Navigator.of(context).pop(seed)),
           ],
         );
       },
@@ -667,8 +660,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
           if (value != null) {
             var result = parseApiKeyUri(value);
             if (result.error == NO_ERROR) {
-              if (result.walletAddress == null ||
-                  result.walletAddress.isEmpty) {
+              if (result.walletAddress.isEmpty) {
                 flushbarMsg(context, 'wallet address not present',
                     category: MessageCategory.Warning);
                 break;
@@ -734,7 +726,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     return null;
   }
 
-  Future<String> _paydbApiKeyClaim(
+  Future<String?> _paydbApiKeyClaim(
       AccountRequestApiKey req, String token) async {
     var result = await paydbApiKeyClaim(token);
     switch (result.error) {
@@ -771,36 +763,43 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
       setState(() => _walletOrAcctLoading = true);
       switch (action) {
         case NoAccountAction.Register:
-          // show register form
-          var registration = await Navigator.push<AccountRegistration>(
-            context,
-            MaterialPageRoute(builder: (context) => AccountRegisterForm()),
-          );
-          if (registration == null) break;
-          var result = await paydbUserRegister(registration);
-          switch (result) {
-            case PayDbError.Auth:
-            case PayDbError.Network:
-              await alert(context, "Network error",
-                  "A network error occured when trying to login");
-              break;
-            case PayDbError.None:
-              if (await _directLoginAccountDialog(context))
-                // save account if login successful
-                accountEmail = await _paydbLogin(
-                    AccountLogin(registration.email, registration.password));
-              break;
+          AccountRegistration? registration;
+          while (accountEmail == null) {
+            // show register form
+            registration = await Navigator.push<AccountRegistration>(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => AccountRegisterForm(registration)),
+            );
+            if (registration == null) break;
+            var result = await paydbUserRegister(registration);
+            switch (result) {
+              case PayDbError.Auth:
+              case PayDbError.Network:
+                await alert(context, "Network error",
+                    "A network error occured when trying to login");
+                break;
+              case PayDbError.None:
+                if (await _directLoginAccountDialog(context))
+                  // save account if login successful
+                  accountEmail = await _paydbLogin(
+                      AccountLogin(registration.email, registration.password));
+                break;
+            }
           }
           break;
         case NoAccountAction.Login:
-          // login form
-          var login = await Navigator.push<AccountLogin>(
-            context,
-            MaterialPageRoute(builder: (context) => AccountLoginForm()),
-          );
-          if (login == null) break;
-          // save account if login successful
-          accountEmail = await _paydbLogin(login);
+          AccountLogin? login;
+          while (accountEmail == null) {
+            // login form
+            login = await Navigator.push<AccountLogin>(
+              context,
+              MaterialPageRoute(builder: (context) => AccountLoginForm(login)),
+            );
+            if (login == null) break;
+            // save account if login successful
+            accountEmail = await _paydbLogin(login);
+          }
           break;
         case NoAccountAction.RequestApiKey:
           // request api key form
@@ -879,8 +878,9 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
           case PayDbError.Network:
             break;
           case PayDbError.None:
+            assert(result.info != null);
             balance =
-                Decimal.fromInt(result.info.balance) / Decimal.fromInt(100);
+                Decimal.fromInt(result.info!.balance) / Decimal.fromInt(100);
             balanceText = balance.toStringAsFixed(2);
             break;
         }
@@ -897,10 +897,6 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
 
   Future<InitTokenDetailsResult> _initTokenDetails() async {
     _alerts.clear();
-    var pinExists = await Prefs.pinExists();
-    setState(
-      () {_pinExists = pinExists;}
-    );
     // check apikey
     if (UseMerchantApi && !await Prefs.hasMerchantApiKey())
       setState(() => _alerts.add('No Retailer API KEY set'));
@@ -958,10 +954,17 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         var result = await paydbUserInfo();
         switch (result.error) {
           case PayDbError.None:
-            _account = PayDbAccount(result.info.email, result.info.photo,
-                result.info.photoType, result.info.permissions);
+            assert(result.info != null);
+            _account = PayDbAccount(result.info!.email, result.info!.photo,
+                result.info!.photoType, result.info!.permissions);
             break;
           case PayDbError.Auth:
+            var yes = await askYesNo(
+                context, 'Authentication failed, delete credentials?');
+            if (yes) {
+              await Prefs.paydbApiKeySet(null);
+              await Prefs.paydbApiKeySet(null);
+            }
             return InitTokenDetailsResult.Auth;
           case PayDbError.Network:
             await alert(context, "Network error",
@@ -1005,7 +1008,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   }
 
   void _scanQrCode() async {
-    var value = await new QRCodeReader().scan();
+    var value = await QrScan.scan(context);
     if (value == null) return;
 
     switch (AppTokenType) {
@@ -1078,7 +1081,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
       context,
       MaterialPageRoute(
           builder: (context) =>
-              ReceiveScreen(_testnet, _addressOrAccount(), _txNotification)),
+              ReceiveScreen(_testnet, _addrOrAccountValue(), _txNotification)),
     );
   }
 
@@ -1113,10 +1116,9 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     var sentFunds = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-          builder: (context) =>
-              RewardScreen(_testnet, _wallet.mnemonic, _fee, _balance)),
+          builder: (context) => RewardScreen(_wallet.mnemonic, _fee, _balance)),
     );
-    if (sentFunds) _updateBalance();
+    if (sentFunds == true) _updateBalance();
   }
 
   void _settlement() async {
@@ -1126,11 +1128,25 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
           builder: (context) =>
               SettlementScreen(_wallet.mnemonic, _fee, _balance)),
     );
-    if (sentFunds) _updateBalance();
+    if (sentFunds == true) _updateBalance();
   }
 
   void _showWallet() {
     Navigator.pop(context);
+  }
+
+  void _showHomepage() {
+    if (WebviewURL != null) {
+      var webview = WebView(
+        initialUrl: WebviewURL,
+        javascriptMode: JavascriptMode.unrestricted,
+        gestureNavigationEnabled: true,
+      );
+      Navigator.push<bool>(
+          context,
+          MaterialPageRoute(
+              builder: (context) => _appScaffold(webview, isHomepage: true)));
+    }
   }
 
   bool _haveCapabililty(Capability cap) {
@@ -1145,7 +1161,6 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
             return _wallet.isMnemonic;
         }
       case TokenType.PayDB:
-        if (_account == null) return false;
         switch (cap) {
           case Capability.Receive:
             return _account.permissions.contains(PayDbPermission.receive);
@@ -1210,62 +1225,56 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     }
     // wallet/account now initialized
     _walletOrAcctInited = true;
+    // webview
+    _showHomepage();
     // init firebase push notifications
     _fcm = FCM(context, PremioStageIndexUrl, PremioStageName);
     // init uni links
     initUniLinks();
   }
 
-  List<Tab> _buildTabs() {
-    var tabs = [
-      Tab(icon: Icon(Icons.account_balance_wallet_outlined)),
-      Tab(icon: Icon(Icons.settings_outlined))
-    ];
-    if (WebviewURL != null) {
-      tabs.insert(0, Tab(icon: Icon(Icons.home_outlined)));
-    }
-    return tabs;
-  }
-
-  List<Widget> _buildTabBodies(Widget body) {
-    var content = [
-      body,
-      SettingsScreen(_pinExists, _mnemonicOrAccount(), _fcm)
-    ];
-    if (WebviewURL != null) {
-      var webview = WebView(
-        initialUrl: WebviewURL,
-        javascriptMode: JavascriptMode.unrestricted,
-        gestureNavigationEnabled: true,
-      );
-      content.insert(0, webview);
-    }
-    return content;
-  }
-
-  Widget _appScaffold(Widget body) {
-    final TabController tabController = DefaultTabController.of(context);
-    tabController.addListener(_initTokenDetails);
+  Widget _appScaffold(Widget body, {bool isHomepage = false}) {
     return Scaffold(
-      appBar: AppBar(
-        leading: Visibility(
-          child: IconButton(
-              onPressed: _toggleAlerts,
-              icon: Icon(Icons.warning,
-                  color: _showAlerts ? ZapGrey : ZapWarning)),
-          maintainSize: true,
-          maintainAnimation: true,
-          maintainState: true,
-          visible: _alerts.length > 0,
+        appBar: AppBar(
+          leading: Visibility(
+            child: IconButton(
+                onPressed: _toggleAlerts,
+                icon: Icon(Icons.warning,
+                    color: _showAlerts ? ZapGrey : ZapWarning)),
+            maintainSize: true,
+            maintainAnimation: true,
+            maintainState: true,
+            visible: _alerts.length > 0 && !isHomepage,
+          ),
+          title: Center(
+              child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                WebviewURL != null
+                    ? IconButton(
+                        icon: Icon(
+                            isHomepage ? Icons.home : Icons.home_outlined,
+                            color: ZapBlue),
+                        onPressed: isHomepage ? null : _showHomepage)
+                    : Spacer(),
+                Image.asset(AssetHeaderIconPng, height: 30),
+                WebviewURL != null
+                    ? IconButton(
+                        icon: Icon(
+                            isHomepage
+                                ? Icons.account_balance_wallet_outlined
+                                : Icons.account_balance_wallet,
+                            color: ZapBlue),
+                        onPressed: isHomepage ? _showWallet : null)
+                    : Spacer()
+              ])),
+          actions: <Widget>[
+            IconButton(
+                icon: Icon(Icons.settings_outlined, color: ZapBlue),
+                onPressed: _showSettings),
+          ],
         ),
-        title: Center(child: Image.asset(AssetHeaderIconPng, height: 30)),
-        actions: [IconButton(icon: Icon(Icons.ac_unit))],
-        bottom: TabBar(tabs: _buildTabs()),
-      ),
-      body: TabBarView(
-        children: _buildTabBodies(body),
-      ),
-    );
+        body: body);
   }
 
   @override
@@ -1393,7 +1402,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
                   children: <Widget>[
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: <Widget>[
+                      children: <Widget?>[
                         _haveCapabililty(Capability.Spend)
                             ? SquareButton(
                                 _send,
@@ -1413,7 +1422,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
                             MaterialCommunityIcons.chevron_double_down,
                             ZapGreen,
                             'RECEIVE $AssetShortNameUpper'),
-                      ].where((child) => child != null).toList(),
+                      ].where((child) => child != null).toList().cast<Widget>(),
                     ),
                     SizedBox.fromSize(size: Size(1, 10)),
                     Visibility(
@@ -1441,4 +1450,5 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         ),
       ),
     );
-}}
+  }
+}

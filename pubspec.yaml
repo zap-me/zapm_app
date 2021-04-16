@@ -1,4 +1,4 @@
-name: ZapMerchant
+name: zap_merchant
 description: zap.me retailer app
 version: 1.3.1+43
 publish_to: none
@@ -57,7 +57,7 @@ dependencies:
   zapdart:
     git:
       url: https://github.com/zap-me/zapdart.git
-      ref: "e21ffe6191d1b6abac694701b34dce3b7502fa63"
+      ref: 18a8e33
     #path: ../zapdart
 
 dev_dependencies:
