@@ -41,7 +41,7 @@ class AppVersion {
 
 class SettingsScreen extends StatefulWidget {
   final bool _pinProtectedInitial;
-  final String? _mnemonicOrAccount;
+  final String _mnemonicOrAccount;
   final FCM? _fcm;
 
   SettingsScreen(this._pinProtectedInitial, this._mnemonicOrAccount, this._fcm)
@@ -59,12 +59,12 @@ class _SettingsState extends State<SettingsScreen> {
   AppVersion? _appVersion;
   int _libzapVersion = -1;
   bool _testnet = false;
-  String _deviceName;
-  String _apikey;
-  String _apisecret;
-  String _apiserver;
+  String? _deviceName="";
+  String? _apikey="";
+  String? _apisecret="";
+  String _apiserver="";
   int _versionTaps = 0;
-  String _paydbServer;
+  String? _paydbServer ="";
 
   _SettingsState(this._pinProtected) {
     _initSettings();
@@ -186,7 +186,7 @@ class _SettingsState extends State<SettingsScreen> {
     if (widget._mnemonicOrAccount == null) return;
     var password = await askSetMnemonicPassword(context);
     if (password != null) {
-      var res = encryptMnemonic(widget._mnemonicOrAccount!, password);
+      var res = encryptMnemonic(widget._mnemonicOrAccount, password);
       await Prefs.cryptoIVSet(res.iv);
       await Prefs.mnemonicSet(res.encryptedMnemonic);
       setState(() {
@@ -279,7 +279,7 @@ class _SettingsState extends State<SettingsScreen> {
         context,
         MaterialPageRoute(
             builder: (context) => HiddenScreen(
-                _testnet, widget._fcm.getToken(), widget._mnemonicOrAccount)),
+                _testnet, widget._fcm?.getToken(), widget._mnemonicOrAccount)),
       );
       _versionTaps = 0;
     }
@@ -287,7 +287,7 @@ class _SettingsState extends State<SettingsScreen> {
 
   Widget _recoveryWords() {
     if (!_secondary && widget._mnemonicOrAccount != null)
-      return Bip39Words.fromString(widget._mnemonicOrAccount!);
+      return Bip39Words.fromString(widget._mnemonicOrAccount);
     return Text('n/a');
   }
 
@@ -300,8 +300,8 @@ class _SettingsState extends State<SettingsScreen> {
           GestureDetector(
               onTap: _versionTap,
               child: ListTile(
-                  title: Text("Version: ${_appVersion.version}"),
-                  subtitle: Text("Build: ${_appVersion.build}"))),
+                  title: Text("Version: ${_appVersion?.version}"),
+                  subtitle: Text("Build: ${_appVersion?.build}"))),
           Visibility(
             visible: AppTokenType == TokenType.Waves,
             child: ListTile(title: Text("Libzap Version: $_libzapVersion")),
