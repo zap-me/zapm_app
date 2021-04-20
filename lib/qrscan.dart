@@ -20,6 +20,7 @@ class QrScan extends StatefulWidget {
 class _QrScanState extends State<QrScan> {
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   QRViewController? controller;
+  bool stopped = false;
 
   // In order to get hot reload to work we need to pause the camera if the platform
   // is android, or resume the camera if the platform is iOS.
@@ -35,23 +36,33 @@ class _QrScanState extends State<QrScan> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          leading: backButton(context, color: ZapBlack),
-          title: Text("QR Code Scan"),
-        ),
-        body: Container(
-          child: QRView(
-            key: qrKey,
-            formatsAllowed: [BarcodeFormat.qrcode],
-            onQRViewCreated: _onQRViewCreated,
+    return WillPopScope(
+      child: Scaffold(
+          appBar: AppBar(
+            leading: backButton(context, color: ZapBlack, onPressed: () {
+              stopped = true;
+              controller?.stopCamera();
+              Navigator.of(context).pop();
+            }),
+            title: Text("QR Code Scan"),
           ),
-        ));
+          body: Container(
+            child: QRView(
+              key: qrKey,
+              formatsAllowed: [BarcodeFormat.qrcode],
+              onQRViewCreated: _onQRViewCreated,
+            ),
+          )),
+      onWillPop: () {
+        stopped = true;
+        controller?.stopCamera();
+        return Future<bool>.value(true);
+      },
+    );
   }
 
   void _onQRViewCreated(QRViewController controller) {
     this.controller = controller;
-    var stopped = false;
     controller.scannedDataStream.listen((scanData) {
       if (stopped) return;
       stopped = true;

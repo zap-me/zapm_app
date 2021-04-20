@@ -56,11 +56,11 @@ class _HiddenState extends State<HiddenScreen> {
         body: Center(
           child: Column(
             children: <Widget>[
-              RaisedButton(
+              raisedButton(
                   onPressed: () => Navigator.push(context,
                       MaterialPageRoute(builder: (context) => TestsScreen())),
                   child: Text("Tests")),
-              RaisedButton(
+              raisedButton(
                   onPressed: () => Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -69,13 +69,13 @@ class _HiddenState extends State<HiddenScreen> {
               ListTile(
                   title: Text("FCM Registration Token"),
                   subtitle: Text("${widget.fcmRegistrationToken}")),
-              RaisedButton(
+              raisedButton(
                   onPressed: _copyFCMToken,
                   child: Text("Copy FCM Registration Token")),
-              RaisedButton(
+              raisedButton(
                   onPressed: _deleteMnemonicAndAccount,
                   child: Text("Delete Mnemonic/Account")),
-              RaisedButton(
+              raisedButton(
                   onPressed: _paydbIssue,
                   child: Text("PayDb Issue 100 tokens")),
             ],

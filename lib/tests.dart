@@ -68,7 +68,7 @@ class _WorkStatusState extends State<WorkStatus> {
   Widget build(BuildContext context) {
     return Column(
       children: <Widget>[
-        RaisedButton(onPressed: _start, child: Text(_action)),
+        raisedButton(onPressed: _start, child: Text(_action)),
         Text(_output)
       ],
     );
