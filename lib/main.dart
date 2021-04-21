@@ -117,8 +117,8 @@ enum Capability { Receive, Balance, History, Spend }
 enum InitTokenDetailsResult { None, NoData, Auth, Network }
 
 class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
-  Socket _merchantSocket=Socket(); // merchant portal websocket
-  StreamSubscription _uniLinksSub=StreamSubscription<dynamic>(); // uni links subscription
+  Socket? _merchantSocket; // merchant portal websocket
+  StreamSubscription? _uniLinksSub; // uni links subscription
   bool _testnet = true;
   WavesWallet _wallet = WavesWallet.empty();
   PayDbAccount _account = PayDbAccount.empty();
@@ -135,9 +135,9 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   final audioPlayer = AudioCache();
   bool _walletOrAcctInited = false;
   bool _walletOrAcctLoading = false;
-  AppVersion? _appVersion=AppVersion();
+  AppVersion? _appVersion;
   bool _pinExists= false;
-  TabController _tabController= TabController();
+  TabController? _tabController;
 
   _ZapHomePageState();
 
