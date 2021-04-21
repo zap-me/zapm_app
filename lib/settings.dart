@@ -393,7 +393,7 @@ class _SettingsState extends State<SettingsScreen> {
                               ? Icon(Icons.lock)
                               : Icon(Icons.lock_open),
                         ),
-                      ),
+                      )),
                       Visibility(
                         visible: !_pinProtected,
                         child: Container(
