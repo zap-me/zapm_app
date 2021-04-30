@@ -46,20 +46,24 @@ class FCM {
     FirebaseMessaging.instance.onTokenRefresh.listen(setToken);
 
     // configure push notification stuff
-    FirebaseMessaging.instance.requestPermission();
-    FirebaseMessaging.instance
-        .getInitialMessage()
-        .then((RemoteMessage? message) => handleMessage(message));
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print("initFirebase onMessage: $message");
-      handleMessage(message);
-    });
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      print("initFirebase onMessageOpenedApp: $message");
-      handleMessage(message);
-    });
-    FirebaseMessaging.onBackgroundMessage(
-        (RemoteMessage message) => fcmBackgroundMessageHandler(message));
+    try {
+      FirebaseMessaging.instance.requestPermission();
+      FirebaseMessaging.instance
+          .getInitialMessage()
+          .then((RemoteMessage? message) => handleMessage(message));
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        print("initFirebase onMessage: $message");
+        handleMessage(message);
+      });
+      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+        print("initFirebase onMessageOpenedApp: $message");
+        handleMessage(message);
+      });
+      FirebaseMessaging.onBackgroundMessage(
+          (RemoteMessage message) => fcmBackgroundMessageHandler(message));
+    } on TypeError catch (e) {
+      print(e);
+    }
   }
 
   void handleMessage(RemoteMessage? message) {
