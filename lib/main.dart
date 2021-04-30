@@ -9,7 +9,7 @@ import 'package:flutter_icons/flutter_icons.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:uni_links2/uni_links.dart';
+import 'package:uni_links/uni_links.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:device_info/device_info.dart';
 import 'package:audioplayers/audio_cache.dart';
@@ -130,7 +130,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   bool _showAlerts = true;
   List<String> _alerts = <String>[];
   Rates? _merchantRates;
-  Uri? _previousUniUri;
+  String? _previousUniUri;
   final Lock _previousUniUriLock = Lock();
   FCM? _fcm;
   final audioPlayer = AudioCache();
@@ -192,7 +192,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     }
   }
 
-  Future<bool> processUri(Uri uri) async {
+  Future<bool> processUri(String uri) async {
     print('$uri');
 
     switch (AppTokenType) {
@@ -201,13 +201,13 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         //
         // waves://<addr>...
         //
-        var result = parseWavesUri(_testnet, uri.toString());
+        var result = parseWavesUri(_testnet, uri);
         if (result.error == NO_ERROR) {
           var tx = await Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => SendScreen(_testnet, _wallet.mnemonic,
-                    _fee, uri.toString(), _balance)),
+                builder: (context) => SendScreen(
+                    _testnet, _wallet.mnemonic, _fee, uri, _balance)),
           );
           if (tx != null) _updateBalance();
           return true;
@@ -218,12 +218,12 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         //
         // premiopay://<acct>...
         //
-        if (PayDbUri.parse(uri.toString()) != null) {
+        if (PayDbUri.parse(uri) != null) {
           var tx = await Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => SendScreen(
-                    _testnet, _account.email, _fee, uri.toString(), _balance)),
+                builder: (context) =>
+                    SendScreen(_testnet, _account.email, _fee, uri, _balance)),
           );
           if (tx != null) _updateBalance();
           return true;
@@ -235,25 +235,26 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     //
     // premiostagelink://<HOST>/claim_payment/<CLAIM_CODE>[?scheme=<SCHEME>]
     //
-    if (uri.isScheme('premiostagelink')) {
-      if (uri.pathSegments.length == 2 &&
-          uri.pathSegments[0] == 'claim_payment') {
+    var uri2 = Uri.tryParse(uri);
+    if (uri2 != null && uri2.isScheme('premiostagelink')) {
+      if (uri2.pathSegments.length == 2 &&
+          uri2.pathSegments[0] == 'claim_payment') {
         var scheme = 'https';
-        if (uri.queryParameters.containsKey('scheme'))
-          scheme = uri.queryParameters['scheme']!;
-        var url = uri.replace(scheme: scheme);
+        if (uri2.queryParameters.containsKey('scheme'))
+          scheme = uri2.queryParameters['scheme']!;
+        var url = uri2.replace(scheme: scheme);
         var body = {};
         var recipient;
         switch (AppTokenType) {
           case TokenType.Waves:
-            if (_wallet.address.isNotEmpty)
+            if (_wallet.address.isEmpty)
               throw FormatException(
                   'wallet address must be valid to claim payment');
             recipient = _wallet.address;
             body = {'recipient': recipient, 'asset_id': LibZap().assetIdGet()};
             break;
           case TokenType.PayDB:
-            if (_account.email.isNotEmpty)
+            if (_account.email.isEmpty)
               throw FormatException(
                   'account email must be valid to claim payment');
             recipient = _account.email;
@@ -288,7 +289,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     // http://app.centrapay.com/pay/<REQUEST_ID>
     //
     if (CentrapayApiKey != null) {
-      var qr = centrapayParseQrcode(uri.toString());
+      var qr = centrapayParseQrcode(uri);
       if (qr != null) {
         var tx = await Navigator.push<Tx>(
           context,
@@ -308,7 +309,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   Future<Null> initUniLinks() async {
     // Check if the app was started with a link
     try {
-      var initialUri = await getInitialUri();
+      var initialUri = await getInitialLink();
       if (initialUri != null) {
         if (!await processUri(initialUri))
           flushbarMsg(context, 'invalid URL',
@@ -323,7 +324,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     }
 
     // Attach a listener to catch any links when app is running in the background
-    _uniLinksSub = uriLinkStream.listen((Uri? uri) async {
+    _uniLinksSub = linkStream.listen((String? uri) async {
       await _previousUniUriLock.synchronized(() async {
         if (_previousUniUri != uri) {
           // this seems to be invoked twice so ignore the second one
@@ -1052,8 +1053,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     }
     // other uris we support
     try {
-      var uri = Uri.parse(value);
-      if (!await processUri(uri))
+      if (!await processUri(value))
         flushbarMsg(context, 'invalid QR code',
             category: MessageCategory.Warning);
     } on FormatException {
