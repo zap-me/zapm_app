@@ -869,7 +869,6 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         var balanceResult = await LibZap.addressBalance(_wallet.address);
         if (balanceResult.success) {
           balance = Decimal.fromInt(balanceResult.value) / Decimal.fromInt(100);
-          balanceText = _balance.toStringAsFixed(2);
         }
         break;
       case TokenType.PayDB:
@@ -882,11 +881,11 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
             assert(result.info != null);
             balance =
                 Decimal.fromInt(result.info!.balance) / Decimal.fromInt(100);
-            balanceText = balance.toStringAsFixed(2);
             break;
         }
         break;
     }
+    balanceText = balance.toStringAsFixed(2);
     setState(() {
       _balance = balance;
       _balanceText = balanceText;
@@ -975,7 +974,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
         break;
     }
     // update testnet and balance
-    _updateTestnet();
+    await _updateTestnet();
     _updateBalance();
     // watch wallet address
     if (AppTokenType == TokenType.Waves) _watchAddress();
@@ -1180,7 +1179,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
       var libzap = LibZap();
       libzap.networkParamsSet(AssetIdMainnet, AssetIdTestnet, NodeUrlMainnet,
           NodeUrlTestnet, testnet);
-      if (!_wallet.isMnemonic) {
+      if (!_wallet.isEmpty && !_wallet.isMnemonic) {
         if (!libzap.addressCheck(_wallet.address)) {
           testnet = !testnet;
           libzap.networkParamsSet(AssetIdMainnet, AssetIdTestnet,
