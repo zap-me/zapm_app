@@ -215,7 +215,7 @@ class _SettingsState extends State<SettingsScreen> {
         if (result.accountAdmin &&
             result.walletAddress.isEmpty &&
             widget._mnemonicOrAccount != null) {
-          var address = _getWalletAddress(widget._mnemonicOrAccount!);
+          var address = _getWalletAddress(widget._mnemonicOrAccount);
           var yes = await askYesNo(context,
               "Do you want to set the account wallet address ($address)?");
           if (yes) {
