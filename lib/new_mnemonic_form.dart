@@ -6,7 +6,7 @@ import 'package:zapdart/widgets.dart';
 import 'config.dart';
 
 class NewMnemonicForm extends StatefulWidget {
-  final String _mnemonic;
+  final String? _mnemonic;
 
   NewMnemonicForm(this._mnemonic) : super();
 

@@ -41,7 +41,7 @@ class AppVersion {
 
 class SettingsScreen extends StatefulWidget {
   final bool _pinProtectedInitial;
-  final String? _mnemonicOrAccount;
+  final String _mnemonicOrAccount;
   final FCM? _fcm;
 
   SettingsScreen(this._pinProtectedInitial, this._mnemonicOrAccount, this._fcm)
@@ -59,12 +59,12 @@ class _SettingsState extends State<SettingsScreen> {
   AppVersion? _appVersion;
   int _libzapVersion = -1;
   bool _testnet = false;
-  String? _deviceName;
-  String? _apikey;
-  String? _apisecret;
-  String? _apiserver;
-  int _titleTaps = 0;
-  String? _paydbServer;
+  String? _deviceName="";
+  String? _apikey="";
+  String? _apisecret="";
+  String _apiserver="";
+  int _versionTaps = 0;
+  String? _paydbServer ="";
 
   _SettingsState(this._pinProtected) {
     _initSettings();
@@ -186,7 +186,7 @@ class _SettingsState extends State<SettingsScreen> {
     if (widget._mnemonicOrAccount == null) return;
     var password = await askSetMnemonicPassword(context);
     if (password != null) {
-      var res = encryptMnemonic(widget._mnemonicOrAccount!, password);
+      var res = encryptMnemonic(widget._mnemonicOrAccount, password);
       await Prefs.cryptoIVSet(res.iv);
       await Prefs.mnemonicSet(res.encryptedMnemonic);
       setState(() {
@@ -215,7 +215,7 @@ class _SettingsState extends State<SettingsScreen> {
         if (result.accountAdmin &&
             result.walletAddress.isEmpty &&
             widget._mnemonicOrAccount != null) {
-          var address = _getWalletAddress(widget._mnemonicOrAccount!);
+          var address = _getWalletAddress(widget._mnemonicOrAccount);
           var yes = await askYesNo(context,
               "Do you want to set the account wallet address ($address)?");
           if (yes) {
@@ -274,9 +274,9 @@ class _SettingsState extends State<SettingsScreen> {
     }
   }
 
-  void _titleTap() {
-    _titleTaps += 1;
-    if (_titleTaps > 10) {
+  void _versionTap() {
+    _versionTaps += 1;
+    if (_versionTaps > 10) {
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -288,7 +288,7 @@ class _SettingsState extends State<SettingsScreen> {
 
   Widget _recoveryWords() {
     if (!_secondary && widget._mnemonicOrAccount != null)
-      return Bip39Words.fromString(widget._mnemonicOrAccount!);
+      return Bip39Words.fromString(widget._mnemonicOrAccount);
     return Text('n/a');
   }
 
@@ -297,37 +297,95 @@ class _SettingsState extends State<SettingsScreen> {
     return Scaffold(
         appBar: AppBar(
           leading: backButton(context, color: ZapBlack),
-          title: GestureDetector(onTap: _titleTap, child: Text("Settings")),
+          title: Text("Settings"),
         ),
         body: Center(
-          child: ListView(
-            children: <Widget>[
-              ListTile(
+      child: ListView(
+        children: <Widget>[
+          GestureDetector(
+              onTap: _versionTap,
+              child: ListTile(
                   title: Text("Version: ${_appVersion?.version}"),
-                  subtitle: Text("Build: ${_appVersion?.build}")),
-              Visibility(
-                visible: AppTokenType == TokenType.Waves,
-                child: ListTile(title: Text("Libzap Version: $_libzapVersion")),
-              ),
-              Visibility(
-                visible: AppTokenType == TokenType.PayDB,
-                child: ListTile(title: Text("Server: $_paydbServer")),
-              ),
-              Container(
-                padding: const EdgeInsets.only(top: 18.0),
-                child: SwitchListTile(
-                  value: _testnet,
-                  title: Text("Testnet"),
-                  onChanged: (value) async {
-                    _toggleTestnet();
-                  },
-                ),
-              ),
-              Visibility(
-                  visible: !_secondary,
-                  child: Column(
-                    children: <Widget>[
-                      Container(
+                  subtitle: Text("Build: ${_appVersion?.build}"))),
+          Visibility(
+            visible: AppTokenType == TokenType.Waves,
+            child: ListTile(title: Text("Libzap Version: $_libzapVersion")),
+          ),
+          Visibility(
+            visible: AppTokenType == TokenType.PayDB,
+            child: ListTile(title: Text("Server: $_paydbServer")),
+          ),
+          Container(
+            padding: const EdgeInsets.only(top: 18.0),
+            child: SwitchListTile(
+              value: _testnet,
+              title: Text("Testnet"),
+              onChanged: (value) async {
+                _toggleTestnet();
+              },
+            ),
+          ),
+          Visibility(
+              visible: !_secondary,
+              child: Column(
+                children: <Widget>[
+                  Container(
+                    padding: const EdgeInsets.only(top: 18.0),
+                    child: ListTile(
+                      title: Text("Pin Protect Settings and Spending"),
+                      trailing: _pinProtected
+                          ? Icon(Icons.lock)
+                          : Icon(Icons.lock_open),
+                    ),
+                  ),
+                  Visibility(
+                    visible: !_pinProtected,
+                    child: Container(
+                      child: ListTile(
+                        title: RaisedButton.icon(
+                            label: Text("Create Pin"),
+                            icon: Icon(Icons.lock),
+                            onPressed: _addPin),
+                      ),
+                    ),
+                  ),
+                  Visibility(
+                    visible: _pinProtected,
+                    child: Container(
+                      child: ListTile(
+                        title: RaisedButton.icon(
+                            label: Text("Change Pin"),
+                            icon: Icon(Icons.lock),
+                            onPressed: _changePin),
+                      ),
+                    ),
+                  ),
+                  Visibility(
+                    visible: _pinProtected,
+                    child: Container(
+                      child: ListTile(
+                        title: RaisedButton.icon(
+                            label: Text("Remove Pin"),
+                            icon: Icon(Icons.lock),
+                            onPressed: _removePin),
+                      ),
+                    ),
+                  ),
+                  Visibility(
+                    visible: !_showMnemonic && AppTokenType == TokenType.Waves,
+                    child: Container(
+                      padding: const EdgeInsets.only(top: 18.0),
+                      child: ListTile(
+                        title: RaisedButton(
+                            child: Text("Show Recovery Words"),
+                            onPressed: () =>
+                                setState(() => _showMnemonic = true)),
+                      ),
+                    ),
+                  ),
+                  Visibility(
+                      visible: _showMnemonic && AppTokenType == TokenType.Waves,
+                      child: Container(
                         padding: const EdgeInsets.only(top: 18.0),
                         child: ListTile(
                           title: Text("Pin Protect Settings and Spending"),
@@ -335,7 +393,7 @@ class _SettingsState extends State<SettingsScreen> {
                               ? Icon(Icons.lock)
                               : Icon(Icons.lock_open),
                         ),
-                      ),
+                      )),
                       Visibility(
                         visible: !_pinProtected,
                         child: Container(
