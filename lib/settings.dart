@@ -305,8 +305,8 @@ class _SettingsState extends State<SettingsScreen> {
               GestureDetector(
                 onTap: _versionTap,
                 child: ListTile(
-                  title: Text("Version: ${_appVersion?.version}"),
-                  subtitle: Text("Build: ${_appVersion?.build}")),
+                    title: Text("Version: ${_appVersion?.version}"),
+                    subtitle: Text("Build: ${_appVersion?.build}")),
               ),
               Visibility(
                 visible: AppTokenType == TokenType.Waves,

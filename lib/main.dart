@@ -83,19 +83,18 @@ class MyApp extends StatelessWidget {
           }
         },
         child: MaterialApp(
-          //debugShowCheckedModeBanner: false,
-          title: AppTitle,
-          theme: ThemeData(
-            brightness: ZapBrightness,
-            primaryColor: ZapWhite,
-            accentColor: ZapBlue,
-            textTheme: ZapTextThemer(Theme.of(context).textTheme),
-            primaryTextTheme: ZapTextThemer(Theme.of(context).textTheme),
-          ),
-          home: DefaultTabController(
-            length: WebviewURL == null ? 2 : 3,
-            child: ZapHomePage(AppTitle)
-        )));
+            //debugShowCheckedModeBanner: false,
+            title: AppTitle,
+            theme: ThemeData(
+              brightness: ZapBrightness,
+              primaryColor: ZapWhite,
+              accentColor: ZapBlue,
+              textTheme: ZapTextThemer(Theme.of(context).textTheme),
+              primaryTextTheme: ZapTextThemer(Theme.of(context).textTheme),
+            ),
+            home: DefaultTabController(
+                length: WebviewURL == null ? 2 : 3,
+                child: ZapHomePage(AppTitle))));
   }
 }
 
@@ -901,9 +900,9 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   Future<InitTokenDetailsResult> _initTokenDetails() async {
     _alerts.clear();
     var pinExists = await Prefs.pinExists();
-    setState(
-      () {_pinExists = pinExists;}
-    );
+    setState(() {
+      _pinExists = pinExists;
+    });
     // check apikey
     if (UseMerchantApi && !await Prefs.hasMerchantApiKey())
       setState(() => _alerts.add('No Retailer API KEY set'));
