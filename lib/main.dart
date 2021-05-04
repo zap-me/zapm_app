@@ -92,9 +92,7 @@ class MyApp extends StatelessWidget {
               textTheme: ZapTextThemer(Theme.of(context).textTheme),
               primaryTextTheme: ZapTextThemer(Theme.of(context).textTheme),
             ),
-            home: DefaultTabController(
-                length: WebviewURL == null ? 2 : 3,
-                child: ZapHomePage(AppTitle))));
+            home: ZapHomePage(AppTitle)));
   }
 }
 
@@ -117,7 +115,8 @@ enum NoAccountAction { Register, Login, RequestApiKey }
 enum Capability { Receive, Balance, History, Spend }
 enum InitTokenDetailsResult { None, NoData, Auth, Network }
 
-class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
+class _ZapHomePageState extends State<ZapHomePage>
+    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   Socket? _merchantSocket; // merchant portal websocket
   StreamSubscription? _uniLinksSub; // uni links subscription
 
@@ -138,9 +137,13 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   bool _walletOrAcctInited = false;
   bool _walletOrAcctLoading = false;
   AppVersion? _appVersion;
-  bool _pinExists = false;
+  late TabController _tabController;
 
-  _ZapHomePageState();
+  _ZapHomePageState() {
+    _tabController =
+        TabController(vsync: this, length: WebviewURL == null ? 1 : 2);
+    _tabController.addListener(_tabChange);
+  }
 
   @override
   void initState() {
@@ -899,10 +902,6 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
 
   Future<InitTokenDetailsResult> _initTokenDetails() async {
     _alerts.clear();
-    var pinExists = await Prefs.pinExists();
-    setState(() {
-      _pinExists = pinExists;
-    });
     // check apikey
     if (UseMerchantApi && !await Prefs.hasMerchantApiKey())
       setState(() => _alerts.add('No Retailer API KEY set'));
@@ -1136,10 +1135,6 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     if (sentFunds == true) _updateBalance();
   }
 
-  void _showWallet() {
-    Navigator.pop(context);
-  }
-
   bool _haveCapabililty(Capability cap) {
     switch (AppTokenType) {
       case TokenType.Waves:
@@ -1222,13 +1217,16 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     initUniLinks();
   }
 
+  void _tabChange() {
+    print(_tabController.index);
+  }
+
   List<Tab> _buildTabs() {
     var tabs = [
-      Tab(icon: Icon(Icons.account_balance_wallet_outlined)),
-      Tab(icon: Icon(Icons.settings_outlined))
+      Tab(icon: Icon(Icons.account_balance_wallet_outlined, color: ZapBlue)),
     ];
     if (WebviewURL != null) {
-      tabs.insert(0, Tab(icon: Icon(Icons.home_outlined)));
+      tabs.insert(0, Tab(icon: Icon(Icons.home_outlined, color: ZapBlue)));
     }
     return tabs;
   }
@@ -1236,7 +1234,6 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   List<Widget> _buildTabBodies(Widget body) {
     var content = [
       body,
-      SettingsScreen(_pinExists, _mnemonicOrAccount(), _fcm)
     ];
     if (WebviewURL != null) {
       var webview = WebView(
@@ -1249,7 +1246,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     return content;
   }
 
-  Widget _appScaffold(Widget body, {bool isHomepage = false}) {
+  Widget _appScaffold(Widget body) {
     return Scaffold(
       appBar: AppBar(
         leading: Visibility(
@@ -1263,10 +1260,17 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
           visible: _alerts.length > 0,
         ),
         title: Center(child: Image.asset(AssetHeaderIconPng, height: 30)),
-        actions: [SizedBox(width: 44.0, height: 24.0)],
-        bottom: TabBar(tabs: _buildTabs()),
+        actions: [
+          IconButton(
+            onPressed: _showSettings,
+            icon: Icon(Icons.settings_outlined, color: ZapBlue),
+          )
+        ],
       ),
+      bottomNavigationBar:
+          TabBar(controller: _tabController, tabs: _buildTabs()),
       body: TabBarView(
+        controller: _tabController,
         children: _buildTabBodies(body),
       ),
     );
