@@ -23,9 +23,9 @@ const AssetBalanceIconSvg = 'assets/icon-bolt.svg';
 // enable/disable reward UI/feature
 const UseReward = false;
 // enable/disable settlement UI/feature
-const UseSettlement = true;
+const UseSettlement = false;
 // enable/disable merchant api (including all references/conversions to NZD)
-const UseMerchantApi = true;
+const UseMerchantApi = false;
 // enable/disable a webview homepage (null = disabled)
 const String? WebviewURL = null;
 
