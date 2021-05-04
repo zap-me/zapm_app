@@ -83,17 +83,16 @@ class MyApp extends StatelessWidget {
           }
         },
         child: MaterialApp(
-          //debugShowCheckedModeBanner: false,
-          title: AppTitle,
-          theme: ThemeData(
-            brightness: ZapBrightness,
-            primaryColor: ZapWhite,
-            accentColor: ZapBlue,
-            textTheme: ZapTextThemer(Theme.of(context).textTheme),
-            primaryTextTheme: ZapTextThemer(Theme.of(context).textTheme),
-          ),
-          home: ZapHomePage(AppTitle),
-        ));
+            //debugShowCheckedModeBanner: false,
+            title: AppTitle,
+            theme: ThemeData(
+              brightness: ZapBrightness,
+              primaryColor: ZapWhite,
+              accentColor: ZapBlue,
+              textTheme: ZapTextThemer(Theme.of(context).textTheme),
+              primaryTextTheme: ZapTextThemer(Theme.of(context).textTheme),
+            ),
+            home: ZapHomePage(AppTitle)));
   }
 }
 
@@ -116,7 +115,8 @@ enum NoAccountAction { Register, Login, RequestApiKey }
 enum Capability { Receive, Balance, History, Spend }
 enum InitTokenDetailsResult { None, NoData, Auth, Network }
 
-class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
+class _ZapHomePageState extends State<ZapHomePage>
+    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   Socket? _merchantSocket; // merchant portal websocket
   StreamSubscription? _uniLinksSub; // uni links subscription
 
@@ -137,8 +137,13 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   bool _walletOrAcctInited = false;
   bool _walletOrAcctLoading = false;
   AppVersion? _appVersion;
+  late TabController _tabController;
 
-  _ZapHomePageState();
+  _ZapHomePageState() {
+    _tabController =
+        TabController(vsync: this, length: WebviewURL == null ? 1 : 2);
+    _tabController.addListener(_tabChange);
+  }
 
   @override
   void initState() {
@@ -1130,24 +1135,6 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     if (sentFunds == true) _updateBalance();
   }
 
-  void _showWallet() {
-    Navigator.pop(context);
-  }
-
-  void _showHomepage() {
-    if (WebviewURL != null) {
-      var webview = WebView(
-        initialUrl: WebviewURL,
-        javascriptMode: JavascriptMode.unrestricted,
-        gestureNavigationEnabled: true,
-      );
-      Navigator.push<bool>(
-          context,
-          MaterialPageRoute(
-              builder: (context) => _appScaffold(webview, isHomepage: true)));
-    }
-  }
-
   bool _haveCapabililty(Capability cap) {
     switch (AppTokenType) {
       case TokenType.Waves:
@@ -1224,56 +1211,69 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     }
     // wallet/account now initialized
     _walletOrAcctInited = true;
-    // webview
-    _showHomepage();
     // init firebase push notifications
     _fcm = FCM(context, PremioStageIndexUrl, PremioStageName);
     // init uni links
     initUniLinks();
   }
 
-  Widget _appScaffold(Widget body, {bool isHomepage = false}) {
+  void _tabChange() {
+    print(_tabController.index);
+  }
+
+  List<Tab> _buildTabs() {
+    var tabs = [
+      Tab(icon: Icon(Icons.account_balance_wallet_outlined, color: ZapBlue)),
+    ];
+    if (WebviewURL != null) {
+      tabs.insert(0, Tab(icon: Icon(Icons.home_outlined, color: ZapBlue)));
+    }
+    return tabs;
+  }
+
+  List<Widget> _buildTabBodies(Widget body) {
+    var content = [
+      body,
+    ];
+    if (WebviewURL != null) {
+      var webview = WebView(
+        initialUrl: WebviewURL,
+        javascriptMode: JavascriptMode.unrestricted,
+        gestureNavigationEnabled: true,
+      );
+      content.insert(0, webview);
+    }
+    return content;
+  }
+
+  Widget _appScaffold(Widget body) {
     return Scaffold(
-        appBar: AppBar(
-          leading: Visibility(
-            child: IconButton(
-                onPressed: _toggleAlerts,
-                icon: Icon(Icons.warning,
-                    color: _showAlerts ? ZapGrey : ZapWarning)),
-            maintainSize: true,
-            maintainAnimation: true,
-            maintainState: true,
-            visible: _alerts.length > 0 && !isHomepage,
-          ),
-          title: Center(
-              child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                WebviewURL != null
-                    ? IconButton(
-                        icon: Icon(
-                            isHomepage ? Icons.home : Icons.home_outlined,
-                            color: ZapBlue),
-                        onPressed: isHomepage ? null : _showHomepage)
-                    : Spacer(),
-                Image.asset(AssetHeaderIconPng, height: 30),
-                WebviewURL != null
-                    ? IconButton(
-                        icon: Icon(
-                            isHomepage
-                                ? Icons.account_balance_wallet_outlined
-                                : Icons.account_balance_wallet,
-                            color: ZapBlue),
-                        onPressed: isHomepage ? _showWallet : null)
-                    : Spacer()
-              ])),
-          actions: <Widget>[
-            IconButton(
-                icon: Icon(Icons.settings_outlined, color: ZapBlue),
-                onPressed: _showSettings),
-          ],
+      appBar: AppBar(
+        leading: Visibility(
+          child: IconButton(
+              onPressed: _toggleAlerts,
+              icon: Icon(Icons.warning,
+                  color: _showAlerts ? ZapGrey : ZapWarning)),
+          maintainSize: true,
+          maintainAnimation: true,
+          maintainState: true,
+          visible: _alerts.length > 0,
         ),
-        body: body);
+        title: Center(child: Image.asset(AssetHeaderIconPng, height: 30)),
+        actions: [
+          IconButton(
+            onPressed: _showSettings,
+            icon: Icon(Icons.settings_outlined, color: ZapBlue),
+          )
+        ],
+      ),
+      bottomNavigationBar:
+          TabBar(controller: _tabController, tabs: _buildTabs()),
+      body: TabBarView(
+        controller: _tabController,
+        children: _buildTabBodies(body),
+      ),
+    );
   }
 
   @override
