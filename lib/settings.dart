@@ -63,7 +63,7 @@ class _SettingsState extends State<SettingsScreen> {
   String? _apikey;
   String? _apisecret;
   String? _apiserver;
-  int _titleTaps = 0;
+  int _versionTaps = 0;
   String? _paydbServer;
 
   _SettingsState(this._pinProtected) {
@@ -274,9 +274,9 @@ class _SettingsState extends State<SettingsScreen> {
     }
   }
 
-  void _titleTap() {
-    _titleTaps += 1;
-    if (_titleTaps > 10) {
+  void _versionTap() {
+    _versionTaps += 1;
+    if (_versionTaps > 10) {
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -297,14 +297,17 @@ class _SettingsState extends State<SettingsScreen> {
     return Scaffold(
         appBar: AppBar(
           leading: backButton(context, color: ZapBlack),
-          title: GestureDetector(onTap: _titleTap, child: Text("Settings")),
+          title: Text("Settings"),
         ),
         body: Center(
           child: ListView(
             children: <Widget>[
-              ListTile(
+              GestureDetector(
+                onTap: _versionTap,
+                child: ListTile(
                   title: Text("Version: ${_appVersion?.version}"),
                   subtitle: Text("Build: ${_appVersion?.build}")),
+              ),
               Visibility(
                 visible: AppTokenType == TokenType.Waves,
                 child: ListTile(title: Text("Libzap Version: $_libzapVersion")),

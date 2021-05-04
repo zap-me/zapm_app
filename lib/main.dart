@@ -92,8 +92,10 @@ class MyApp extends StatelessWidget {
             textTheme: ZapTextThemer(Theme.of(context).textTheme),
             primaryTextTheme: ZapTextThemer(Theme.of(context).textTheme),
           ),
-          home: ZapHomePage(AppTitle),
-        ));
+          home: DefaultTabController(
+            length: WebviewURL == null ? 2 : 3,
+            child: ZapHomePage(AppTitle)
+        )));
   }
 }
 
@@ -137,6 +139,7 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
   bool _walletOrAcctInited = false;
   bool _walletOrAcctLoading = false;
   AppVersion? _appVersion;
+  bool _pinExists = false;
 
   _ZapHomePageState();
 
@@ -897,6 +900,10 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
 
   Future<InitTokenDetailsResult> _initTokenDetails() async {
     _alerts.clear();
+    var pinExists = await Prefs.pinExists();
+    setState(
+      () {_pinExists = pinExists;}
+    );
     // check apikey
     if (UseMerchantApi && !await Prefs.hasMerchantApiKey())
       setState(() => _alerts.add('No Retailer API KEY set'));
@@ -1134,20 +1141,6 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     Navigator.pop(context);
   }
 
-  void _showHomepage() {
-    if (WebviewURL != null) {
-      var webview = WebView(
-        initialUrl: WebviewURL,
-        javascriptMode: JavascriptMode.unrestricted,
-        gestureNavigationEnabled: true,
-      );
-      Navigator.push<bool>(
-          context,
-          MaterialPageRoute(
-              builder: (context) => _appScaffold(webview, isHomepage: true)));
-    }
-  }
-
   bool _haveCapabililty(Capability cap) {
     switch (AppTokenType) {
       case TokenType.Waves:
@@ -1224,56 +1217,60 @@ class _ZapHomePageState extends State<ZapHomePage> with WidgetsBindingObserver {
     }
     // wallet/account now initialized
     _walletOrAcctInited = true;
-    // webview
-    _showHomepage();
     // init firebase push notifications
     _fcm = FCM(context, PremioStageIndexUrl, PremioStageName);
     // init uni links
     initUniLinks();
   }
 
+  List<Tab> _buildTabs() {
+    var tabs = [
+      Tab(icon: Icon(Icons.account_balance_wallet_outlined)),
+      Tab(icon: Icon(Icons.settings_outlined))
+    ];
+    if (WebviewURL != null) {
+      tabs.insert(0, Tab(icon: Icon(Icons.home_outlined)));
+    }
+    return tabs;
+  }
+
+  List<Widget> _buildTabBodies(Widget body) {
+    var content = [
+      body,
+      SettingsScreen(_pinExists, _mnemonicOrAccount(), _fcm)
+    ];
+    if (WebviewURL != null) {
+      var webview = WebView(
+        initialUrl: WebviewURL,
+        javascriptMode: JavascriptMode.unrestricted,
+        gestureNavigationEnabled: true,
+      );
+      content.insert(0, webview);
+    }
+    return content;
+  }
+
   Widget _appScaffold(Widget body, {bool isHomepage = false}) {
     return Scaffold(
-        appBar: AppBar(
-          leading: Visibility(
-            child: IconButton(
-                onPressed: _toggleAlerts,
-                icon: Icon(Icons.warning,
-                    color: _showAlerts ? ZapGrey : ZapWarning)),
-            maintainSize: true,
-            maintainAnimation: true,
-            maintainState: true,
-            visible: _alerts.length > 0 && !isHomepage,
-          ),
-          title: Center(
-              child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                WebviewURL != null
-                    ? IconButton(
-                        icon: Icon(
-                            isHomepage ? Icons.home : Icons.home_outlined,
-                            color: ZapBlue),
-                        onPressed: isHomepage ? null : _showHomepage)
-                    : Spacer(),
-                Image.asset(AssetHeaderIconPng, height: 30),
-                WebviewURL != null
-                    ? IconButton(
-                        icon: Icon(
-                            isHomepage
-                                ? Icons.account_balance_wallet_outlined
-                                : Icons.account_balance_wallet,
-                            color: ZapBlue),
-                        onPressed: isHomepage ? _showWallet : null)
-                    : Spacer()
-              ])),
-          actions: <Widget>[
-            IconButton(
-                icon: Icon(Icons.settings_outlined, color: ZapBlue),
-                onPressed: _showSettings),
-          ],
+      appBar: AppBar(
+        leading: Visibility(
+          child: IconButton(
+              onPressed: _toggleAlerts,
+              icon: Icon(Icons.warning,
+                  color: _showAlerts ? ZapGrey : ZapWarning)),
+          maintainSize: true,
+          maintainAnimation: true,
+          maintainState: true,
+          visible: _alerts.length > 0,
         ),
-        body: body);
+        title: Center(child: Image.asset(AssetHeaderIconPng, height: 30)),
+        actions: [SizedBox(width: 44.0, height: 24.0)],
+        bottom: TabBar(tabs: _buildTabs()),
+      ),
+      body: TabBarView(
+        children: _buildTabBodies(body),
+      ),
+    );
   }
 
   @override
