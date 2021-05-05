@@ -118,8 +118,7 @@ class _ZapHomePageState extends State<ZapHomePage>
 
   _ZapHomePageState() {
     _ws = WalletState(_txNotification, _walletStateUpdate);
-    _tabController =
-        TabController(vsync: this, length: _buildTabCount());
+    _tabController = TabController(vsync: this, length: _buildTabCount());
     _tabController.addListener(_tabChange);
   }
 
@@ -144,8 +143,7 @@ class _ZapHomePageState extends State<ZapHomePage>
         if (result.error == NO_ERROR) {
           var tx = await Navigator.push(
             context,
-            MaterialPageRoute(
-                builder: (context) => SendScreen(_ws, uri)),
+            MaterialPageRoute(builder: (context) => SendScreen(_ws, uri)),
           );
           if (tx != null) _updateBalance();
           return true;
@@ -159,9 +157,7 @@ class _ZapHomePageState extends State<ZapHomePage>
         if (PayDbUri.parse(uri) != null) {
           var tx = await Navigator.push(
             context,
-            MaterialPageRoute(
-                builder: (context) =>
-                    SendScreen(_ws, uri)),
+            MaterialPageRoute(builder: (context) => SendScreen(_ws, uri)),
           );
           if (tx != null) _updateBalance();
           return true;
@@ -229,8 +225,7 @@ class _ZapHomePageState extends State<ZapHomePage>
       if (qr != null) {
         var tx = await Navigator.push<Tx>(
           context,
-          MaterialPageRoute(
-              builder: (context) => CentrapayScreen(_ws, qr)),
+          MaterialPageRoute(builder: (context) => CentrapayScreen(_ws, qr)),
         );
         if (tx != null) _updateBalance();
         return true;
@@ -369,7 +364,8 @@ class _ZapHomePageState extends State<ZapHomePage>
   }
 
   void _copyAddrOrAccount() {
-    Clipboard.setData(ClipboardData(text: _ws.addrOrAccountValue())).then((value) {
+    Clipboard.setData(ClipboardData(text: _ws.addrOrAccountValue()))
+        .then((value) {
       flushbarMsg(context, 'copied ${_ws.addrOrAccount()} to clipboard');
     });
   }
@@ -385,8 +381,7 @@ class _ZapHomePageState extends State<ZapHomePage>
         if (result != null) {
           var tx = await Navigator.push(
             context,
-            MaterialPageRoute(
-                builder: (context) => SendScreen(_ws, value)),
+            MaterialPageRoute(builder: (context) => SendScreen(_ws, value)),
           );
           if (tx != null) _updateBalance();
           return;
@@ -407,8 +402,7 @@ class _ZapHomePageState extends State<ZapHomePage>
         if (paydbParseValid(value)) {
           var tx = await Navigator.push(
             context,
-            MaterialPageRoute(
-                builder: (context) => SendScreen(_ws, value)),
+            MaterialPageRoute(builder: (context) => SendScreen(_ws, value)),
           );
           if (tx != null) _updateBalance();
           return;
@@ -429,8 +423,7 @@ class _ZapHomePageState extends State<ZapHomePage>
   void _send() async {
     var tx = await Navigator.push(
       context,
-      MaterialPageRoute(
-          builder: (context) => SendScreen(_ws, '')),
+      MaterialPageRoute(builder: (context) => SendScreen(_ws, '')),
     );
     if (tx != null) _updateBalance();
   }
@@ -439,8 +432,8 @@ class _ZapHomePageState extends State<ZapHomePage>
     await Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (context) =>
-              ReceiveScreen(_ws.testnet, _ws.addrOrAccountValue(), _txNotification)),
+          builder: (context) => ReceiveScreen(
+              _ws.testnet, _ws.addrOrAccountValue(), _txNotification)),
     );
   }
 
@@ -448,7 +441,8 @@ class _ZapHomePageState extends State<ZapHomePage>
     var sentFunds = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-          builder: (context) => RewardScreen(_ws.walletMnemonic, _ws.fee, _ws.balance)),
+          builder: (context) =>
+              RewardScreen(_ws.walletMnemonic, _ws.fee, _ws.balance)),
     );
     if (sentFunds == true) _updateBalance();
   }
@@ -496,7 +490,6 @@ class _ZapHomePageState extends State<ZapHomePage>
       _walletOrAcctLoading = loading;
       _ws = _ws;
     });
-
   }
 
   void _tabChange() {
@@ -511,7 +504,9 @@ class _ZapHomePageState extends State<ZapHomePage>
   }
 
   ScrollPhysics _buildTabPhysics() {
-    return WebviewURL != null ? NeverScrollableScrollPhysics() : ClampingScrollPhysics();
+    return WebviewURL != null
+        ? NeverScrollableScrollPhysics()
+        : ClampingScrollPhysics();
   }
 
   List<Tab> _buildTabs() {
@@ -527,11 +522,7 @@ class _ZapHomePageState extends State<ZapHomePage>
   }
 
   List<Widget> _buildTabBodies(Widget body) {
-    var content = [
-      body, 
-      TransactionsScreen(_ws),
-      SettingsScreen(_ws, _fcm)
-    ];
+    var content = [body, TransactionsScreen(_ws), SettingsScreen(_ws, _fcm)];
     if (WebviewURL != null) {
       var webview = WebView(
         initialUrl: WebviewURL,
@@ -545,44 +536,43 @@ class _ZapHomePageState extends State<ZapHomePage>
 
   Widget _appScaffold(Widget body) {
     return Scaffold(
-      appBar: AppBar(
-        leading: Visibility(
-          child: IconButton(
-              onPressed: _toggleAlerts,
-              icon: Icon(Icons.warning,
-                  color: _showAlerts ? ZapGrey : ZapWarning)),
-          maintainSize: true,
-          maintainAnimation: true,
-          maintainState: true,
-          visible: _ws.alerts.length > 0,
-        ),
-        title: Center(child: Image.asset(AssetHeaderIconPng, height: 30)),
-        actions: [Visibility(
-          child: IconButton(
-            onPressed: _toggleAlerts,
-            icon: Icon(Icons.settings_outlined, color: ZapBlue),
+        appBar: AppBar(
+          leading: Visibility(
+            child: IconButton(
+                onPressed: _toggleAlerts,
+                icon: Icon(Icons.warning,
+                    color: _showAlerts ? ZapGrey : ZapWarning)),
+            maintainSize: true,
+            maintainAnimation: true,
+            maintainState: true,
+            visible: _ws.alerts.length > 0,
           ),
-          maintainSize: true,
-          maintainAnimation: true,
-          maintainState: true,
-          visible: false),
-        ],
-      ),
-      bottomNavigationBar:
-          TabBar(controller: _tabController, tabs: _buildTabs()),
-      body: Column(children: [
-        Visibility(
-            visible: _showAlerts && _ws.alerts.length > 0,
-            child: AlertDrawer(_toggleAlerts, _ws.alerts)),
-        Expanded(child:
-          TabBarView(
+          title: Center(child: Image.asset(AssetHeaderIconPng, height: 30)),
+          actions: [
+            Visibility(
+                child: IconButton(
+                  onPressed: _toggleAlerts,
+                  icon: Icon(Icons.settings_outlined, color: ZapBlue),
+                ),
+                maintainSize: true,
+                maintainAnimation: true,
+                maintainState: true,
+                visible: false),
+          ],
+        ),
+        bottomNavigationBar:
+            TabBar(controller: _tabController, tabs: _buildTabs()),
+        body: Column(children: [
+          Visibility(
+              visible: _showAlerts && _ws.alerts.length > 0,
+              child: AlertDrawer(_toggleAlerts, _ws.alerts)),
+          Expanded(
+              child: TabBarView(
             physics: _buildTabPhysics(),
             controller: _tabController,
             children: _buildTabBodies(body),
-          )
-        )
-      ])
-    );
+          ))
+        ]));
   }
 
   @override
@@ -731,13 +721,14 @@ class _ZapHomePageState extends State<ZapHomePage>
                     ),
                     SizedBox.fromSize(size: Size(1, 10)),
                     Visibility(
-                      visible: _ws.haveCapabililty(Capability.Spend) && UseReward,
+                      visible:
+                          _ws.haveCapabililty(Capability.Spend) && UseReward,
                       child: ListButton(
                           _zapReward, '$AssetShortNameLower rewards'),
                     ),
                     Visibility(
-                      visible:
-                          _ws.haveCapabililty(Capability.Spend) && UseSettlement,
+                      visible: _ws.haveCapabililty(Capability.Spend) &&
+                          UseSettlement,
                       child: ListButton(_settlement, 'make settlement'),
                     ),
                     ListButtonEnd(),

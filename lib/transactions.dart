@@ -35,8 +35,7 @@ class GenTx {
 class TransactionsScreen extends StatefulWidget {
   final WalletState _ws;
 
-  TransactionsScreen(this._ws)
-      : super();
+  TransactionsScreen(this._ws) : super();
 
   @override
   _TransactionsState createState() => new _TransactionsState();
@@ -146,7 +145,8 @@ class _TransactionsState extends State<TransactionsScreen> {
       var failed = false;
       while (true) {
         var res = await _downloadMoreTxs(_downloadCount);
-        if (!this.mounted) // check that the page has not been disposed while we were downloading
+        if (!this
+            .mounted) // check that the page has not been disposed while we were downloading
           return;
         if (res.downloadCount == 0) {
           flushbarMsg(context, 'failed to load transactions',
@@ -158,7 +158,8 @@ class _TransactionsState extends State<TransactionsScreen> {
         if (count >= _displayCount || res.downloadCount < remaining) break;
         remaining = _displayCount - count;
       }
-      if (!this.mounted) // check that the page has not been disposed while we were downloading
+      if (!this
+          .mounted) // check that the page has not been disposed while we were downloading
         return;
       setState(() {
         if (!failed) {
@@ -188,8 +189,7 @@ class _TransactionsState extends State<TransactionsScreen> {
     var amount = Decimal.fromInt(tx.amount) / Decimal.fromInt(100);
     var amountText = "${amount.toStringAsFixed(2)} $AssetShortNameUpper";
     if (widget._ws.rates != null)
-      amountText =
-          "$amountText / ${toNZDAmount(amount, widget._ws.rates!)}";
+      amountText = "$amountText / ${toNZDAmount(amount, widget._ws.rates!)}";
     amountText = outgoing ? '- $amountText' : '+ $amountText';
     var fee = Decimal.fromInt(tx.fee) / Decimal.fromInt(100);
     var feeText = fee.toStringAsFixed(2);
@@ -306,73 +306,64 @@ class _TransactionsState extends State<TransactionsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
         body: Center(
-          child: Column(
-            mainAxisAlignment:
-                _loading ? MainAxisAlignment.center : MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.center,
+      child: Column(
+        mainAxisAlignment:
+            _loading ? MainAxisAlignment.center : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          Visibility(
+              visible: !_loading && _txsFiltered.length == 0,
+              child: Text("Nothing here..")),
+          Visibility(
+              visible: !_loading,
+              child: Expanded(
+                  child: ListView.builder(
+                itemCount: _buildTxListMax(),
+                itemBuilder: (BuildContext context, int index) =>
+                    _buildTxList(context, index),
+              ))),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
               Visibility(
-                  visible: !_loading && _txsFiltered.length == 0,
-                  child: Text("Nothing here..")),
+                  maintainSize: true,
+                  maintainState: true,
+                  maintainAnimation: true,
+                  visible: !_loading && _less,
+                  child: Container(
+                      padding: const EdgeInsets.all(5),
+                      child: RoundedButton(
+                          () => _loadTxs(LoadDirection.Previous),
+                          ZapBlue,
+                          ZapWhite,
+                          'prev',
+                          icon: Icons.navigate_before,
+                          borderColor: ZapBlue))),
               Visibility(
                   visible: !_loading,
-                  child: Expanded(
-                      child: ListView.builder(
-                    itemCount: _buildTxListMax(),
-                    itemBuilder: (BuildContext context, int index) =>
-                        _buildTxList(context, index),
-                  ))),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Visibility(
-                      maintainSize: true,
-                      maintainState: true,
-                      maintainAnimation: true,
-                      visible: !_loading && _less,
-                      child: Container(
-                          padding: const EdgeInsets.all(5),
-                          child: RoundedButton(
-                              () => _loadTxs(LoadDirection.Previous),
-                              ZapBlue,
-                              ZapWhite,
-                              'prev',
-                              icon: Icons.navigate_before,
-                              borderColor: ZapBlue))),
-                  Visibility(
-                    visible: !_loading,
-                    child:
-                      Container(
-                          padding: const EdgeInsets.all(5),
-                          child: RoundedButton(
-                              () => _exportJson(),
-                              ZapBlue,
-                              ZapWhite,
-                              'save file',
-                              icon: Icons.save,
-                              borderColor: ZapBlue))),
-                  Visibility(
-                      maintainSize: true,
-                      maintainState: true,
-                      maintainAnimation: true,
-                      visible: !_loading && _more,
-                      child: Container(
-                          padding: const EdgeInsets.all(5),
-                          child: RoundedButton(
-                              () => _loadTxs(LoadDirection.Next),
-                              ZapBlue,
-                              ZapWhite,
-                              'next',
-                              icon: Icons.navigate_next,
-                              borderColor: ZapBlue))),
-                ],
-              ),
+                  child: Container(
+                      padding: const EdgeInsets.all(5),
+                      child: RoundedButton(
+                          () => _exportJson(), ZapBlue, ZapWhite, 'save file',
+                          icon: Icons.save, borderColor: ZapBlue))),
               Visibility(
-                visible: _loading,
-                child: CircularProgressIndicator(),
-              ),
+                  maintainSize: true,
+                  maintainState: true,
+                  maintainAnimation: true,
+                  visible: !_loading && _more,
+                  child: Container(
+                      padding: const EdgeInsets.all(5),
+                      child: RoundedButton(() => _loadTxs(LoadDirection.Next),
+                          ZapBlue, ZapWhite, 'next',
+                          icon: Icons.navigate_next, borderColor: ZapBlue))),
             ],
           ),
-        ));
+          Visibility(
+            visible: _loading,
+            child: CircularProgressIndicator(),
+          ),
+        ],
+      ),
+    ));
   }
 }

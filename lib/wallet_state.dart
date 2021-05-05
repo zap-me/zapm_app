@@ -27,8 +27,8 @@ enum NoAccountAction { Register, Login, RequestApiKey }
 enum Capability { Receive, Balance, History, Spend }
 enum InitTokenDetailsResult { None, NoData, Auth, Network }
 
-typedef WalletStateUpdateCallback = void Function(WalletState ws, bool updatingBalance,
-    bool loading);
+typedef WalletStateUpdateCallback = void Function(
+    WalletState ws, bool updatingBalance, bool loading);
 
 class WalletState {
   WalletState(this._txNotification, this._update);
@@ -432,8 +432,8 @@ class WalletState {
     return null;
   }
 
-  Future<String?> _paydbApiKeyClaim(BuildContext context,
-      AccountRequestApiKey req, String token) async {
+  Future<String?> _paydbApiKeyClaim(
+      BuildContext context, AccountRequestApiKey req, String token) async {
     var result = await paydbApiKeyClaim(token);
     switch (result.error) {
       case PayDbError.Auth:
@@ -527,7 +527,8 @@ class WalletState {
               assert(result.token != null);
               while (await _waitApiKeyAccountDialog(context)) {
                 // claim api key
-                accountEmail = await _paydbApiKeyClaim(context, req, result.token!);
+                accountEmail =
+                    await _paydbApiKeyClaim(context, req, result.token!);
                 if (accountEmail != null) break;
               }
               break;
@@ -547,8 +548,7 @@ class WalletState {
     _testnet = await _setTestnet();
     var testnetText = 'Testnet!';
     if (_testnet && !_alerts.contains(testnetText)) _alerts.add(testnetText);
-    if (!_testnet && _alerts.contains(testnetText))
-      _alerts.remove(testnetText);
+    if (!_testnet && _alerts.contains(testnetText)) _alerts.remove(testnetText);
     return true;
   }
 
@@ -565,7 +565,8 @@ class WalletState {
         // get balance
         var balanceResult = await LibZap.addressBalance(_wallet.address);
         if (balanceResult.success) {
-          _balance = Decimal.fromInt(balanceResult.value) / Decimal.fromInt(100);
+          _balance =
+              Decimal.fromInt(balanceResult.value) / Decimal.fromInt(100);
         }
         break;
       case TokenType.PayDB:
@@ -738,5 +739,4 @@ class WalletState {
     }
     return testnet;
   }
-
 }

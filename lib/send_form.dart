@@ -19,8 +19,7 @@ class SendForm extends StatefulWidget {
   final WalletState _ws;
   final String _recipientOrUri;
 
-  SendForm(this._ws, this._recipientOrUri)
-      : super();
+  SendForm(this._ws, this._recipientOrUri) : super();
 
   @override
   SendFormState createState() {
@@ -39,7 +38,8 @@ class SendFormState extends State<SendForm> {
   bool setRecipientOrUri(String recipientOrUri) {
     switch (AppTokenType) {
       case TokenType.Waves:
-        var result = parseRecipientOrWavesUri(widget._ws.testnet, recipientOrUri);
+        var result =
+            parseRecipientOrWavesUri(widget._ws.testnet, recipientOrUri);
         if (result == recipientOrUri) {
           _recipientController.text = recipientOrUri;
           return true;
@@ -142,7 +142,11 @@ class SendFormState extends State<SendForm> {
             // create tx
             var libzap = LibZap();
             var spendTx = libzap.transactionCreate(
-                widget._ws.mnemonicOrAccount(), recipient, amount, fee, _attachment);
+                widget._ws.mnemonicOrAccount(),
+                recipient,
+                amount,
+                fee,
+                _attachment);
             if (spendTx.success) {
               var tx = await Navigator.push<Tx>(
                 context,
@@ -238,8 +242,8 @@ class SendFormState extends State<SendForm> {
             decoration: InputDecoration(
                 labelText: '$AssetShortNameUpper amount',
                 suffixIcon: flatButton(
-                    onPressed: () =>
-                        _amountController.text = '${widget._ws.balance - widget._ws.fee}',
+                    onPressed: () => _amountController.text =
+                        '${widget._ws.balance - widget._ws.fee}',
                     child: Text('max', style: TextStyle(color: ZapYellow)))),
             validator: (value) {
               if (value == null || value.isEmpty) {

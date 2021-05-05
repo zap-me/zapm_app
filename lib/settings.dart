@@ -43,8 +43,7 @@ class SettingsScreen extends StatefulWidget {
   final WalletState _ws;
   final FCM? _fcm;
 
-  SettingsScreen(this._ws, this._fcm)
-      : super();
+  SettingsScreen(this._ws, this._fcm) : super();
 
   @override
   _SettingsState createState() => new _SettingsState();
@@ -283,8 +282,8 @@ class _SettingsState extends State<SettingsScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => HiddenScreen(
-                _testnet, widget._fcm?.getToken(), widget._ws.mnemonicOrAccount())),
+            builder: (context) => HiddenScreen(_testnet,
+                widget._fcm?.getToken(), widget._ws.mnemonicOrAccount())),
       );
     }
   }
@@ -299,171 +298,169 @@ class _SettingsState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
         body: Center(
-          child: ListView(
-            children: <Widget>[
-              GestureDetector(
-                onTap: _versionTap,
-                child: ListTile(
-                    title: Text("Version: ${_appVersion?.version}"),
-                    subtitle: Text("Build: ${_appVersion?.build}")),
-              ),
-              Visibility(
-                visible: AppTokenType == TokenType.Waves,
-                child: ListTile(title: Text("Libzap Version: $_libzapVersion")),
-              ),
-              Visibility(
-                visible: AppTokenType == TokenType.PayDB,
-                child: ListTile(title: Text("Server: $_paydbServer")),
-              ),
-              Container(
-                padding: const EdgeInsets.only(top: 18.0),
-                child: SwitchListTile(
-                  value: _testnet,
-                  title: Text("Testnet"),
-                  onChanged: (value) async {
-                    _toggleTestnet();
-                  },
-                ),
-              ),
-              Visibility(
-                  visible: !_secondary,
-                  child: Column(
-                    children: <Widget>[
-                      Container(
+      child: ListView(
+        children: <Widget>[
+          GestureDetector(
+            onTap: _versionTap,
+            child: ListTile(
+                title: Text("Version: ${_appVersion?.version}"),
+                subtitle: Text("Build: ${_appVersion?.build}")),
+          ),
+          Visibility(
+            visible: AppTokenType == TokenType.Waves,
+            child: ListTile(title: Text("Libzap Version: $_libzapVersion")),
+          ),
+          Visibility(
+            visible: AppTokenType == TokenType.PayDB,
+            child: ListTile(title: Text("Server: $_paydbServer")),
+          ),
+          Container(
+            padding: const EdgeInsets.only(top: 18.0),
+            child: SwitchListTile(
+              value: _testnet,
+              title: Text("Testnet"),
+              onChanged: (value) async {
+                _toggleTestnet();
+              },
+            ),
+          ),
+          Visibility(
+              visible: !_secondary,
+              child: Column(
+                children: <Widget>[
+                  Container(
+                    padding: const EdgeInsets.only(top: 18.0),
+                    child: ListTile(
+                      title: Text("Pin Protect Settings and Spending"),
+                      trailing: _pinProtected
+                          ? Icon(Icons.lock)
+                          : Icon(Icons.lock_open),
+                    ),
+                  ),
+                  Visibility(
+                    visible: !_pinProtected,
+                    child: Container(
+                      child: ListTile(
+                        title: raisedButtonIcon(
+                            label: Text("Create Pin"),
+                            icon: Icon(Icons.lock),
+                            onPressed: _addPin),
+                      ),
+                    ),
+                  ),
+                  Visibility(
+                    visible: _pinProtected,
+                    child: Container(
+                      child: ListTile(
+                        title: raisedButtonIcon(
+                            label: Text("Change Pin"),
+                            icon: Icon(Icons.lock),
+                            onPressed: _changePin),
+                      ),
+                    ),
+                  ),
+                  Visibility(
+                    visible: _pinProtected,
+                    child: Container(
+                      child: ListTile(
+                        title: raisedButtonIcon(
+                            label: Text("Remove Pin"),
+                            icon: Icon(Icons.lock),
+                            onPressed: _removePin),
+                      ),
+                    ),
+                  ),
+                  Visibility(
+                    visible: !_showMnemonic && AppTokenType == TokenType.Waves,
+                    child: Container(
+                      padding: const EdgeInsets.only(top: 18.0),
+                      child: ListTile(
+                          title: raisedButtonIcon(
+                              label: Text("Show Recovery Words"),
+                              icon: Icon(
+                                  _pinProtected ? Icons.lock : Icons.lock_open),
+                              onPressed: () async {
+                                if (!await pinCheck(
+                                    context, await Prefs.pinGet())) {
+                                  return;
+                                }
+                                setState(() => _showMnemonic = true);
+                              })),
+                    ),
+                  ),
+                  Visibility(
+                      visible: _showMnemonic && AppTokenType == TokenType.Waves,
+                      child: Container(
                         padding: const EdgeInsets.only(top: 18.0),
                         child: ListTile(
-                          title: Text("Pin Protect Settings and Spending"),
-                          trailing: _pinProtected
+                          title: Text("Recovery words"),
+                          subtitle: _recoveryWords(),
+                          trailing: _mnemonicPasswordProtected
                               ? Icon(Icons.lock)
                               : Icon(Icons.lock_open),
                         ),
-                      ),
-                      Visibility(
-                        visible: !_pinProtected,
-                        child: Container(
-                          child: ListTile(
-                            title: raisedButtonIcon(
-                                label: Text("Create Pin"),
-                                icon: Icon(Icons.lock),
-                                onPressed: _addPin),
-                          ),
-                        ),
-                      ),
-                      Visibility(
-                        visible: _pinProtected,
-                        child: Container(
-                          child: ListTile(
-                            title: raisedButtonIcon(
-                                label: Text("Change Pin"),
-                                icon: Icon(Icons.lock),
-                                onPressed: _changePin),
-                          ),
-                        ),
-                      ),
-                      Visibility(
-                        visible: _pinProtected,
-                        child: Container(
-                          child: ListTile(
-                            title: raisedButtonIcon(
-                                label: Text("Remove Pin"),
-                                icon: Icon(Icons.lock),
-                                onPressed: _removePin),
-                          ),
-                        ),
-                      ),
-                      Visibility(
-                        visible:
-                            !_showMnemonic && AppTokenType == TokenType.Waves,
-                        child: Container(
-                          padding: const EdgeInsets.only(top: 18.0),
-                          child: ListTile(
-                            title: raisedButtonIcon(
-                                label: Text("Show Recovery Words"),
-                                icon: Icon(_pinProtected ? Icons.lock : Icons.lock_open),
-                                onPressed: () async {
-                                    if (!await pinCheck(context, await Prefs.pinGet())) {
-                                      return;
-                                    }
-                                    setState(() => _showMnemonic = true);
-                                }
-                              )
-                          ),
-                        ),
-                      ),
-                      Visibility(
-                          visible:
-                              _showMnemonic && AppTokenType == TokenType.Waves,
-                          child: Container(
-                            padding: const EdgeInsets.only(top: 18.0),
-                            child: ListTile(
-                              title: Text("Recovery words"),
-                              subtitle: _recoveryWords(),
-                              trailing: _mnemonicPasswordProtected
-                                  ? Icon(Icons.lock)
-                                  : Icon(Icons.lock_open),
-                            ),
-                          )),
-                      Visibility(
-                        visible: !_mnemonicPasswordProtected &&
-                            AppTokenType == TokenType.Waves,
-                        child: Container(
-                          child: ListTile(
-                            title: raisedButtonIcon(
-                                label: Text("Password Protect Recovery words"),
-                                icon: Icon(Icons.lock),
-                                onPressed: _addPasswordProtection),
-                          ),
-                        ),
-                      ),
-                    ],
-                  )),
-              Visibility(
-                  visible: UseMerchantApi,
-                  child: Column(children: <Widget>[
-                    Container(
-                      padding: const EdgeInsets.only(top: 18.0),
+                      )),
+                  Visibility(
+                    visible: !_mnemonicPasswordProtected &&
+                        AppTokenType == TokenType.Waves,
+                    child: Container(
                       child: ListTile(
                         title: raisedButtonIcon(
-                            label: Text("Scan Api Key"),
-                            icon: Icon(MaterialCommunityIcons.qrcode_scan),
-                            onPressed: !_secondary ? _scanApikey : null),
+                            label: Text("Password Protect Recovery words"),
+                            icon: Icon(Icons.lock),
+                            onPressed: _addPasswordProtection),
                       ),
                     ),
-                    ListTile(
-                      title: Text("Device Name"),
-                      subtitle: Text("$_deviceName"),
-                      trailing: raisedButtonIcon(
-                          label: Text("Edit"),
-                          icon: Icon(Icons.edit),
-                          onPressed: !_secondary ? _editDeviceName : null),
-                    ),
-                    ListTile(
-                      title: Text("Api Key"),
-                      subtitle: Text("$_apikey"),
-                      trailing: raisedButtonIcon(
-                          label: Text("Edit"),
-                          icon: Icon(Icons.edit),
-                          onPressed: !_secondary ? _editApikey : null),
-                    ),
-                    ListTile(
-                      title: Text("Api Secret"),
-                      subtitle: Text("$_apisecret"),
-                      trailing: raisedButtonIcon(
-                          label: Text("Edit"),
-                          icon: Icon(Icons.edit),
-                          onPressed: !_secondary ? _editApisecret : null),
-                    ),
-                    ListTile(
-                      title: Text("Api Server"),
-                      subtitle: Text("$_apiserver"),
-                      trailing: raisedButtonIcon(
-                          label: Text("Edit"),
-                          icon: Icon(Icons.edit),
-                          onPressed: !_secondary ? _editApiserver : null),
-                    ),
-                  ]))
-            ],
-          ),
-        ));
+                  ),
+                ],
+              )),
+          Visibility(
+              visible: UseMerchantApi,
+              child: Column(children: <Widget>[
+                Container(
+                  padding: const EdgeInsets.only(top: 18.0),
+                  child: ListTile(
+                    title: raisedButtonIcon(
+                        label: Text("Scan Api Key"),
+                        icon: Icon(MaterialCommunityIcons.qrcode_scan),
+                        onPressed: !_secondary ? _scanApikey : null),
+                  ),
+                ),
+                ListTile(
+                  title: Text("Device Name"),
+                  subtitle: Text("$_deviceName"),
+                  trailing: raisedButtonIcon(
+                      label: Text("Edit"),
+                      icon: Icon(Icons.edit),
+                      onPressed: !_secondary ? _editDeviceName : null),
+                ),
+                ListTile(
+                  title: Text("Api Key"),
+                  subtitle: Text("$_apikey"),
+                  trailing: raisedButtonIcon(
+                      label: Text("Edit"),
+                      icon: Icon(Icons.edit),
+                      onPressed: !_secondary ? _editApikey : null),
+                ),
+                ListTile(
+                  title: Text("Api Secret"),
+                  subtitle: Text("$_apisecret"),
+                  trailing: raisedButtonIcon(
+                      label: Text("Edit"),
+                      icon: Icon(Icons.edit),
+                      onPressed: !_secondary ? _editApisecret : null),
+                ),
+                ListTile(
+                  title: Text("Api Server"),
+                  subtitle: Text("$_apiserver"),
+                  trailing: raisedButtonIcon(
+                      label: Text("Edit"),
+                      icon: Icon(Icons.edit),
+                      onPressed: !_secondary ? _editApiserver : null),
+                ),
+              ]))
+        ],
+      ),
+    ));
   }
 }

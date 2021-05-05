@@ -10,8 +10,7 @@ import 'wallet_state.dart';
 import 'merchant.dart';
 
 class SendScreen extends StatelessWidget {
-  SendScreen(this._ws, this._recipientOrUri)
-      : super();
+  SendScreen(this._ws, this._recipientOrUri) : super();
 
   final WalletState _ws;
   final String _recipientOrUri;

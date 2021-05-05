@@ -182,8 +182,7 @@ class CentrapayScreen extends StatefulWidget {
   final WalletState _ws;
   final CentrapayQr _qr;
 
-  CentrapayScreen(this._ws, this._qr)
-      : super();
+  CentrapayScreen(this._ws, this._qr) : super();
 
   @override
   CentrapayScreenState createState() {
