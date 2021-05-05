@@ -1270,6 +1270,7 @@ class _ZapHomePageState extends State<ZapHomePage>
       bottomNavigationBar:
           TabBar(controller: _tabController, tabs: _buildTabs()),
       body: TabBarView(
+        physics: WebviewURL != null ? NeverScrollableScrollPhysics() : ClampingScrollPhysics(),
         controller: _tabController,
         children: _buildTabBodies(body),
       ),
