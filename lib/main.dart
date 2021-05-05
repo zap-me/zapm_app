@@ -6,12 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:decimal/decimal.dart';
 import 'package:flutter_icons/flutter_icons.dart';
-import 'package:socket_io_client/socket_io_client.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:uni_links/uni_links.dart';
 import 'package:synchronized/synchronized.dart';
-import 'package:device_info/device_info.dart';
 import 'package:audioplayers/audio_cache.dart';
 
 import 'package:zapdart/colors.dart';
@@ -25,16 +23,13 @@ import 'send_receive.dart';
 import 'reward.dart';
 import 'settlement.dart';
 import 'settings.dart';
-import 'prefs.dart';
-import 'new_mnemonic_form.dart';
-import 'account_forms.dart';
 import 'transactions.dart';
 import 'merchant.dart';
-import 'recovery_form.dart';
 import 'centrapay.dart';
 import 'firebase.dart';
 import 'paydb.dart';
 import 'qrscan.dart';
+import 'wallet_state.dart';
 
 void main() {
   // See https://github.com/flutter/flutter/wiki/Desktop-shells#target-platform-override
@@ -105,31 +100,11 @@ class ZapHomePage extends StatefulWidget {
   _ZapHomePageState createState() => new _ZapHomePageState();
 }
 
-enum NoWalletAction {
-  CreateMnemonic,
-  RecoverMnemonic,
-  RecoverRaw,
-  ScanMerchantApiKey
-}
-enum NoAccountAction { Register, Login, RequestApiKey }
-enum Capability { Receive, Balance, History, Spend }
-enum InitTokenDetailsResult { None, NoData, Auth, Network }
-
 class _ZapHomePageState extends State<ZapHomePage>
     with WidgetsBindingObserver, SingleTickerProviderStateMixin {
-  Socket? _merchantSocket; // merchant portal websocket
   StreamSubscription? _uniLinksSub; // uni links subscription
 
-  bool _testnet = true;
-  WavesWallet _wallet = WavesWallet.empty();
-  PayDbAccount _account = PayDbAccount.empty();
-  Decimal _fee = Decimal.parse("0.01");
-  Decimal _balance = Decimal.fromInt(-1);
-  String _balanceText = "...";
-  bool _updatingBalance = true;
   bool _showAlerts = true;
-  List<String> _alerts = <String>[];
-  Rates? _merchantRates;
   String? _previousUniUri;
   final Lock _previousUniUriLock = Lock();
   FCM? _fcm;
@@ -138,8 +113,11 @@ class _ZapHomePageState extends State<ZapHomePage>
   bool _walletOrAcctLoading = false;
   AppVersion? _appVersion;
   late TabController _tabController;
+  late WalletState _ws;
+  bool _updatingBalance = true;
 
   _ZapHomePageState() {
+    _ws = WalletState(_txNotification, _walletStateUpdate);
     _tabController =
         TabController(vsync: this, length: _buildTabCount());
     _tabController.addListener(_tabChange);
@@ -153,50 +131,6 @@ class _ZapHomePageState extends State<ZapHomePage>
     super.initState();
   }
 
-  String _addrOrAccount() {
-    switch (AppTokenType) {
-      case TokenType.Waves:
-        return 'wallet address';
-      case TokenType.PayDB:
-        return 'account';
-    }
-  }
-
-  String _addrOrAccountValue() {
-    switch (AppTokenType) {
-      case TokenType.Waves:
-        if (_wallet.address.isNotEmpty) return _wallet.address;
-        break;
-      case TokenType.PayDB:
-        if (_account.email.isNotEmpty) return _account.email;
-        break;
-    }
-    return '...';
-  }
-
-  String _mnemonicOrAccount() {
-    switch (AppTokenType) {
-      case TokenType.Waves:
-        if (_wallet.isMnemonic) return _wallet.mnemonic;
-        break;
-      case TokenType.PayDB:
-        if (_account.email.isNotEmpty) return _account.email;
-        break;
-    }
-    return '...';
-  }
-
-  Widget _profileImage() {
-    switch (AppTokenType) {
-      case TokenType.Waves:
-        return SizedBox();
-      case TokenType.PayDB:
-        return Padding(
-            child: paydbAccountImage(_account.photo, _account.photoType),
-            padding: EdgeInsets.only(right: 20));
-    }
-  }
-
   Future<bool> processUri(String uri) async {
     print('$uri');
 
@@ -206,13 +140,12 @@ class _ZapHomePageState extends State<ZapHomePage>
         //
         // waves://<addr>...
         //
-        var result = parseWavesUri(_testnet, uri);
+        var result = parseWavesUri(_ws.testnet, uri);
         if (result.error == NO_ERROR) {
           var tx = await Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => SendScreen(
-                    _testnet, _wallet.mnemonic, _fee, uri, _balance)),
+                builder: (context) => SendScreen(_ws, uri)),
           );
           if (tx != null) _updateBalance();
           return true;
@@ -228,7 +161,7 @@ class _ZapHomePageState extends State<ZapHomePage>
             context,
             MaterialPageRoute(
                 builder: (context) =>
-                    SendScreen(_testnet, _account.email, _fee, uri, _balance)),
+                    SendScreen(_ws, uri)),
           );
           if (tx != null) _updateBalance();
           return true;
@@ -249,20 +182,18 @@ class _ZapHomePageState extends State<ZapHomePage>
           scheme = uri2.queryParameters['scheme']!;
         var url = uri2.replace(scheme: scheme);
         var body = {};
-        var recipient;
+        var recipient = _ws.addrOrAccountValue();
         switch (AppTokenType) {
           case TokenType.Waves:
-            if (_wallet.address.isEmpty)
+            if (recipient.isEmpty)
               throw FormatException(
                   'wallet address must be valid to claim payment');
-            recipient = _wallet.address;
             body = {'recipient': recipient, 'asset_id': LibZap().assetIdGet()};
             break;
           case TokenType.PayDB:
-            if (_account.email.isEmpty)
+            if (recipient.isEmpty)
               throw FormatException(
                   'account email must be valid to claim payment');
-            recipient = _account.email;
             body = {'recipient': recipient};
             break;
         }
@@ -299,8 +230,7 @@ class _ZapHomePageState extends State<ZapHomePage>
         var tx = await Navigator.push<Tx>(
           context,
           MaterialPageRoute(
-              builder: (context) => CentrapayScreen(
-                  _testnet, _wallet.mnemonic, _fee, _balance, qr)),
+              builder: (context) => CentrapayScreen(_ws, qr)),
         );
         if (tx != null) _updateBalance();
         return true;
@@ -348,10 +278,9 @@ class _ZapHomePageState extends State<ZapHomePage>
 
   @override
   void dispose() {
+    _ws.dispose();
     // remove WidgetsBindingObserver
     WidgetsBinding.instance?.removeObserver(this);
-    // close socket
-    _merchantSocket?.close();
     // close uni links subscription
     _uniLinksSub?.cancel();
     super.dispose();
@@ -361,16 +290,16 @@ class _ZapHomePageState extends State<ZapHomePage>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     print("App lifestyle state changed: $state");
     if (state == AppLifecycleState.resumed) if (AppTokenType == TokenType.Waves)
-      _watchAddress();
+      _ws.watchAddress(context);
   }
 
   void _txNotification(String txid, String sender, String recipient,
       double amount, String? attachment) {
     var amountString = "${amount.toStringAsFixed(2)} $AssetShortNameUpper";
     // convert amount to NZD
-    if (_merchantRates != null) {
+    if (_ws.rates != null) {
       var amountDec = Decimal.parse(amount.toString());
-      amountString += " / ${toNZDAmount(amountDec, _merchantRates!)}";
+      amountString += " / ${toNZDAmount(amountDec, _ws.rates!)}";
     }
     // decode attachment
     if (attachment != null && attachment.isNotEmpty)
@@ -422,573 +351,6 @@ class _ZapHomePageState extends State<ZapHomePage>
     _updateBalance();
   }
 
-  void _watchAddress() async {
-    assert(AppTokenType == TokenType.Waves);
-    // do nothing if the address, apikey or apisecret is not set
-    if (_wallet.address.isEmpty) return;
-    if (!await Prefs.hasMerchantApiKey()) return;
-    // register to watch our address
-    if (!await merchantWatch(_wallet.address)) {
-      flushbarMsg(context, 'failed to register address',
-          category: MessageCategory.Warning);
-      return;
-    }
-    // create socket to receive tx alerts
-    _merchantSocket?.close();
-    _merchantSocket = await merchantSocket(_txNotification);
-  }
-
-  Future<NoWalletAction> _noWalletDialog(BuildContext context) async {
-    assert(AppTokenType == TokenType.Waves);
-    var res = await showDialog<NoWalletAction>(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return SimpleDialog(
-            title: const Text(UseMerchantApi
-                ? "You do not have recovery words or an address saved, what would you like to do?"
-                : "You do not have recovery words saved, what would you like to do?"),
-            children: <Widget>[
-              SimpleDialogOption(
-                onPressed: () {
-                  Navigator.pop(context, NoWalletAction.CreateMnemonic);
-                },
-                child: const Text("Create new recovery words"),
-              ),
-              SimpleDialogOption(
-                onPressed: () {
-                  Navigator.pop(context, NoWalletAction.RecoverMnemonic);
-                },
-                child: const Text("Recover using your recovery words"),
-              ),
-              SimpleDialogOption(
-                onPressed: () {
-                  Navigator.pop(context, NoWalletAction.RecoverRaw);
-                },
-                child: const Text(
-                    "Recover using a raw seed string (advanced use only)"),
-              ),
-              Visibility(
-                  visible: UseMerchantApi,
-                  child: SimpleDialogOption(
-                      onPressed: () {
-                        Navigator.pop(
-                            context, NoWalletAction.ScanMerchantApiKey);
-                      },
-                      child: const Text("Scan retailer api key"))),
-            ],
-          );
-        });
-    if (res != null) return res;
-    return NoWalletAction.RecoverMnemonic;
-  }
-
-  Future<bool> _directLoginAccountDialog(BuildContext context) async {
-    assert(AppTokenType == TokenType.PayDB);
-    var res = await showDialog<bool>(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return SimpleDialog(
-            title: const Text("User registration in process"),
-            children: <Widget>[
-              Center(
-                  child: const Text("Complete by confirming your email",
-                      style: TextStyle(fontSize: 10))),
-              SimpleDialogOption(
-                onPressed: () {
-                  Navigator.pop(context, true);
-                },
-                child: const Text("I have confirmed my email (login now)"),
-              ),
-              SimpleDialogOption(
-                onPressed: () {
-                  Navigator.pop(context, false);
-                },
-                child: const Text("I will confirm my email later"),
-              ),
-            ],
-          );
-        });
-    return res != null && res;
-  }
-
-  Future<bool> _waitApiKeyAccountDialog(BuildContext context) async {
-    assert(AppTokenType == TokenType.PayDB);
-    var res = await showDialog<bool>(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return SimpleDialog(
-            title: const Text("API KEY request in process"),
-            children: <Widget>[
-              Center(
-                  child: const Text("Complete by confirming your email",
-                      style: TextStyle(fontSize: 10))),
-              SimpleDialogOption(
-                onPressed: () {
-                  Navigator.pop(context, true);
-                },
-                child:
-                    const Text("I have confirmed my email (claim API KEY now)"),
-              ),
-              SimpleDialogOption(
-                onPressed: () {
-                  Navigator.pop(context, false);
-                },
-                child: const Text("Cancel"),
-              ),
-            ],
-          );
-        });
-    return res != null && res;
-  }
-
-  Future<NoAccountAction> _noAccountDialog(BuildContext context) async {
-    assert(AppTokenType == TokenType.PayDB);
-    var server = await paydbServer();
-    var res = await showDialog<NoAccountAction>(
-        context: context,
-        barrierDismissible: true,
-        builder: (BuildContext context) {
-          return SimpleDialog(
-            title: const Text("Register or Login"),
-            children: <Widget>[
-              Center(
-                  child:
-                      Text("Server: $server", style: TextStyle(fontSize: 10))),
-              SimpleDialogOption(
-                onPressed: () {
-                  Navigator.pop(context, NoAccountAction.Register);
-                },
-                child: const Text("Register a new account"),
-              ),
-              SimpleDialogOption(
-                onPressed: () {
-                  Navigator.pop(context, NoAccountAction.Login);
-                },
-                child: const Text("Login to your account"),
-              ),
-              SimpleDialogOption(
-                onPressed: () {
-                  Navigator.pop(context, NoAccountAction.RequestApiKey);
-                },
-                child: const Text("Request API KEY from your account"),
-              ),
-            ],
-          );
-        });
-    if (res != null) return res;
-    return NoAccountAction.Login;
-  }
-
-  Future<String?> _recoverMnemonic(BuildContext context) {
-    return Navigator.push<String>(
-        context, MaterialPageRoute(builder: (context) => RecoveryForm()));
-  }
-
-  Future<String?> _recoverSeed(BuildContext context) async {
-    String seed = "";
-    return showDialog<String>(
-      context: context,
-      barrierDismissible:
-          false, // dialog is dismissible with a tap on the barrier
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Enter your raw seed string to recover your account"),
-          content: Row(
-            children: <Widget>[
-              Expanded(
-                  child: Container(
-                      constraints: BoxConstraints(maxWidth: 300),
-                      child: TextField(
-                        autofocus: true,
-                        decoration: InputDecoration(
-                          labelText: "Seed",
-                        ),
-                        onChanged: (value) {
-                          seed = value;
-                        },
-                      )))
-            ],
-          ),
-          actions: <Widget>[
-            raisedButton(
-                child: Text("Ok"),
-                onPressed: () => Navigator.of(context).pop(seed)),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _noWallet() async {
-    assert(AppTokenType == TokenType.Waves);
-    var libzap = LibZap();
-    while (true) {
-      String? mnemonic;
-      String? address;
-      setState(() => _walletOrAcctLoading = false);
-      var action = await _noWalletDialog(context);
-      setState(() => _walletOrAcctLoading = true);
-      switch (action) {
-        case NoWalletAction.CreateMnemonic:
-          mnemonic = libzap.mnemonicCreate();
-          if (mnemonic != null)
-            // show warning for new mnemonic
-            await Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => NewMnemonicForm(mnemonic!)),
-            );
-          break;
-        case NoWalletAction.RecoverMnemonic:
-          // recover mnemonic
-          mnemonic = await _recoverMnemonic(context);
-          if (mnemonic != null) {
-            mnemonic = mnemonic.trim();
-            mnemonic = mnemonic.replaceAll(RegExp(r"\s+"), " ");
-            mnemonic = mnemonic.toLowerCase();
-            if (!libzap.mnemonicCheck(mnemonic)) {
-              mnemonic = null;
-            }
-          }
-          if (mnemonic == null)
-            await alert(context, "Recovery words not valid",
-                "The recovery words you entered are not valid");
-          break;
-        case NoWalletAction.RecoverRaw:
-          // recover raw seed string
-          mnemonic = await _recoverSeed(context);
-          break;
-        case NoWalletAction.ScanMerchantApiKey:
-          var value = await QrScan.scan(context);
-          if (value != null) {
-            var result = parseApiKeyUri(value);
-            if (result.error == NO_ERROR) {
-              if (result.walletAddress.isEmpty) {
-                flushbarMsg(context, 'wallet address not present',
-                    category: MessageCategory.Warning);
-                break;
-              }
-              await Prefs.addressSet(result.walletAddress);
-              await Prefs.deviceNameSet(result.deviceName);
-              await Prefs.merchantApiKeySet(result.apikey);
-              await Prefs.merchantApiSecretSet(result.apisecret);
-              if (result.apiserver.isNotEmpty)
-                await Prefs.merchantApiServerSet(result.apiserver);
-              flushbarMsg(context, 'API KEY set');
-              address = result.walletAddress;
-            } else
-              flushbarMsg(context, 'invalid QR code',
-                  category: MessageCategory.Warning);
-          }
-          break;
-      }
-      if (mnemonic != null && mnemonic.isNotEmpty) {
-        await Prefs.mnemonicSet(mnemonic);
-        await alert(context, "Recovery words saved", ":)");
-        break;
-      }
-      if (address != null && address.isNotEmpty) {
-        await Prefs.addressSet(address);
-        await alert(context, "Address saved", ":)");
-        break;
-      }
-    }
-  }
-
-  Future<String> _deviceName() async {
-    var device = 'app';
-    if (Platform.isAndroid)
-      device = (await DeviceInfoPlugin().androidInfo).model;
-    if (Platform.isIOS)
-      device = (await DeviceInfoPlugin().iosInfo).utsname.machine;
-    var date = DateTime.now().toIso8601String().split('T').first;
-    return '$device - $date';
-  }
-
-  Future<String?> _paydbLogin(AccountLogin login) async {
-    var deviceName = await _deviceName();
-    var result =
-        await paydbApiKeyCreate(login.email, login.password, deviceName);
-    switch (result.error) {
-      case PayDbError.Auth:
-        await alert(context, "Authentication not valid",
-            "The login details you entered are not valid");
-        break;
-      case PayDbError.Network:
-        await alert(context, "Network error",
-            "A network error occured when trying to login");
-        break;
-      case PayDbError.None:
-        // write api key
-        if (result.apikey != null) {
-          await Prefs.paydbApiKeySet(result.apikey!.token);
-          await Prefs.paydbApiSecretSet(result.apikey!.secret);
-        }
-        return login.email;
-    }
-    return null;
-  }
-
-  Future<String?> _paydbApiKeyClaim(
-      AccountRequestApiKey req, String token) async {
-    var result = await paydbApiKeyClaim(token);
-    switch (result.error) {
-      case PayDbError.Auth:
-        await alert(context, "Authentication not valid",
-            "The login details you entered are not valid");
-        break;
-      case PayDbError.Network:
-        await alert(context, "Network error",
-            "A network error occured when trying to login");
-        break;
-      case PayDbError.None:
-        // write api key
-        if (result.apikey != null) {
-          await Prefs.paydbApiKeySet(result.apikey!.token);
-          await Prefs.paydbApiSecretSet(result.apikey!.secret);
-        }
-        return req.email;
-    }
-    return null;
-  }
-
-  Future<void> _noAccount() async {
-    assert(AppTokenType == TokenType.PayDB);
-    if (await paydbServer() == null) {
-      Prefs.testnetSet(!_testnet);
-      await _updateTestnet();
-    }
-    assert(await paydbServer() != null);
-    while (true) {
-      String? accountEmail;
-      setState(() => _walletOrAcctLoading = false);
-      var action = await _noAccountDialog(context);
-      setState(() => _walletOrAcctLoading = true);
-      switch (action) {
-        case NoAccountAction.Register:
-          AccountRegistration? registration;
-          while (accountEmail == null) {
-            // show register form
-            registration = await Navigator.push<AccountRegistration>(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => AccountRegisterForm(registration)),
-            );
-            if (registration == null) break;
-            var result = await paydbUserRegister(registration);
-            switch (result) {
-              case PayDbError.Auth:
-              case PayDbError.Network:
-                await alert(context, "Network error",
-                    "A network error occured when trying to login");
-                break;
-              case PayDbError.None:
-                if (await _directLoginAccountDialog(context))
-                  // save account if login successful
-                  accountEmail = await _paydbLogin(
-                      AccountLogin(registration.email, registration.password));
-                break;
-            }
-          }
-          break;
-        case NoAccountAction.Login:
-          AccountLogin? login;
-          while (accountEmail == null) {
-            // login form
-            login = await Navigator.push<AccountLogin>(
-              context,
-              MaterialPageRoute(builder: (context) => AccountLoginForm(login)),
-            );
-            if (login == null) break;
-            // save account if login successful
-            accountEmail = await _paydbLogin(login);
-          }
-          break;
-        case NoAccountAction.RequestApiKey:
-          // request api key form
-          var deviceName = await _deviceName();
-          var req = await Navigator.push<AccountRequestApiKey>(
-            context,
-            MaterialPageRoute(
-                builder: (context) => AccountRequestApiKeyForm(deviceName)),
-          );
-          if (req == null) break;
-          var result = await paydbApiKeyRequest(req.email, req.deviceName);
-          switch (result.error) {
-            case PayDbError.Auth:
-            case PayDbError.Network:
-              await alert(context, "Network error",
-                  "A network error occured when trying to login");
-              break;
-            case PayDbError.None:
-              assert(result.token != null);
-              while (await _waitApiKeyAccountDialog(context)) {
-                // claim api key
-                accountEmail = await _paydbApiKeyClaim(req, result.token!);
-                if (accountEmail != null) break;
-              }
-              break;
-          }
-          break;
-      }
-      if (accountEmail != null && accountEmail.isNotEmpty) {
-        _account = PayDbAccount(accountEmail, '', '', []);
-        await alert(context, "Login successful", ":)");
-        break;
-      }
-    }
-  }
-
-  Future<bool> _updateTestnet() async {
-    // update testnet
-    _testnet = await _setTestnet();
-    setState(() {
-      var testnetText = 'Testnet!';
-      if (_testnet && !_alerts.contains(testnetText)) _alerts.add(testnetText);
-      if (!_testnet && _alerts.contains(testnetText))
-        _alerts.remove(testnetText);
-    });
-    return true;
-  }
-
-  Future<bool> _updateBalance() async {
-    setState(() {
-      // start updating balance spinner
-      _updatingBalance = true;
-      // update state
-      _wallet = _wallet;
-      _account = _account;
-    });
-    var balance = Decimal.fromInt(-1);
-    var balanceText = ":(";
-    switch (AppTokenType) {
-      case TokenType.Waves:
-        // get fee
-        var feeResult = await LibZap.transactionFee();
-        if (feeResult.success)
-          _fee = Decimal.fromInt(feeResult.value) / Decimal.fromInt(100);
-        // get balance
-        var balanceResult = await LibZap.addressBalance(_wallet.address);
-        if (balanceResult.success) {
-          balance = Decimal.fromInt(balanceResult.value) / Decimal.fromInt(100);
-        }
-        break;
-      case TokenType.PayDB:
-        var result = await paydbUserInfo();
-        switch (result.error) {
-          case PayDbError.Auth:
-          case PayDbError.Network:
-            break;
-          case PayDbError.None:
-            assert(result.info != null);
-            balance =
-                Decimal.fromInt(result.info!.balance) / Decimal.fromInt(100);
-            break;
-        }
-        break;
-    }
-    balanceText = balance.toStringAsFixed(2);
-    setState(() {
-      _balance = balance;
-      _balanceText = balanceText;
-      // stop updating balance spinner
-      _updatingBalance = false;
-    });
-    return true;
-  }
-
-  Future<InitTokenDetailsResult> _initTokenDetails() async {
-    _alerts.clear();
-    // check apikey
-    if (UseMerchantApi && !await Prefs.hasMerchantApiKey())
-      setState(() => _alerts.add('No Retailer API KEY set'));
-    switch (AppTokenType) {
-      case TokenType.Waves:
-        // check mnemonic
-        if (_wallet.isEmpty) {
-          var libzap = LibZap();
-          var mnemonic = await Prefs.mnemonicGet();
-          if (mnemonic != null && mnemonic.isNotEmpty) {
-            var mnemonicPasswordProtected =
-                await Prefs.mnemonicPasswordProtectedGet();
-            if (mnemonicPasswordProtected) {
-              while (true) {
-                var password = await askMnemonicPassword(context);
-                if (password == null || password.isEmpty) {
-                  continue;
-                }
-                var iv = await Prefs.cryptoIVGet();
-                var decryptedMnemonic =
-                    decryptMnemonic(mnemonic!, iv!, password);
-                if (decryptedMnemonic == null) {
-                  await alert(context, "Could not decrypt recovery words",
-                      "the password entered is probably wrong");
-                  continue;
-                }
-                if (!libzap.mnemonicCheck(decryptedMnemonic)) {
-                  var yes = await askYesNo(
-                      context, 'The recovery words are not valid, is this ok?');
-                  if (!yes) continue;
-                }
-                mnemonic = decryptedMnemonic;
-                break;
-              }
-            }
-            var address = libzap.seedAddress(mnemonic);
-            _wallet = WavesWallet.mnemonic(mnemonic, address);
-          } else {
-            var address = await Prefs.addressGet();
-            if (address != null && address.isNotEmpty) {
-              _wallet = WavesWallet.justAddress(address);
-            } else {
-              return InitTokenDetailsResult.NoData;
-            }
-          }
-        } else if (_wallet.isMnemonic) {
-          // reinitialize wallet address (we might have toggled testnet)
-          var address = LibZap().seedAddress(_wallet.mnemonic);
-          _wallet = WavesWallet.mnemonic(_wallet.mnemonic, address);
-        }
-        break;
-      case TokenType.PayDB:
-        // check apikey
-        if (!await Prefs.hasPaydbApiKey()) return InitTokenDetailsResult.NoData;
-        var result = await paydbUserInfo();
-        switch (result.error) {
-          case PayDbError.None:
-            assert(result.info != null);
-            _account = PayDbAccount(result.info!.email, result.info!.photo,
-                result.info!.photoType, result.info!.permissions);
-            break;
-          case PayDbError.Auth:
-            var yes = await askYesNo(
-                context, 'Authentication failed, delete credentials?');
-            if (yes) {
-              await Prefs.paydbApiKeySet(null);
-              await Prefs.paydbApiKeySet(null);
-            }
-            return InitTokenDetailsResult.Auth;
-          case PayDbError.Network:
-            await alert(context, "Network error",
-                "check your network settings before continuing");
-            return InitTokenDetailsResult.Network;
-        }
-        break;
-    }
-    // update testnet and balance
-    await _updateTestnet();
-    _updateBalance();
-    // watch wallet address
-    if (AppTokenType == TokenType.Waves) _watchAddress();
-    // update merchant rates
-    if (UseMerchantApi && await Prefs.hasMerchantApiKey())
-      merchantRates().then((value) => _merchantRates = value);
-    return InitTokenDetailsResult.None;
-  }
-
   void _showQrCode() {
     showDialog<String>(
       context: context,
@@ -1000,15 +362,15 @@ class _ZapHomePageState extends State<ZapHomePage>
                     child: Container(
                         width: 300,
                         height: 300,
-                        child: QrWidget(_addrOrAccountValue(), size: 300)),
+                        child: QrWidget(_ws.addrOrAccountValue(), size: 300)),
                     onTap: () => Navigator.pop(context))));
       },
     );
   }
 
   void _copyAddrOrAccount() {
-    Clipboard.setData(ClipboardData(text: _addrOrAccountValue())).then((value) {
-      flushbarMsg(context, 'copied ${_addrOrAccount()} to clipboard');
+    Clipboard.setData(ClipboardData(text: _ws.addrOrAccountValue())).then((value) {
+      flushbarMsg(context, 'copied ${_ws.addrOrAccount()} to clipboard');
     });
   }
 
@@ -1019,13 +381,12 @@ class _ZapHomePageState extends State<ZapHomePage>
     switch (AppTokenType) {
       case TokenType.Waves:
         // waves address or uri
-        var result = parseRecipientOrWavesUri(_testnet, value);
+        var result = parseRecipientOrWavesUri(_ws.testnet, value);
         if (result != null) {
           var tx = await Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => SendScreen(
-                    _testnet, _wallet.mnemonic, _fee, value, _balance)),
+                builder: (context) => SendScreen(_ws, value)),
           );
           if (tx != null) _updateBalance();
           return;
@@ -1033,7 +394,7 @@ class _ZapHomePageState extends State<ZapHomePage>
         // merchant claim code
         var ccresult = parseClaimCodeUri(value);
         if (ccresult.error == NO_ERROR) {
-          if (await merchantClaim(ccresult.code, _wallet.address))
+          if (await merchantClaim(ccresult.code, _ws.addrOrAccountValue()))
             flushbarMsg(context, 'claim succeded');
           else
             flushbarMsg(context, 'claim failed',
@@ -1047,8 +408,7 @@ class _ZapHomePageState extends State<ZapHomePage>
           var tx = await Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => SendScreen(
-                    _testnet, _account.email, _fee, value, _balance)),
+                builder: (context) => SendScreen(_ws, value)),
           );
           if (tx != null) _updateBalance();
           return;
@@ -1070,12 +430,7 @@ class _ZapHomePageState extends State<ZapHomePage>
     var tx = await Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (context) => SendScreen(
-              _testnet,
-              _mnemonicOrAccount(),
-              AppTokenType == TokenType.Waves ? _fee : Decimal.fromInt(0),
-              '',
-              _balance)),
+          builder: (context) => SendScreen(_ws, '')),
     );
     if (tx != null) _updateBalance();
   }
@@ -1085,7 +440,7 @@ class _ZapHomePageState extends State<ZapHomePage>
       context,
       MaterialPageRoute(
           builder: (context) =>
-              ReceiveScreen(_testnet, _addrOrAccountValue(), _txNotification)),
+              ReceiveScreen(_ws.testnet, _ws.addrOrAccountValue(), _txNotification)),
     );
   }
 
@@ -1093,7 +448,7 @@ class _ZapHomePageState extends State<ZapHomePage>
     var sentFunds = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-          builder: (context) => RewardScreen(_wallet.mnemonic, _fee, _balance)),
+          builder: (context) => RewardScreen(_ws.walletMnemonic, _ws.fee, _ws.balance)),
     );
     if (sentFunds == true) _updateBalance();
   }
@@ -1103,52 +458,9 @@ class _ZapHomePageState extends State<ZapHomePage>
       context,
       MaterialPageRoute(
           builder: (context) =>
-              SettlementScreen(_wallet.mnemonic, _fee, _balance)),
+              SettlementScreen(_ws.walletMnemonic, _ws.fee, _ws.balance)),
     );
     if (sentFunds == true) _updateBalance();
-  }
-
-  bool _haveCapabililty(Capability cap) {
-    switch (AppTokenType) {
-      case TokenType.Waves:
-        switch (cap) {
-          case Capability.Receive:
-            return _wallet.address.isNotEmpty;
-          case Capability.Balance:
-          case Capability.History:
-          case Capability.Spend:
-            return _wallet.isMnemonic;
-        }
-      case TokenType.PayDB:
-        switch (cap) {
-          case Capability.Receive:
-            return _account.permissions.contains(PayDbPermission.receive);
-          case Capability.Balance:
-            return _account.permissions.contains(PayDbPermission.balance);
-          case Capability.History:
-            return _account.permissions.contains(PayDbPermission.history);
-          case Capability.Spend:
-            return _account.permissions.contains(PayDbPermission.transfer);
-        }
-    }
-  }
-
-  Future<bool> _setTestnet() async {
-    var testnet = await Prefs.testnetGet();
-    if (AppTokenType == TokenType.Waves) {
-      var libzap = LibZap();
-      libzap.networkParamsSet(AssetIdMainnet, AssetIdTestnet, NodeUrlMainnet,
-          NodeUrlTestnet, testnet);
-      if (!_wallet.isEmpty && !_wallet.isMnemonic) {
-        if (!libzap.addressCheck(_wallet.address)) {
-          testnet = !testnet;
-          libzap.networkParamsSet(AssetIdMainnet, AssetIdTestnet,
-              NodeUrlMainnet, NodeUrlTestnet, testnet);
-          await Prefs.testnetSet(testnet);
-        }
-      }
-    }
-    return testnet;
   }
 
   void _toggleAlerts() {
@@ -1156,43 +468,42 @@ class _ZapHomePageState extends State<ZapHomePage>
   }
 
   void _init() async {
-    // init _testnet var
-    _testnet = await _setTestnet();
     // get app version
     _appVersion = await AppVersion.parsePubspec();
     setState(() {
       _appVersion = _appVersion;
     });
-    // set libzap to initial testnet value so we can devrive address from mnemonic
-    var testnet = await Prefs.testnetGet();
-    LibZap().networkParamsSet(AssetIdMainnet, AssetIdTestnet, NodeUrlMainnet,
-        NodeUrlTestnet, testnet);
-    // init wallet
-    var tokenDetailsResult = InitTokenDetailsResult.NoData;
-    while (tokenDetailsResult != InitTokenDetailsResult.None) {
-      tokenDetailsResult = await _initTokenDetails();
-      if (tokenDetailsResult == InitTokenDetailsResult.NoData) {
-        switch (AppTokenType) {
-          case TokenType.Waves:
-            await _noWallet();
-            break;
-          case TokenType.PayDB:
-            await _noAccount();
-            break;
-        }
-      }
-    }
+    // init wallet state
+    await _ws.init(context);
     // wallet/account now initialized
-    _walletOrAcctInited = true;
+    setState(() {
+      _walletOrAcctInited = true;
+      _updatingBalance = false;
+    });
     // init firebase push notifications
     _fcm = FCM(context, PremioStageIndexUrl, PremioStageName);
     // init uni links
     initUniLinks();
   }
 
+  Future<void> _updateBalance() async {
+    await _ws.updateBalance();
+  }
+
+  void _walletStateUpdate(WalletState ws, bool updatingBalance, bool loading) {
+    setState(() {
+      _updatingBalance = updatingBalance;
+      _walletOrAcctLoading = loading;
+      _ws = _ws;
+    });
+
+  }
+
   void _tabChange() {
     print(_tabController.index);
-    _initTokenDetails();
+    //setState(() {
+    //  _ws = _ws;
+    //});
   }
 
   int _buildTabCount() {
@@ -1218,12 +529,8 @@ class _ZapHomePageState extends State<ZapHomePage>
   List<Widget> _buildTabBodies(Widget body) {
     var content = [
       body, 
-      TransactionsScreen(
-              _addrOrAccountValue(),
-              _testnet,
-              _haveCapabililty(Capability.Spend),
-              _merchantRates),
-      SettingsScreen(_mnemonicOrAccount(), _fcm)
+      TransactionsScreen(_ws),
+      SettingsScreen(_ws, _fcm)
     ];
     if (WebviewURL != null) {
       var webview = WebView(
@@ -1247,7 +554,7 @@ class _ZapHomePageState extends State<ZapHomePage>
           maintainSize: true,
           maintainAnimation: true,
           maintainState: true,
-          visible: _alerts.length > 0,
+          visible: _ws.alerts.length > 0,
         ),
         title: Center(child: Image.asset(AssetHeaderIconPng, height: 30)),
         actions: [Visibility(
@@ -1265,8 +572,8 @@ class _ZapHomePageState extends State<ZapHomePage>
           TabBar(controller: _tabController, tabs: _buildTabs()),
       body: Column(children: [
         Visibility(
-            visible: _showAlerts && _alerts.length > 0,
-            child: AlertDrawer(_toggleAlerts, _alerts)),
+            visible: _showAlerts && _ws.alerts.length > 0,
+            child: AlertDrawer(_toggleAlerts, _ws.alerts)),
         Expanded(child:
           TabBarView(
             physics: _buildTabPhysics(),
@@ -1303,7 +610,7 @@ class _ZapHomePageState extends State<ZapHomePage>
         child: ListView(
           children: <Widget>[
             Visibility(
-                visible: _haveCapabililty(Capability.Balance),
+                visible: _ws.haveCapabililty(Capability.Balance),
                 child: Column(
                   children: <Widget>[
                     Container(
@@ -1337,7 +644,7 @@ class _ZapHomePageState extends State<ZapHomePage>
                                         mainAxisAlignment:
                                             MainAxisAlignment.center,
                                         children: <Widget>[
-                                          Text(_balanceText,
+                                          Text(_ws.balanceText,
                                               style: TextStyle(
                                                   color: ZapBlue,
                                                   fontSize: 28)),
@@ -1356,11 +663,11 @@ class _ZapHomePageState extends State<ZapHomePage>
                   ],
                 )),
             Visibility(
-                visible: _haveCapabililty(Capability.Receive),
+                visible: _ws.haveCapabililty(Capability.Receive),
                 child: Column(children: <Widget>[
                   Container(
                     padding: const EdgeInsets.only(top: 28.0),
-                    child: Text('${_addrOrAccount()}:',
+                    child: Text('${_ws.addrOrAccount()}:',
                         style: TextStyle(
                             color: ZapBlackMed, fontWeight: FontWeight.w700),
                         textAlign: TextAlign.center),
@@ -1370,8 +677,8 @@ class _ZapHomePageState extends State<ZapHomePage>
                       child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            _profileImage(),
-                            Text(_addrOrAccountValue(),
+                            _ws.profileImage(),
+                            Text(_ws.addrOrAccountValue(),
                                 style: TextStyle(color: ZapBlackLight),
                                 textAlign: TextAlign.center),
                           ])),
@@ -1386,7 +693,7 @@ class _ZapHomePageState extends State<ZapHomePage>
                             minWidth:
                                 MediaQuery.of(context).size.width / 2 - 20),
                         RoundedButton(_copyAddrOrAccount, ZapWhite, ZapBlue,
-                            'copy ${_addrOrAccount()}',
+                            'copy ${_ws.addrOrAccount()}',
                             minWidth:
                                 MediaQuery.of(context).size.width / 2 - 20),
                       ]))
@@ -1401,14 +708,14 @@ class _ZapHomePageState extends State<ZapHomePage>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: <Widget?>[
-                        _haveCapabililty(Capability.Spend)
+                        _ws.haveCapabililty(Capability.Spend)
                             ? SquareButton(
                                 _send,
                                 MaterialCommunityIcons.chevron_double_up,
                                 ZapYellow,
                                 'SEND $AssetShortNameUpper')
                             : null,
-                        _haveCapabililty(Capability.Spend)
+                        _ws.haveCapabililty(Capability.Spend)
                             ? SquareButton(
                                 _scanQrCode,
                                 MaterialCommunityIcons.qrcode_scan,
@@ -1424,13 +731,13 @@ class _ZapHomePageState extends State<ZapHomePage>
                     ),
                     SizedBox.fromSize(size: Size(1, 10)),
                     Visibility(
-                      visible: _haveCapabililty(Capability.Spend) && UseReward,
+                      visible: _ws.haveCapabililty(Capability.Spend) && UseReward,
                       child: ListButton(
                           _zapReward, '$AssetShortNameLower rewards'),
                     ),
                     Visibility(
                       visible:
-                          _haveCapabililty(Capability.Spend) && UseSettlement,
+                          _ws.haveCapabililty(Capability.Spend) && UseSettlement,
                       child: ListButton(_settlement, 'make settlement'),
                     ),
                     ListButtonEnd(),

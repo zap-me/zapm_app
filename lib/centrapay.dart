@@ -12,6 +12,7 @@ import 'package:zapdart/colors.dart';
 
 import 'send_receive.dart';
 import 'config.dart';
+import 'wallet_state.dart';
 
 const CENTRAPAY_QR_BASE_URI = 'https://app.centrapay.com/pay';
 const CENTRAPAY_DEV_QR_BASE_URI = 'https://app.cp42.click/pay';
@@ -178,13 +179,10 @@ Future<CentrapayRequestPayResult> centrapayRequestPay(
 }
 
 class CentrapayScreen extends StatefulWidget {
-  final bool _testnet;
-  final String _seed;
-  final Decimal _fee;
-  final Decimal _max;
+  final WalletState _ws;
   final CentrapayQr _qr;
 
-  CentrapayScreen(this._testnet, this._seed, this._fee, this._max, this._qr)
+  CentrapayScreen(this._ws, this._qr)
       : super();
 
   @override
@@ -219,7 +217,7 @@ class CentrapayScreenState extends State<CentrapayScreen> {
           result.request?.status == CentrapayRequestStatusNew) {
         _req = result.request;
         for (var item in result.request!.payments)
-          if (centrapayValidPaymentMethod(item.ledger, widget._testnet)) {
+          if (centrapayValidPaymentMethod(item.ledger, widget._ws.testnet)) {
             setState(() {
               _loading = false;
               _payment = item;
@@ -273,8 +271,7 @@ class CentrapayScreenState extends State<CentrapayScreen> {
         var tx = await Navigator.push<Tx>(
           context,
           MaterialPageRoute(
-              builder: (context) => SendScreen(widget._testnet, widget._seed,
-                  widget._fee, recipientUri, widget._max)),
+              builder: (context) => SendScreen(widget._ws, recipientUri)),
         );
         if (tx == null)
           return CentrapayZapResult(true, null,

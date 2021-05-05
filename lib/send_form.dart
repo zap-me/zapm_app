@@ -13,16 +13,13 @@ import 'sending_form.dart';
 import 'prefs.dart';
 import 'paydb.dart';
 import 'qrscan.dart';
+import 'wallet_state.dart';
 
 class SendForm extends StatefulWidget {
-  final bool _testnet;
-  final String _mnemonicOrAccount;
-  final Decimal _fee;
+  final WalletState _ws;
   final String _recipientOrUri;
-  final Decimal _max;
 
-  SendForm(this._testnet, this._mnemonicOrAccount, this._fee,
-      this._recipientOrUri, this._max)
+  SendForm(this._ws, this._recipientOrUri)
       : super();
 
   @override
@@ -42,12 +39,12 @@ class SendFormState extends State<SendForm> {
   bool setRecipientOrUri(String recipientOrUri) {
     switch (AppTokenType) {
       case TokenType.Waves:
-        var result = parseRecipientOrWavesUri(widget._testnet, recipientOrUri);
+        var result = parseRecipientOrWavesUri(widget._ws.testnet, recipientOrUri);
         if (result == recipientOrUri) {
           _recipientController.text = recipientOrUri;
           return true;
         } else if (result != null) {
-          var parts = parseWavesUri(widget._testnet, recipientOrUri);
+          var parts = parseWavesUri(widget._ws.testnet, recipientOrUri);
           _recipientController.text = parts.address;
           updateRecipient(parts.address);
           _amountController.text = parts.amount.toString();
@@ -110,7 +107,7 @@ class SendFormState extends State<SendForm> {
       var amountText = _amountController.text;
       var amountDec = Decimal.parse(amountText);
       var amount = (amountDec * Decimal.fromInt(100)).toInt();
-      var fee = (widget._fee * Decimal.fromInt(100)).toInt();
+      var fee = (widget._ws.fee * Decimal.fromInt(100)).toInt();
       // double check with user
       var yesSend = await showDialog<bool>(
           context: context,
@@ -145,7 +142,7 @@ class SendFormState extends State<SendForm> {
             // create tx
             var libzap = LibZap();
             var spendTx = libzap.transactionCreate(
-                widget._mnemonicOrAccount, recipient, amount, fee, _attachment);
+                widget._ws.mnemonicOrAccount(), recipient, amount, fee, _attachment);
             if (spendTx.success) {
               var tx = await Navigator.push<Tx>(
                 context,
@@ -242,15 +239,15 @@ class SendFormState extends State<SendForm> {
                 labelText: '$AssetShortNameUpper amount',
                 suffixIcon: flatButton(
                     onPressed: () =>
-                        _amountController.text = '${widget._max - widget._fee}',
+                        _amountController.text = '${widget._ws.balance - widget._ws.fee}',
                     child: Text('max', style: TextStyle(color: ZapYellow)))),
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Please enter a value';
               }
               final dv = Decimal.parse(value);
-              if (dv > widget._max - widget._fee) {
-                return 'Max available to send is ${widget._max - widget._fee}';
+              if (dv > widget._ws.balance - widget._ws.fee) {
+                return 'Max available to send is ${widget._ws.balance - widget._ws.fee}';
               }
               if (dv <= Decimal.fromInt(0)) {
                 return 'Please enter a value greater then zero';

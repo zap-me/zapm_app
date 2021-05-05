@@ -397,7 +397,7 @@ Future<SettlementResult> merchantSettlementUpdate(
 }
 
 typedef TxNotificationCallback = void Function(String txid, String sender,
-    String recipient, double amount, String attachment);
+    String recipient, double amount, String? attachment);
 Future<Socket> merchantSocket(
     TxNotificationCallback txNotificationCallback) async {
   var baseUrl = await Prefs.merchantApiServerGet();

@@ -13,9 +13,6 @@ import 'hmac.dart';
 import 'merchant.dart';
 import 'paydb.dart';
 
-typedef TxNotificationCallback = void Function(String txid, String sender,
-    String recipient, double amount, String? attachment);
-
 class ReceiveForm extends StatefulWidget {
   final bool _testnet;
   final String _addressOrAccount;

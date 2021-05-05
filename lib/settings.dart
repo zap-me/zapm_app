@@ -4,12 +4,12 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:package_info/package_info.dart';
 import 'package:yaml/yaml.dart';
+import 'package:zap_merchant/wallet_state.dart';
 
 import 'package:zapdart/libzap.dart';
 import 'package:zapdart/utils.dart';
 import 'package:zapdart/pinentry.dart';
 import 'package:zapdart/widgets.dart';
-import 'package:zapdart/colors.dart';
 import 'package:zapdart/bip39widget.dart';
 
 import 'config.dart';
@@ -40,10 +40,10 @@ class AppVersion {
 }
 
 class SettingsScreen extends StatefulWidget {
-  final String? _mnemonicOrAccount;
+  final WalletState _ws;
   final FCM? _fcm;
 
-  SettingsScreen(this._mnemonicOrAccount, this._fcm)
+  SettingsScreen(this._ws, this._fcm)
       : super();
 
   @override
@@ -120,16 +120,16 @@ class _SettingsState extends State<SettingsScreen> {
   void initState() {
     super.initState();
     // set secondary
-    _secondary = widget._mnemonicOrAccount == null;
+    _secondary = widget._ws.mnemonicOrAccount().isEmpty;
   }
 
   void _toggleTestnet() async {
     if (_secondary) return;
-    Prefs.testnetSet(!_testnet);
+    await Prefs.testnetSet(!_testnet);
+    widget._ws.initTokenDetails(context);
     setState(() {
       _testnet = !_testnet;
     });
-    _initSettings();
   }
 
   void _addPin() async {
@@ -186,10 +186,10 @@ class _SettingsState extends State<SettingsScreen> {
 
   void _addPasswordProtection() async {
     assert(AppTokenType == TokenType.Waves);
-    if (widget._mnemonicOrAccount == null) return;
+    if (widget._ws.mnemonicOrAccount().isEmpty) return;
     var password = await askSetMnemonicPassword(context);
     if (password != null) {
-      var res = encryptMnemonic(widget._mnemonicOrAccount!, password);
+      var res = encryptMnemonic(widget._ws.mnemonicOrAccount(), password);
       await Prefs.cryptoIVSet(res.iv);
       await Prefs.mnemonicSet(res.encryptedMnemonic);
       setState(() {
@@ -217,8 +217,8 @@ class _SettingsState extends State<SettingsScreen> {
         flushbarMsg(context, 'API KEY set');
         if (result.accountAdmin &&
             result.walletAddress.isEmpty &&
-            widget._mnemonicOrAccount != null) {
-          var address = _getWalletAddress(widget._mnemonicOrAccount!);
+            widget._ws.mnemonicOrAccount().isNotEmpty) {
+          var address = _getWalletAddress(widget._ws.mnemonicOrAccount());
           var yes = await askYesNo(context,
               "Do you want to set the account wallet address ($address)?");
           if (yes) {
@@ -284,14 +284,14 @@ class _SettingsState extends State<SettingsScreen> {
         context,
         MaterialPageRoute(
             builder: (context) => HiddenScreen(
-                _testnet, widget._fcm?.getToken(), widget._mnemonicOrAccount)),
+                _testnet, widget._fcm?.getToken(), widget._ws.mnemonicOrAccount())),
       );
     }
   }
 
   Widget _recoveryWords() {
-    if (!_secondary && widget._mnemonicOrAccount != null)
-      return Bip39Words.fromString(widget._mnemonicOrAccount!);
+    if (!_secondary && widget._ws.mnemonicOrAccount().isNotEmpty)
+      return Bip39Words.fromString(widget._ws.mnemonicOrAccount());
     return Text('n/a');
   }
 

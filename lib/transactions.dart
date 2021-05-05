@@ -6,6 +6,7 @@ import 'package:decimal/decimal.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:zap_merchant/wallet_state.dart';
 
 import 'package:zapdart/libzap.dart';
 import 'package:zapdart/utils.dart';
@@ -32,13 +33,9 @@ class GenTx {
 }
 
 class TransactionsScreen extends StatefulWidget {
-  final String _addrOrAccount;
-  final bool _testnet;
-  final bool _canSpend;
-  final Rates? _merchantRates;
+  final WalletState _ws;
 
-  TransactionsScreen(
-      this._addrOrAccount, this._testnet, this._canSpend, this._merchantRates)
+  TransactionsScreen(this._ws)
       : super();
 
   @override
@@ -78,7 +75,7 @@ class _TransactionsState extends State<TransactionsScreen> {
     switch (AppTokenType) {
       case TokenType.Waves:
         var wavesTxs = await LibZap.addressTransactions(
-            widget._addrOrAccount, count, _lastTxId);
+            widget._ws.addrOrAccountValue(), count, _lastTxId);
         txs = <GenTx>[];
         txsFiltered = <GenTx>[];
         for (var tx in wavesTxs) {
@@ -86,7 +83,7 @@ class _TransactionsState extends State<TransactionsScreen> {
               tx.recipient, null, tx.amount, tx.fee);
           txs.add(genTx);
           // check asset id
-          var assetId = widget._testnet
+          var assetId = widget._ws.testnet
               ? (AssetIdTestnet != null
                   ? AssetIdTestnet
                   : LibZap.TESTNET_ASSET_ID)
@@ -103,7 +100,7 @@ class _TransactionsState extends State<TransactionsScreen> {
           try {
             txDeviceName = json.decode(tx.attachment!)['device_name'];
           } catch (_) {}
-          if (!widget._canSpend &&
+          if (!widget._ws.haveCapabililty(Capability.Spend) &&
               deviceName!.isNotEmpty &&
               deviceName != txDeviceName) continue;
           txsFiltered.add(genTx);
@@ -187,12 +184,12 @@ class _TransactionsState extends State<TransactionsScreen> {
   Widget _buildTxList(BuildContext context, int index) {
     var offsetIndex = _offset + index;
     var tx = _txsFiltered[offsetIndex];
-    var outgoing = tx.sender == widget._addrOrAccount;
+    var outgoing = tx.sender == widget._ws.addrOrAccountValue();
     var amount = Decimal.fromInt(tx.amount) / Decimal.fromInt(100);
     var amountText = "${amount.toStringAsFixed(2)} $AssetShortNameUpper";
-    if (widget._merchantRates != null)
+    if (widget._ws.rates != null)
       amountText =
-          "$amountText / ${toNZDAmount(amount, widget._merchantRates!)}";
+          "$amountText / ${toNZDAmount(amount, widget._ws.rates!)}";
     amountText = outgoing ? '- $amountText' : '+ $amountText';
     var fee = Decimal.fromInt(tx.fee) / Decimal.fromInt(100);
     var feeText = fee.toStringAsFixed(2);
@@ -201,7 +198,7 @@ class _TransactionsState extends State<TransactionsScreen> {
     var dateStrLong = DateFormat('yyyy-MM-dd HH:mm').format(date);
     String? link;
     if (AppTokenType == TokenType.Waves)
-      link = widget._testnet
+      link = widget._ws.testnet
           ? 'https://wavesexplorer.com/testnet/tx/${tx.id}'
           : 'https://wavesexplorer.com/tx/${tx.id}';
     return ListTx(() {
@@ -271,7 +268,7 @@ class _TransactionsState extends State<TransactionsScreen> {
                       ),
                     ));
               }));
-    }, date, tx.id, amount, widget._merchantRates, outgoing);
+    }, date, tx.id, amount, widget._ws.rates, outgoing);
   }
 
   Future<void> _exportJson() async {
