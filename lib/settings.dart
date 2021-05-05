@@ -40,15 +40,14 @@ class AppVersion {
 }
 
 class SettingsScreen extends StatefulWidget {
-  final bool _pinProtectedInitial;
   final String? _mnemonicOrAccount;
   final FCM? _fcm;
 
-  SettingsScreen(this._pinProtectedInitial, this._mnemonicOrAccount, this._fcm)
+  SettingsScreen(this._mnemonicOrAccount, this._fcm)
       : super();
 
   @override
-  _SettingsState createState() => new _SettingsState(_pinProtectedInitial);
+  _SettingsState createState() => new _SettingsState();
 }
 
 class _SettingsState extends State<SettingsScreen> {
@@ -66,12 +65,16 @@ class _SettingsState extends State<SettingsScreen> {
   int _versionTaps = 0;
   String? _paydbServer;
 
-  _SettingsState(this._pinProtected) {
+  _SettingsState() {
     _initSettings();
     _libzapVersion = _getLibZapVersion();
   }
 
   void _initSettings() async {
+    var pinExists = await Prefs.pinExists();
+    setState(() {
+      _pinProtected = pinExists;
+    });
     // app version
     var version = await AppVersion.parsePubspec();
     setState(() {
@@ -295,10 +298,6 @@ class _SettingsState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          leading: backButton(context, color: ZapBlack),
-          title: Text("Settings"),
-        ),
         body: Center(
           child: ListView(
             children: <Widget>[
@@ -378,10 +377,16 @@ class _SettingsState extends State<SettingsScreen> {
                         child: Container(
                           padding: const EdgeInsets.only(top: 18.0),
                           child: ListTile(
-                            title: raisedButton(
-                                child: Text("Show Recovery Words"),
-                                onPressed: () =>
-                                    setState(() => _showMnemonic = true)),
+                            title: raisedButtonIcon(
+                                label: Text("Show Recovery Words"),
+                                icon: Icon(_pinProtected ? Icons.lock : Icons.lock_open),
+                                onPressed: () async {
+                                    if (!await pinCheck(context, await Prefs.pinGet())) {
+                                      return;
+                                    }
+                                    setState(() => _showMnemonic = true);
+                                }
+                              )
                           ),
                         ),
                       ),

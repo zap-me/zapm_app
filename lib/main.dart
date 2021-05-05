@@ -141,7 +141,7 @@ class _ZapHomePageState extends State<ZapHomePage>
 
   _ZapHomePageState() {
     _tabController =
-        TabController(vsync: this, length: WebviewURL == null ? 1 : 2);
+        TabController(vsync: this, length: _buildTabCount());
     _tabController.addListener(_tabChange);
   }
 
@@ -1089,33 +1089,6 @@ class _ZapHomePageState extends State<ZapHomePage>
     );
   }
 
-  void _transactions() async {
-    var deviceName = await Prefs.deviceNameGet();
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-          builder: (context) => TransactionsScreen(
-              _addrOrAccountValue(),
-              _testnet,
-              _haveCapabililty(Capability.Spend) ? null : deviceName,
-              _merchantRates)),
-    );
-  }
-
-  void _showSettings() async {
-    var _pinExists = await Prefs.pinExists();
-    if (!await pinCheck(context, await Prefs.pinGet())) {
-      return;
-    }
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-          builder: (context) =>
-              SettingsScreen(_pinExists, _mnemonicOrAccount(), _fcm)),
-    );
-    _initTokenDetails();
-  }
-
   void _zapReward() async {
     var sentFunds = await Navigator.push<bool>(
       context,
@@ -1219,11 +1192,22 @@ class _ZapHomePageState extends State<ZapHomePage>
 
   void _tabChange() {
     print(_tabController.index);
+    _initTokenDetails();
+  }
+
+  int _buildTabCount() {
+    return WebviewURL != null ? 4 : 3;
+  }
+
+  ScrollPhysics _buildTabPhysics() {
+    return WebviewURL != null ? NeverScrollableScrollPhysics() : ClampingScrollPhysics();
   }
 
   List<Tab> _buildTabs() {
     var tabs = [
       Tab(icon: Icon(Icons.account_balance_wallet_outlined, color: ZapBlue)),
+      Tab(icon: Icon(FlutterIcons.bank_transfer_mco, color: ZapBlue)),
+      Tab(icon: Icon(Icons.settings_applications_outlined, color: ZapBlue)),
     ];
     if (WebviewURL != null) {
       tabs.insert(0, Tab(icon: Icon(Icons.home_outlined, color: ZapBlue)));
@@ -1233,7 +1217,13 @@ class _ZapHomePageState extends State<ZapHomePage>
 
   List<Widget> _buildTabBodies(Widget body) {
     var content = [
-      body,
+      body, 
+      TransactionsScreen(
+              _addrOrAccountValue(),
+              _testnet,
+              _haveCapabililty(Capability.Spend),
+              _merchantRates),
+      SettingsScreen(_mnemonicOrAccount(), _fcm)
     ];
     if (WebviewURL != null) {
       var webview = WebView(
@@ -1260,20 +1250,31 @@ class _ZapHomePageState extends State<ZapHomePage>
           visible: _alerts.length > 0,
         ),
         title: Center(child: Image.asset(AssetHeaderIconPng, height: 30)),
-        actions: [
-          IconButton(
-            onPressed: _showSettings,
+        actions: [Visibility(
+          child: IconButton(
+            onPressed: _toggleAlerts,
             icon: Icon(Icons.settings_outlined, color: ZapBlue),
-          )
+          ),
+          maintainSize: true,
+          maintainAnimation: true,
+          maintainState: true,
+          visible: false),
         ],
       ),
       bottomNavigationBar:
           TabBar(controller: _tabController, tabs: _buildTabs()),
-      body: TabBarView(
-        physics: WebviewURL != null ? NeverScrollableScrollPhysics() : ClampingScrollPhysics(),
-        controller: _tabController,
-        children: _buildTabBodies(body),
-      ),
+      body: Column(children: [
+        Visibility(
+            visible: _showAlerts && _alerts.length > 0,
+            child: AlertDrawer(_toggleAlerts, _alerts)),
+        Expanded(child:
+          TabBarView(
+            physics: _buildTabPhysics(),
+            controller: _tabController,
+            children: _buildTabBodies(body),
+          )
+        )
+      ])
     );
   }
 
@@ -1301,9 +1302,6 @@ class _ZapHomePageState extends State<ZapHomePage>
         onRefresh: _updateBalance,
         child: ListView(
           children: <Widget>[
-            Visibility(
-                visible: _showAlerts && _alerts.length > 0,
-                child: AlertDrawer(_toggleAlerts, _alerts)),
             Visibility(
                 visible: _haveCapabililty(Capability.Balance),
                 child: Column(
@@ -1425,10 +1423,6 @@ class _ZapHomePageState extends State<ZapHomePage>
                       ].where((child) => child != null).toList().cast<Widget>(),
                     ),
                     SizedBox.fromSize(size: Size(1, 10)),
-                    Visibility(
-                      visible: _haveCapabililty(Capability.History),
-                      child: ListButton(_transactions, 'transactions'),
-                    ),
                     Visibility(
                       visible: _haveCapabililty(Capability.Spend) && UseReward,
                       child: ListButton(

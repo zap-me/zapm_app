@@ -15,6 +15,7 @@ import 'package:zapdart/colors.dart';
 import 'config.dart';
 import 'merchant.dart';
 import 'paydb.dart';
+import 'prefs.dart';
 
 class GenTx {
   String id;
@@ -33,11 +34,11 @@ class GenTx {
 class TransactionsScreen extends StatefulWidget {
   final String _addrOrAccount;
   final bool _testnet;
-  final String? _deviceName;
+  final bool _canSpend;
   final Rates? _merchantRates;
 
   TransactionsScreen(
-      this._addrOrAccount, this._testnet, this._deviceName, this._merchantRates)
+      this._addrOrAccount, this._testnet, this._canSpend, this._merchantRates)
       : super();
 
   @override
@@ -45,17 +46,6 @@ class TransactionsScreen extends StatefulWidget {
 }
 
 enum LoadDirection { Next, Previous, Initial }
-
-class Choice {
-  const Choice(this.title, this.icon);
-
-  final String title;
-  final IconData icon;
-}
-
-const List<Choice> choices = const <Choice>[
-  const Choice("Export JSON", Icons.save),
-];
 
 class DownloadResult {
   final int downloadCount;
@@ -82,6 +72,7 @@ class _TransactionsState extends State<TransactionsScreen> {
   }
 
   Future<DownloadResult> _downloadMoreTxs(int count) async {
+    var deviceName = await Prefs.deviceNameGet();
     List<GenTx> txs = [];
     List<GenTx> txsFiltered = [];
     switch (AppTokenType) {
@@ -108,13 +99,13 @@ class _TransactionsState extends State<TransactionsScreen> {
             tx.attachment = base58decodeString(tx.attachment!);
           genTx.attachment = tx.attachment;
           // check device name
-          var deviceName = '';
+          var txDeviceName = '';
           try {
-            deviceName = json.decode(tx.attachment!)['device_name'];
+            txDeviceName = json.decode(tx.attachment!)['device_name'];
           } catch (_) {}
-          if (widget._deviceName != null &&
-              widget._deviceName!.isNotEmpty &&
-              widget._deviceName != deviceName) continue;
+          if (!widget._canSpend &&
+              deviceName!.isNotEmpty &&
+              deviceName != txDeviceName) continue;
           txsFiltered.add(genTx);
         }
         break;
@@ -158,6 +149,8 @@ class _TransactionsState extends State<TransactionsScreen> {
       var failed = false;
       while (true) {
         var res = await _downloadMoreTxs(_downloadCount);
+        if (!this.mounted) // check that the page has not been disposed while we were downloading
+          return;
         if (res.downloadCount == 0) {
           flushbarMsg(context, 'failed to load transactions',
               category: MessageCategory.Warning);
@@ -168,6 +161,8 @@ class _TransactionsState extends State<TransactionsScreen> {
         if (count >= _displayCount || res.downloadCount < remaining) break;
         remaining = _displayCount - count;
       }
+      if (!this.mounted) // check that the page has not been disposed while we were downloading
+        return;
       setState(() {
         if (!failed) {
           _more = count >= _displayCount;
@@ -279,63 +274,40 @@ class _TransactionsState extends State<TransactionsScreen> {
     }, date, tx.id, amount, widget._merchantRates, outgoing);
   }
 
-  void _select(Choice choice) async {
-    switch (choice.title) {
-      case "Export JSON":
+  Future<void> _exportJson() async {
+    setState(() {
+      _loading = true;
+    });
+    while (true) {
+      var txs = await _downloadMoreTxs(_downloadCount);
+      if (txs.downloadCount == 0) {
+        flushbarMsg(context, 'failed to load transactions',
+            category: MessageCategory.Warning);
         setState(() {
-          _loading = true;
+          _loading = false;
         });
-        while (true) {
-          var txs = await _downloadMoreTxs(_downloadCount);
-          if (txs.downloadCount == 0) {
-            flushbarMsg(context, 'failed to load transactions',
-                category: MessageCategory.Warning);
-            setState(() {
-              _loading = false;
-            });
-            return;
-          } else if (_foundEnd) {
-            var json = jsonEncode(_txsFiltered);
-            var filename = "zap_txs.json";
-            if (Platform.isAndroid || Platform.isIOS) {
-              var dir = await getExternalStorageDirectory();
-              if (dir != null) filename = dir.path + "/" + filename;
-            }
-            await File(filename).writeAsString(json);
-            alert(context, "Wrote JSON", filename);
-            setState(() {
-              _loading = false;
-            });
-            break;
-          }
-          flushbarMsg(context, 'loaded ${_txsFiltered.length} transactions');
+        return;
+      } else if (_foundEnd) {
+        var json = jsonEncode(_txsFiltered);
+        var filename = "zap_txs.json";
+        if (Platform.isAndroid || Platform.isIOS) {
+          var dir = await getExternalStorageDirectory();
+          if (dir != null) filename = dir.path + "/" + filename;
         }
+        await File(filename).writeAsString(json);
+        alert(context, "Wrote JSON", filename);
+        setState(() {
+          _loading = false;
+        });
         break;
+      }
+      flushbarMsg(context, 'loaded ${_txsFiltered.length} transactions');
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          leading: backButton(context, color: ZapBlue),
-          title: Text("transactions", style: TextStyle(color: ZapBlue)),
-          actions: <Widget>[
-            PopupMenuButton<Choice>(
-              icon: Icon(Icons.more_vert, color: ZapBlue),
-              onSelected: _select,
-              enabled: !_loading,
-              itemBuilder: (BuildContext context) {
-                return choices.map((Choice choice) {
-                  return PopupMenuItem<Choice>(
-                    value: choice,
-                    child: Text(choice.title),
-                  );
-                }).toList();
-              },
-            ),
-          ],
-        ),
         body: Center(
           child: Column(
             mainAxisAlignment:
@@ -357,6 +329,9 @@ class _TransactionsState extends State<TransactionsScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
                   Visibility(
+                      maintainSize: true,
+                      maintainState: true,
+                      maintainAnimation: true,
                       visible: !_loading && _less,
                       child: Container(
                           padding: const EdgeInsets.all(5),
@@ -368,6 +343,21 @@ class _TransactionsState extends State<TransactionsScreen> {
                               icon: Icons.navigate_before,
                               borderColor: ZapBlue))),
                   Visibility(
+                    visible: !_loading,
+                    child:
+                      Container(
+                          padding: const EdgeInsets.all(5),
+                          child: RoundedButton(
+                              () => _exportJson(),
+                              ZapBlue,
+                              ZapWhite,
+                              'save file',
+                              icon: Icons.save,
+                              borderColor: ZapBlue))),
+                  Visibility(
+                      maintainSize: true,
+                      maintainState: true,
+                      maintainAnimation: true,
                       visible: !_loading && _more,
                       child: Container(
                           padding: const EdgeInsets.all(5),
