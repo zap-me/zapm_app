@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:device_info/device_info.dart';
 import 'package:decimal/decimal.dart';
@@ -27,11 +28,157 @@ enum NoAccountAction { Register, Login, RequestApiKey }
 enum Capability { Receive, Balance, History, Spend }
 enum InitTokenDetailsResult { None, NoData, Auth, Network }
 
+class GenTx {
+  String id;
+  String action;
+  int timestamp;
+  String sender;
+  String recipient;
+  String? attachment;
+  int amount;
+  int fee;
+
+  GenTx(this.id, this.action, this.timestamp, this.sender, this.recipient,
+      this.attachment, this.amount, this.fee);
+}
+
+class TxDownloadResult {
+  final int downloadCount;
+  final int validCount;
+  final bool end;
+  final String? lastTxid;
+  TxDownloadResult(
+      this.downloadCount, this.validCount, this.end, this.lastTxid);
+}
+
 typedef WalletStateUpdateCallback = void Function(
     WalletState ws, bool updatingBalance, bool loading);
 
+class TxDownloader {
+  TxDownloader(this._ws);
+
+  WalletState _ws;
+  var _txsAll = <GenTx>[];
+  var _txsFiltered = <GenTx>[];
+  String? _lastTxId;
+  var _foundEnd = false;
+
+  List<GenTx> get txs {
+    return _txsFiltered;
+  }
+
+  bool get foundEnd {
+    return _foundEnd;
+  }
+
+  String wavesAssetId() {
+    return _ws.testnet
+        ? (AssetIdTestnet != null ? AssetIdTestnet! : LibZap.TESTNET_ASSET_ID)
+        : (AssetIdMainnet != null ? AssetIdMainnet! : LibZap.MAINNET_ASSET_ID);
+  }
+
+  String? wavesAttachment(Tx tx) {
+    if (tx.attachment != null && tx.attachment!.isNotEmpty)
+      return base58decodeString(tx.attachment!);
+    return tx.attachment;
+  }
+
+  void wavesTxsFilter(Iterable<Tx> wavesTxs, String? deviceName,
+      List<GenTx> txs, List<GenTx> txsFiltered) {
+    for (var tx in wavesTxs) {
+      var genTx = GenTx(tx.id, ActionTransfer, tx.timestamp, tx.sender,
+          tx.recipient, null, tx.amount, tx.fee);
+      txs.add(genTx);
+      // check asset id
+      if (tx.assetId != wavesAssetId()) continue;
+      // decode attachment
+      genTx.attachment = wavesAttachment(tx);
+      // check device name
+      var txDeviceName = '';
+      try {
+        txDeviceName = json.decode(tx.attachment!)['device_name'];
+      } catch (_) {}
+      if (!_ws.haveCapabililty(Capability.Spend) &&
+          deviceName!.isNotEmpty &&
+          deviceName != txDeviceName) continue;
+      txsFiltered.add(genTx);
+    }
+  }
+
+  void paydbTxsFilter(
+      PayDbUserTxsResult paydbTxs, List<GenTx> txs, List<GenTx> txsFiltered) {
+    if (paydbTxs.txs != null && paydbTxs.error == PayDbError.None) {
+      for (var tx in paydbTxs.txs!) {
+        var genTx = GenTx(tx.token, tx.action, tx.timestamp * 1000, tx.sender,
+            tx.recipient, tx.attachment, tx.amount, 0);
+        txs.add(genTx);
+        txsFiltered.add(genTx);
+      }
+    }
+  }
+
+  Future<TxDownloadResult> downloadMoreTxs(int count) async {
+    List<GenTx> txs = [];
+    List<GenTx> txsFiltered = [];
+    switch (AppTokenType) {
+      case TokenType.Waves:
+        var deviceName = await Prefs.deviceNameGet();
+        var wavesTxs = await LibZap.addressTransactions(
+            _ws.addrOrAccountValue(), count, _lastTxId);
+        wavesTxsFilter(wavesTxs, deviceName, txs, txsFiltered);
+        break;
+      case TokenType.PayDB:
+        var result = await paydbUserTransactions(_txsAll.length, count);
+        paydbTxsFilter(result, txs, txsFiltered);
+    }
+    _txsAll += txs;
+    _txsFiltered += txsFiltered;
+    if (_txsAll.length > 0) _lastTxId = _txsAll[_txsAll.length - 1].id;
+    if (txs.length < count) _foundEnd = true;
+    return TxDownloadResult(
+        txs.length, txsFiltered.length, _foundEnd, _lastTxId);
+  }
+
+  bool containsTx(List<GenTx> txs, String txid) {
+    for (var tx in txs) if (tx.id == txid) return true;
+    return false;
+  }
+
+  Future<TxDownloadResult> downloadNewTxs(
+      int count, int offset, String? lastTxid) async {
+    List<GenTx> txs = [];
+    List<GenTx> txsFiltered = [];
+    switch (AppTokenType) {
+      case TokenType.Waves:
+        var deviceName = await Prefs.deviceNameGet();
+        var wavesTxs = await LibZap.addressTransactions(
+            _ws.addrOrAccountValue(), count, lastTxid);
+        wavesTxsFilter(wavesTxs, deviceName, txs, txsFiltered);
+        break;
+      case TokenType.PayDB:
+        var result = await paydbUserTransactions(offset, count);
+        paydbTxsFilter(result, txs, txsFiltered);
+    }
+    var end = false;
+    for (var i = txs.length - 1; i >= 0; i--) {
+      if (containsTx(_txsAll, txs[i].id))
+        end = true;
+      else
+        _txsAll.insert(0, txs[i]);
+    }
+    for (var i = txsFiltered.length - 1; i >= 0; i--) {
+      if (!containsTx(_txsFiltered, txsFiltered[i].id))
+        _txsFiltered.insert(0, txsFiltered[i]);
+    }
+    var lastTxId = txs.length > 0 ? txs.last.id : null;
+    return TxDownloadResult(txs.length, txsFiltered.length, end, lastTxId);
+  }
+}
+
 class WalletState {
-  WalletState(this._txNotification, this._update);
+  WalletState(this._txNotification, this._update) {
+    _txDownloader = TxDownloader(this);
+  }
 
   final TxNotificationCallback _txNotification;
   final WalletStateUpdateCallback _update;
@@ -45,6 +192,8 @@ class WalletState {
   String _balanceText = "...";
   List<String> _alerts = <String>[];
   Rates? _merchantRates;
+
+  late TxDownloader _txDownloader;
 
   bool get testnet {
     return _testnet;
@@ -72,6 +221,10 @@ class WalletState {
 
   List<String> get alerts {
     return _alerts;
+  }
+
+  TxDownloader get txDownloader {
+    return _txDownloader;
   }
 
   String addrOrAccount() {

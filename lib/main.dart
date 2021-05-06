@@ -494,9 +494,6 @@ class _ZapHomePageState extends State<ZapHomePage>
 
   void _tabChange() {
     print(_tabController.index);
-    //setState(() {
-    //  _ws = _ws;
-    //});
   }
 
   int _buildTabCount() {
