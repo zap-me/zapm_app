@@ -479,7 +479,8 @@ class _ZapHomePageState extends State<ZapHomePage>
     await _ws.updateBalance();
   }
 
-  void _walletStateUpdate(WalletState ws, bool updatingBalance, bool loading, bool inited) {
+  void _walletStateUpdate(
+      WalletState ws, bool updatingBalance, bool loading, bool inited) {
     setState(() {
       _updatingBalance = updatingBalance;
       _walletOrAcctLoading = loading;
