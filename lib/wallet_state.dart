@@ -52,7 +52,7 @@ class TxDownloadResult {
 }
 
 typedef WalletStateUpdateCallback = void Function(
-    WalletState ws, bool updatingBalance, bool loading);
+    WalletState ws, bool updatingBalance, bool loading, bool inited);
 
 class TxDownloader {
   TxDownloader(this._ws);
@@ -488,9 +488,9 @@ class WalletState {
     while (true) {
       String? mnemonic;
       String? address;
-      _update(this, false, true);
+      _update(this, false, true, false);
       var action = await _noWalletDialog(context);
-      _update(this, false, false);
+      _update(this, false, false, false);
       switch (action) {
         case NoWalletAction.CreateMnemonic:
           mnemonic = libzap.mnemonicCreate();
@@ -624,9 +624,9 @@ class WalletState {
     assert(await paydbServer() != null);
     while (true) {
       String? accountEmail;
-      _update(this, false, true);
+      _update(this, false, true, false);
       var action = await _noAccountDialog(context);
-      _update(this, false, false);
+      _update(this, false, false, false);
       switch (action) {
         case NoAccountAction.Register:
           AccountRegistration? registration;
@@ -713,7 +713,7 @@ class WalletState {
   }
 
   Future<bool> updateBalance() async {
-    _update(this, true, false);
+    _update(this, true, false, true);
     _balance = Decimal.fromInt(-1);
     _balanceText = ":(";
     switch (AppTokenType) {
@@ -744,7 +744,7 @@ class WalletState {
         break;
     }
     _balanceText = balance.toStringAsFixed(2);
-    _update(this, false, false);
+    _update(this, false, false, true);
     return true;
   }
 

@@ -469,11 +469,6 @@ class _ZapHomePageState extends State<ZapHomePage>
     });
     // init wallet state
     await _ws.init(context);
-    // wallet/account now initialized
-    setState(() {
-      _walletOrAcctInited = true;
-      _updatingBalance = false;
-    });
     // init firebase push notifications
     _fcm = FCM(context, PremioStageIndexUrl, PremioStageName);
     // init uni links
@@ -484,10 +479,11 @@ class _ZapHomePageState extends State<ZapHomePage>
     await _ws.updateBalance();
   }
 
-  void _walletStateUpdate(WalletState ws, bool updatingBalance, bool loading) {
+  void _walletStateUpdate(WalletState ws, bool updatingBalance, bool loading, bool inited) {
     setState(() {
       _updatingBalance = updatingBalance;
       _walletOrAcctLoading = loading;
+      _walletOrAcctInited = inited;
       _ws = _ws;
     });
   }
