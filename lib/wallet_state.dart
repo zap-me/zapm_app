@@ -173,6 +173,13 @@ class TxDownloader {
     var lastTxId = txs.length > 0 ? txs.last.id : null;
     return TxDownloadResult(txs.length, txsFiltered.length, end, lastTxId);
   }
+
+  void reset() {
+    _txsAll.clear();
+    _txsFiltered.clear();
+    _lastTxId = null;
+    _foundEnd = false;
+  }
 }
 
 class WalletState {

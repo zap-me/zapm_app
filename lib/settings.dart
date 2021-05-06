@@ -125,6 +125,7 @@ class _SettingsState extends State<SettingsScreen> {
   void _toggleTestnet() async {
     if (_secondary) return;
     await Prefs.testnetSet(!_testnet);
+    widget._ws.txDownloader.reset();
     widget._ws.initTokenDetails(context);
     setState(() {
       _testnet = !_testnet;
