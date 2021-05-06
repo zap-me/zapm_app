@@ -9,6 +9,7 @@ import 'package:flutter_icons/flutter_icons.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:uni_links/uni_links.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:audioplayers/audio_cache.dart';
 
@@ -124,9 +125,12 @@ class _ZapHomePageState extends State<ZapHomePage>
 
   @override
   void initState() {
-    _init();
+    // Enable hybrid composition (needed for webview to handle '_blank' links)
+    if (Platform.isAndroid) WebView.platform = SurfaceAndroidWebView();
     // add WidgetsBindingObserver
     WidgetsBinding.instance?.addObserver(this);
+    // init async stuff
+    _init();
     super.initState();
   }
 
@@ -522,6 +526,13 @@ class _ZapHomePageState extends State<ZapHomePage>
         initialUrl: WebviewURL,
         javascriptMode: JavascriptMode.unrestricted,
         gestureNavigationEnabled: true,
+        navigationDelegate: (nr) {
+          if (nr.isForMainFrame && !nr.url.startsWith(WebviewURL!)) {
+            launch(nr.url);
+            return NavigationDecision.prevent;
+          }
+          return NavigationDecision.navigate;
+        },
       );
       content.insert(0, webview);
     }
