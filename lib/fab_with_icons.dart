@@ -11,11 +11,14 @@ class MenuItem {
 
 // https://stackoverflow.com/questions/46480221/flutter-floating-action-button-with-speed-dail
 class FabWithIcons extends StatefulWidget {
-  FabWithIcons({required this.icon, required this.menuItems, required this.onMenuIconTapped});
+  FabWithIcons({required this.icon, required this.menuItems, required this.onTapped,
+    required this.onMenuIconTapped, required this.expanded});
   final IconData icon;
   final List<MenuItem> menuItems;
+  final ValueChanged<bool> onTapped;
   final ValueChanged<MenuItem> onMenuIconTapped;
-  
+  final bool expanded;
+
   @override
   State createState() => FabWithIconsState();
 }
@@ -28,8 +31,19 @@ class FabWithIconsState extends State<FabWithIcons> with TickerProviderStateMixi
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 250),
+      duration: const Duration(milliseconds: 500),
     );
+  }
+
+  @override
+  void didUpdateWidget(FabWithIcons oldWidget) {
+    if ((_controller.isDismissed || _controller.isAnimating) && widget.expanded) {
+      _controller.reset();
+      _controller.forward();
+    } else if (_controller.isCompleted || _controller.isAnimating && !widget.expanded) {
+      _controller.reverse();
+    }
+    super.didUpdateWidget(oldWidget);
   }
 
   @override
@@ -77,13 +91,14 @@ class FabWithIconsState extends State<FabWithIcons> with TickerProviderStateMixi
   Widget _buildFab() {
     return FloatingActionButton(
       onPressed: () {
+        widget.onTapped(_controller.isDismissed);
         if (_controller.isDismissed) {
           _controller.forward();
         } else {
           _controller.reverse();
         }
       },
-      child: Icon(widget.icon),
+      child: Icon(!widget.expanded ? widget.icon : Icons.remove),
       elevation: 2.0,
     );
   }

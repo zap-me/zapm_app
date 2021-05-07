@@ -118,6 +118,7 @@ class _ZapHomePageState extends State<ZapHomePage>
   late TabController _tabController;
   late WalletState _ws;
   bool _updatingBalance = true;
+  bool _fabExpanded = false;
 
   _ZapHomePageState() {
     _ws = WalletState(_txNotification, _walletStateUpdate);
@@ -529,7 +530,7 @@ class _ZapHomePageState extends State<ZapHomePage>
     return tabs;
   }
 
-  Widget _buildFab() {
+  FabWithIcons _buildFab() {
     var menuItems = [
       MenuItem(MaterialCommunityIcons.chevron_double_down, 'RECIEVE $AssetShortNameUpper', ZapWhite, ZapGreen, _receive),
     ];
@@ -542,12 +543,19 @@ class _ZapHomePageState extends State<ZapHomePage>
     return FabWithIcons(
               icon: FlutterIcons.bolt_faw5s,
               menuItems: menuItems,
-              onMenuIconTapped: _selectedFab,
+              onTapped: _fabTapped,
+              onMenuIconTapped: _selectedMenuItem,
+              expanded: _fabExpanded,
             );
   }
 
-  void _selectedFab(MenuItem item) {
+  void _fabTapped(bool expanded) {
+    setState(() => _fabExpanded = expanded);
+  }
+
+  void _selectedMenuItem(MenuItem item) {
     print('FAB: ${item.label}');
+    setState(() => _fabExpanded = false);
     item.action();
   }
 
@@ -575,6 +583,7 @@ class _ZapHomePageState extends State<ZapHomePage>
   }
 
   Widget _appScaffold(Widget body) {
+    var fab = _buildFab();
     return Stack(
       alignment: Alignment.bottomCenter,
       children: [Scaffold(
@@ -617,7 +626,12 @@ class _ZapHomePageState extends State<ZapHomePage>
                 ))
               ])
       ),
-      Positioned(child: _buildFab(), bottom: 5,)
+      _fabExpanded ? GestureDetector(
+        child: Container(color: Colors.grey.withOpacity(0.5),),
+        onTap: () {
+          setState(() => _fabExpanded = false);
+      },) : SizedBox(),
+      Positioned(child: fab, bottom: 5,)
     ]);
   }
 
