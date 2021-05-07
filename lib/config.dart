@@ -1,6 +1,7 @@
 // uncomment if you need to override the app theme
 //import 'package:flutter/material.dart';
 //import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_icons/flutter_icons.dart';
 
 import 'package:zapdart/colors.dart';
 
@@ -30,6 +31,7 @@ const UseMerchantApi = false;
 const String? WebviewURL = null;
 // enable/disable the centered ZAP button
 const ZapButton = true;
+const ZapButtonIcon = FlutterIcons.bolt_faw5s;
 
 // are we using the waves network or a paydb server
 const TokenType AppTokenType = TokenType.Waves;

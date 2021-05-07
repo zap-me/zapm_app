@@ -74,8 +74,8 @@ class FabWithIconsState extends State<FabWithIcons>
     if (mi.color != null) foregroundColor = mi.color!;
     if (mi.background != null) backgroundColor = mi.background!;
     return Container(
-      height: 100.0,
-      width: 100.0,
+      height: 85,
+      width: MediaQuery.of(context).size.width,
       alignment: FractionalOffset.topCenter,
       child: ScaleTransition(
           scale: CurvedAnimation(
@@ -83,18 +83,26 @@ class FabWithIconsState extends State<FabWithIcons>
             curve: Interval(0.0, 1.0 - index / widget.menuItems.length / 2.0,
                 curve: Curves.easeOut),
           ),
-          child: Column(children: [
+          child: Row(children: [
+            Expanded(child: SizedBox()),
             FloatingActionButton(
               backgroundColor: backgroundColor,
               mini: false,
               child: Icon(mi.icon, color: foregroundColor),
               onPressed: () => _onTapped(index),
             ),
-            SizedBox(height: 5),
-            Text(
-              mi.label,
-              style: TextStyle(color: foregroundColor, fontSize: 12),
-            )
+            Expanded(
+                child: Container(
+                    margin: EdgeInsets.only(left: 10),
+                    child: GestureDetector(
+                        onTap: () => _controller.reverse(),
+                        child: Material(
+                            color: Colors.transparent,
+                            child: Text(
+                              mi.label,
+                              style: TextStyle(
+                                  color: foregroundColor, fontSize: 14),
+                            )))))
           ])),
     );
   }

@@ -518,7 +518,7 @@ class _ZapHomePageState extends State<ZapHomePage>
   List<Widget> _buildTabs() {
     var tabs = [
       Tab(icon: Icon(Icons.account_balance_wallet_outlined, color: ZapBlue)),
-      Tab(icon: Icon(FlutterIcons.bank_transfer_mco, color: ZapBlue)),
+      Tab(icon: Icon(FlutterIcons.swap_horizontal_bold_mco, color: ZapBlue)),
       Tab(icon: Icon(Icons.settings_applications_outlined, color: ZapBlue)),
     ];
     if (WebviewURL != null) {
@@ -545,7 +545,7 @@ class _ZapHomePageState extends State<ZapHomePage>
           menuItems;
     }
     return FabWithIcons(
-      icon: FlutterIcons.bolt_faw5s,
+      icon: ZapButtonIcon,
       menuItems: menuItems,
       onTapped: _fabTapped,
       onMenuIconTapped: _selectedMenuItem,
@@ -630,7 +630,7 @@ class _ZapHomePageState extends State<ZapHomePage>
       _fabExpanded
           ? GestureDetector(
               child: Container(
-                color: Colors.grey.withOpacity(0.8),
+                color: Colors.black.withOpacity(0.7),
               ),
               onTap: () {
                 setState(() => _fabExpanded = false);
