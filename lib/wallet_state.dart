@@ -234,6 +234,15 @@ class WalletState {
     return _txDownloader;
   }
 
+  String walletOrAccount() {
+    switch (AppTokenType) {
+      case TokenType.Waves:
+        return 'wallet';
+      case TokenType.PayDB:
+        return 'account';
+    }
+  }
+
   String addrOrAccount() {
     switch (AppTokenType) {
       case TokenType.Waves:

@@ -515,14 +515,21 @@ class _ZapHomePageState extends State<ZapHomePage>
         : ClampingScrollPhysics();
   }
 
+  Widget _tab(IconData icon, String label) {
+    return Tab(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+      Icon(icon, color: ZapBlue),
+      Text(label, style: TextStyle(color: ZapBlue, fontSize: 8)),
+    ],));
+  }
+
   List<Widget> _buildTabs() {
     var tabs = [
-      Tab(icon: Icon(Icons.account_balance_wallet_outlined, color: ZapBlue)),
-      Tab(icon: Icon(FlutterIcons.swap_horizontal_bold_mco, color: ZapBlue)),
-      Tab(icon: Icon(Icons.settings_applications_outlined, color: ZapBlue)),
+      _tab(Icons.account_balance_wallet_outlined, _ws.walletOrAccount().toUpperCase()),
+      _tab(FlutterIcons.swap_horizontal_bold_mco, 'HISTORY'),
+      _tab(Icons.settings_applications_outlined, 'SETTINGS'),
     ];
     if (WebviewURL != null) {
-      tabs.insert(0, Tab(icon: Icon(Icons.home_outlined, color: ZapBlue)));
+      tabs.insert(0, _tab(Icons.home_outlined, 'HOME'));
     }
     if (ZapButton) {
       tabs.insert(tabs.length ~/ 2, Tab(child: SizedBox()));
