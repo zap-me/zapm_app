@@ -80,16 +80,16 @@ class MyApp extends StatelessWidget {
           }
         },
         child: MaterialApp(
-            //debugShowCheckedModeBanner: false,
-            title: AppTitle,
-            theme: ThemeData(
-              brightness: ZapBrightness,
-              primaryColor: ZapWhite,
-              accentColor: ZapBlue,
-              textTheme: ZapTextThemer(Theme.of(context).textTheme),
-              primaryTextTheme: ZapTextThemer(Theme.of(context).textTheme),
-            ),
-            home: ZapHomePage(AppTitle),
+          //debugShowCheckedModeBanner: false,
+          title: AppTitle,
+          theme: ThemeData(
+            brightness: ZapBrightness,
+            primaryColor: ZapWhite,
+            accentColor: ZapBlue,
+            textTheme: ZapTextThemer(Theme.of(context).textTheme),
+            primaryTextTheme: ZapTextThemer(Theme.of(context).textTheme),
+          ),
+          home: ZapHomePage(AppTitle),
         ));
   }
 }
@@ -532,21 +532,25 @@ class _ZapHomePageState extends State<ZapHomePage>
 
   FabWithIcons _buildFab() {
     var menuItems = [
-      MenuItem(MaterialCommunityIcons.chevron_double_down, 'RECEIVE $AssetShortNameUpper', ZapWhite, ZapGreen, _receive),
+      MenuItem(MaterialCommunityIcons.chevron_double_down,
+          'RECEIVE $AssetShortNameUpper', ZapWhite, ZapGreen, _receive),
     ];
     if (_ws.haveCapabililty(Capability.Spend)) {
       menuItems = [
-        MenuItem(MaterialCommunityIcons.chevron_double_up, 'SEND $AssetShortNameUpper', ZapWhite, ZapYellow, _send),
-        MenuItem(MaterialCommunityIcons.qrcode_scan, 'SCAN QR CODE', ZapWhite, ZapBlue, _scanQrCode)
-      ] + menuItems;
+            MenuItem(MaterialCommunityIcons.chevron_double_up,
+                'SEND $AssetShortNameUpper', ZapWhite, ZapYellow, _send),
+            MenuItem(MaterialCommunityIcons.qrcode_scan, 'SCAN QR CODE',
+                ZapWhite, ZapBlue, _scanQrCode)
+          ] +
+          menuItems;
     }
     return FabWithIcons(
-              icon: FlutterIcons.bolt_faw5s,
-              menuItems: menuItems,
-              onTapped: _fabTapped,
-              onMenuIconTapped: _selectedMenuItem,
-              expanded: _fabExpanded,
-            );
+      icon: FlutterIcons.bolt_faw5s,
+      menuItems: menuItems,
+      onTapped: _fabTapped,
+      onMenuIconTapped: _selectedMenuItem,
+      expanded: _fabExpanded,
+    );
   }
 
   void _fabTapped(bool expanded) {
@@ -584,54 +588,59 @@ class _ZapHomePageState extends State<ZapHomePage>
 
   Widget _appScaffold(Widget body) {
     var fab = _buildFab();
-    return Stack(
-      alignment: Alignment.bottomCenter,
-      children: [Scaffold(
-        appBar: AppBar(
-          leading: Visibility(
-            child: IconButton(
-                onPressed: _toggleAlerts,
-                icon: Icon(Icons.warning,
-                    color: _showAlerts ? ZapGrey : ZapWarning)),
-            maintainSize: true,
-            maintainAnimation: true,
-            maintainState: true,
-            visible: _ws.alerts.length > 0,
-          ),
-          title: Center(child: Image.asset(AssetHeaderIconPng, height: 30)),
-          actions: [
-            Visibility(
-                child: IconButton(
+    return Stack(alignment: Alignment.bottomCenter, children: [
+      Scaffold(
+          appBar: AppBar(
+            leading: Visibility(
+              child: IconButton(
                   onPressed: _toggleAlerts,
-                  icon: Icon(Icons.settings_outlined, color: ZapBlue),
-                ),
-                maintainSize: true,
-                maintainAnimation: true,
-                maintainState: true,
-                visible: false),
-          ],
-        ),
-        bottomNavigationBar:
-            TabBar(controller: _tabController, tabs: _buildTabs()),
-        body: 
-            Column(children: [
+                  icon: Icon(Icons.warning,
+                      color: _showAlerts ? ZapGrey : ZapWarning)),
+              maintainSize: true,
+              maintainAnimation: true,
+              maintainState: true,
+              visible: _ws.alerts.length > 0,
+            ),
+            title: Center(child: Image.asset(AssetHeaderIconPng, height: 30)),
+            actions: [
               Visibility(
+                  child: IconButton(
+                    onPressed: _toggleAlerts,
+                    icon: Icon(Icons.settings_outlined, color: ZapBlue),
+                  ),
+                  maintainSize: true,
+                  maintainAnimation: true,
+                  maintainState: true,
+                  visible: false),
+            ],
+          ),
+          bottomNavigationBar:
+              TabBar(controller: _tabController, tabs: _buildTabs()),
+          body: Column(children: [
+            Visibility(
                 visible: _showAlerts && _ws.alerts.length > 0,
                 child: AlertDrawer(_toggleAlerts, _ws.alerts)),
-              Expanded(
+            Expanded(
                 child: TabBarView(
-                  physics: _buildTabPhysics(),
-                  controller: _tabController,
-                  children: _buildTabBodies(body),
-                ))
-              ])
-      ),
-      _fabExpanded ? GestureDetector(
-        child: Container(color: Colors.grey.withOpacity(0.8),),
-        onTap: () {
-          setState(() => _fabExpanded = false);
-      },) : SizedBox(),
-      Positioned(child: fab, bottom: 5,)
+              physics: _buildTabPhysics(),
+              controller: _tabController,
+              children: _buildTabBodies(body),
+            ))
+          ])),
+      _fabExpanded
+          ? GestureDetector(
+              child: Container(
+                color: Colors.grey.withOpacity(0.8),
+              ),
+              onTap: () {
+                setState(() => _fabExpanded = false);
+              },
+            )
+          : SizedBox(),
+      Positioned(
+        child: fab,
+        bottom: 5,
+      )
     ]);
   }
 
@@ -733,76 +742,85 @@ class _ZapHomePageState extends State<ZapHomePage>
                                 textAlign: TextAlign.center),
                           ])),
                   Divider(),
-                  ZapButton ?
-                    Container(
-                        child: Column(
-                          children: [
+                  ZapButton
+                      ? Container(
+                          child: Column(children: [
                           QrWidget(_ws.addrOrAccountValue(), size: 200),
-                          RoundedButton(_copyAddrOrAccount, ZapWhite, ZapBlue,
-                              'copy ${_ws.addrOrAccount()}', icon: Icons.copy,),
-                          ])) :
-                    Container(
-                        child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
                           RoundedButton(
-                              _showQrCode, ZapBlue, ZapWhite, 'view QR code',
-                              icon: MaterialCommunityIcons.qrcode,
-                              minWidth:
-                                  MediaQuery.of(context).size.width / 2 - 20),
-                          RoundedButton(_copyAddrOrAccount, ZapWhite, ZapBlue,
-                              'copy ${_ws.addrOrAccount()}',
-                              minWidth:
-                                  MediaQuery.of(context).size.width / 2 - 20),
+                            _copyAddrOrAccount,
+                            ZapWhite,
+                            ZapBlue,
+                            'copy ${_ws.addrOrAccount()}',
+                            icon: Icons.copy,
+                          ),
                         ]))
+                      : Container(
+                          child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                              RoundedButton(_showQrCode, ZapBlue, ZapWhite,
+                                  'view QR code',
+                                  icon: MaterialCommunityIcons.qrcode,
+                                  minWidth:
+                                      MediaQuery.of(context).size.width / 2 -
+                                          20),
+                              RoundedButton(_copyAddrOrAccount, ZapWhite,
+                                  ZapBlue, 'copy ${_ws.addrOrAccount()}',
+                                  minWidth:
+                                      MediaQuery.of(context).size.width / 2 -
+                                          20),
+                            ]))
                 ])),
-            ZapButton ?
-              SizedBox() :
-              Container(
-                margin: const EdgeInsets.only(top: 40),
-                padding: const EdgeInsets.only(top: 20),
-                color: ZapWhite,
-                child: Column(
-                  children: <Widget>[
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: <Widget?>[
-                        _ws.haveCapabililty(Capability.Spend)
-                            ? SquareButton(
-                                _send,
-                                MaterialCommunityIcons.chevron_double_up,
-                                ZapYellow,
-                                'SEND $AssetShortNameUpper')
-                            : null,
-                        _ws.haveCapabililty(Capability.Spend)
-                            ? SquareButton(
-                                _scanQrCode,
-                                MaterialCommunityIcons.qrcode_scan,
-                                ZapBlue,
-                                'SCAN QR CODE')
-                            : null,
-                        SquareButton(
-                            _receive,
-                            MaterialCommunityIcons.chevron_double_down,
-                            ZapGreen,
-                            'RECEIVE $AssetShortNameUpper'),
-                      ].where((child) => child != null).toList().cast<Widget>(),
-                    ),
-                    SizedBox.fromSize(size: Size(1, 10)),
-                    Visibility(
-                      visible:
-                          _ws.haveCapabililty(Capability.Spend) && UseReward,
-                      child: ListButton(
-                          _zapReward, '$AssetShortNameLower rewards'),
-                    ),
-                    Visibility(
-                      visible: _ws.haveCapabililty(Capability.Spend) &&
-                          UseSettlement,
-                      child: ListButton(_settlement, 'make settlement'),
-                    ),
-                    ListButtonEnd(),
-                  ],
-                )),
+            ZapButton
+                ? SizedBox()
+                : Container(
+                    margin: const EdgeInsets.only(top: 40),
+                    padding: const EdgeInsets.only(top: 20),
+                    color: ZapWhite,
+                    child: Column(
+                      children: <Widget>[
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: <Widget?>[
+                            _ws.haveCapabililty(Capability.Spend)
+                                ? SquareButton(
+                                    _send,
+                                    MaterialCommunityIcons.chevron_double_up,
+                                    ZapYellow,
+                                    'SEND $AssetShortNameUpper')
+                                : null,
+                            _ws.haveCapabililty(Capability.Spend)
+                                ? SquareButton(
+                                    _scanQrCode,
+                                    MaterialCommunityIcons.qrcode_scan,
+                                    ZapBlue,
+                                    'SCAN QR CODE')
+                                : null,
+                            SquareButton(
+                                _receive,
+                                MaterialCommunityIcons.chevron_double_down,
+                                ZapGreen,
+                                'RECEIVE $AssetShortNameUpper'),
+                          ]
+                              .where((child) => child != null)
+                              .toList()
+                              .cast<Widget>(),
+                        ),
+                        SizedBox.fromSize(size: Size(1, 10)),
+                        Visibility(
+                          visible: _ws.haveCapabililty(Capability.Spend) &&
+                              UseReward,
+                          child: ListButton(
+                              _zapReward, '$AssetShortNameLower rewards'),
+                        ),
+                        Visibility(
+                          visible: _ws.haveCapabililty(Capability.Spend) &&
+                              UseSettlement,
+                          child: ListButton(_settlement, 'make settlement'),
+                        ),
+                        ListButtonEnd(),
+                      ],
+                    )),
           ],
         ),
       ),

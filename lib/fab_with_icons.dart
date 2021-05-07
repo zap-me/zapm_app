@@ -11,8 +11,12 @@ class MenuItem {
 
 // https://stackoverflow.com/questions/46480221/flutter-floating-action-button-with-speed-dail
 class FabWithIcons extends StatefulWidget {
-  FabWithIcons({required this.icon, required this.menuItems, required this.onTapped,
-    required this.onMenuIconTapped, required this.expanded});
+  FabWithIcons(
+      {required this.icon,
+      required this.menuItems,
+      required this.onTapped,
+      required this.onMenuIconTapped,
+      required this.expanded});
   final IconData icon;
   final List<MenuItem> menuItems;
   final ValueChanged<bool> onTapped;
@@ -23,7 +27,8 @@ class FabWithIcons extends StatefulWidget {
   State createState() => FabWithIconsState();
 }
 
-class FabWithIconsState extends State<FabWithIcons> with TickerProviderStateMixin {
+class FabWithIconsState extends State<FabWithIcons>
+    with TickerProviderStateMixin {
   late final AnimationController _controller;
 
   @override
@@ -37,10 +42,12 @@ class FabWithIconsState extends State<FabWithIcons> with TickerProviderStateMixi
 
   @override
   void didUpdateWidget(FabWithIcons oldWidget) {
-    if ((_controller.isDismissed || _controller.isAnimating) && widget.expanded) {
+    if ((_controller.isDismissed || _controller.isAnimating) &&
+        widget.expanded) {
       _controller.reset();
       _controller.forward();
-    } else if (_controller.isCompleted || _controller.isAnimating && !widget.expanded) {
+    } else if (_controller.isCompleted ||
+        _controller.isAnimating && !widget.expanded) {
       _controller.reverse();
     }
     super.didUpdateWidget(oldWidget);
@@ -53,9 +60,10 @@ class FabWithIconsState extends State<FabWithIcons> with TickerProviderStateMixi
       mainAxisSize: MainAxisSize.min,
       children: List.generate(widget.menuItems.length, (int index) {
         return _buildChild(index);
-      }).toList()..add(
-        _buildFab(),
-      ),
+      }).toList()
+        ..add(
+          _buildFab(),
+        ),
     );
   }
 
@@ -70,25 +78,24 @@ class FabWithIconsState extends State<FabWithIcons> with TickerProviderStateMixi
       width: 100.0,
       alignment: FractionalOffset.topCenter,
       child: ScaleTransition(
-        scale: CurvedAnimation(
-          parent: _controller,
-          curve: Interval(
-              0.0,
-              1.0 - index / widget.menuItems.length / 2.0,
-              curve: Curves.easeOut
+          scale: CurvedAnimation(
+            parent: _controller,
+            curve: Interval(0.0, 1.0 - index / widget.menuItems.length / 2.0,
+                curve: Curves.easeOut),
           ),
-        ),
-        child: Column(children: [
-          FloatingActionButton(
-            backgroundColor: backgroundColor,
-            mini: false,
-            child: Icon(mi.icon, color: foregroundColor),
-            onPressed: () => _onTapped(index),
-          ),
-          SizedBox(height: 5),
-          Text(mi.label, style: TextStyle(color: foregroundColor, fontSize: 12),)
-        ])
-      ),
+          child: Column(children: [
+            FloatingActionButton(
+              backgroundColor: backgroundColor,
+              mini: false,
+              child: Icon(mi.icon, color: foregroundColor),
+              onPressed: () => _onTapped(index),
+            ),
+            SizedBox(height: 5),
+            Text(
+              mi.label,
+              style: TextStyle(color: foregroundColor, fontSize: 12),
+            )
+          ])),
     );
   }
 
