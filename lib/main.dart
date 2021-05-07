@@ -32,9 +32,6 @@ import 'paydb.dart';
 import 'qrscan.dart';
 import 'wallet_state.dart';
 import 'fab_with_icons.dart';
-import 'layout.dart';
-
-final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 
 void main() {
   // See https://github.com/flutter/flutter/wiki/Desktop-shells#target-platform-override
@@ -93,7 +90,7 @@ class MyApp extends StatelessWidget {
               primaryTextTheme: ZapTextThemer(Theme.of(context).textTheme),
             ),
             home: ZapHomePage(AppTitle),
-            navigatorObservers: [routeObserver],));
+        ));
   }
 }
 
@@ -107,7 +104,7 @@ class ZapHomePage extends StatefulWidget {
 }
 
 class _ZapHomePageState extends State<ZapHomePage>
-    with WidgetsBindingObserver, SingleTickerProviderStateMixin, RouteAware {
+    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   StreamSubscription? _uniLinksSub; // uni links subscription
 
   bool _showAlerts = true;
@@ -121,7 +118,6 @@ class _ZapHomePageState extends State<ZapHomePage>
   late TabController _tabController;
   late WalletState _ws;
   bool _updatingBalance = true;
-  bool _fabOverlay = true;
 
   _ZapHomePageState() {
     _ws = WalletState(_txNotification, _walletStateUpdate);
@@ -141,15 +137,8 @@ class _ZapHomePageState extends State<ZapHomePage>
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
-  }
-
-  @override
   void dispose() {
     _ws.dispose();
-    routeObserver.unsubscribe(this);
     // remove WidgetsBindingObserver
     WidgetsBinding.instance?.removeObserver(this);
     // close uni links subscription
@@ -162,16 +151,6 @@ class _ZapHomePageState extends State<ZapHomePage>
     print("App lifestyle state changed: $state");
     if (state == AppLifecycleState.resumed) if (AppTokenType == TokenType.Waves)
       _ws.watchAddress(context);
-  }
-
-  @override
-  void didPushNext() {
-    setState(() => _fabOverlay = false);
-  }
-
-  @override
-  void didPopNext() {
-    setState(() => _fabOverlay = true);
   }
 
   Future<bool> processUri(String uri) async {
@@ -518,7 +497,7 @@ class _ZapHomePageState extends State<ZapHomePage>
 
   void _tabChange() {
     print(_tabController.index);
-    if (_tabController.index == 2)
+    if (_tabController.index == _buildTabCount() ~/ 2)
       _tabController.index = _tabController.previousIndex;
   }
 
@@ -545,7 +524,7 @@ class _ZapHomePageState extends State<ZapHomePage>
       tabs.insert(0, Tab(icon: Icon(Icons.home_outlined, color: ZapBlue)));
     }
     if (ZapButton) {
-      tabs.insert(tabs.length ~/ 2, Tab(child: _buildFab()));
+      tabs.insert(tabs.length ~/ 2, Tab(child: SizedBox()));
     }
     return tabs;
   }
@@ -556,25 +535,11 @@ class _ZapHomePageState extends State<ZapHomePage>
       MenuItem(MaterialCommunityIcons.qrcode_scan, 'SCAN QR CODE', ZapWhite, ZapBlue, _scanQrCode),
       MenuItem(MaterialCommunityIcons.chevron_double_down, 'RECIEVE $AssetShortNameUpper', ZapWhite, ZapGreen, _receive),
     ];
-    /*return FabWithIcons(
+    return FabWithIcons(
               icon: FlutterIcons.bolt_faw5s,
               menuItems: menuItems,
               onMenuIconTapped: _selectedFab,
-            );*/
-    return AnchoredOverlay(
-        showOverlay: _fabOverlay,
-        overlayBuilder: (context, offset) {
-          return CenterAbout(
-            position: Offset(offset.dx, offset.dy - menuItems.length * 35.0 - 5),
-            child: FabWithIcons(
-              icon: FlutterIcons.bolt_faw5s,
-              menuItems: menuItems,
-              onMenuIconTapped: _selectedFab,
-            ),
-          );
-        },
-        child: SizedBox(height: 2),
-      );
+            );
   }
 
   void _selectedFab(MenuItem item) {
@@ -606,7 +571,9 @@ class _ZapHomePageState extends State<ZapHomePage>
   }
 
   Widget _appScaffold(Widget body) {
-    return Scaffold(
+    return Stack(
+      alignment: Alignment.bottomCenter,
+      children: [Scaffold(
         appBar: AppBar(
           leading: Visibility(
             child: IconButton(
@@ -633,17 +600,21 @@ class _ZapHomePageState extends State<ZapHomePage>
         ),
         bottomNavigationBar:
             TabBar(controller: _tabController, tabs: _buildTabs()),
-        body: Column(children: [
-          Visibility(
-              visible: _showAlerts && _ws.alerts.length > 0,
-              child: AlertDrawer(_toggleAlerts, _ws.alerts)),
-          Expanded(
-              child: TabBarView(
-            physics: _buildTabPhysics(),
-            controller: _tabController,
-            children: _buildTabBodies(body),
-          ))
-        ]));
+        body: 
+            Column(children: [
+              Visibility(
+                visible: _showAlerts && _ws.alerts.length > 0,
+                child: AlertDrawer(_toggleAlerts, _ws.alerts)),
+              Expanded(
+                child: TabBarView(
+                  physics: _buildTabPhysics(),
+                  controller: _tabController,
+                  children: _buildTabBodies(body),
+                ))
+              ])
+      ),
+      Positioned(child: _buildFab(), bottom: 5,)
+    ]);
   }
 
   @override
