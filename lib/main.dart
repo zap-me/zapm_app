@@ -530,11 +530,15 @@ class _ZapHomePageState extends State<ZapHomePage>
   }
 
   Widget _buildFab() {
-    final menuItems = [
-      MenuItem(MaterialCommunityIcons.chevron_double_up, 'SEND $AssetShortNameUpper', ZapWhite, ZapYellow, _send),
-      MenuItem(MaterialCommunityIcons.qrcode_scan, 'SCAN QR CODE', ZapWhite, ZapBlue, _scanQrCode),
+    var menuItems = [
       MenuItem(MaterialCommunityIcons.chevron_double_down, 'RECIEVE $AssetShortNameUpper', ZapWhite, ZapGreen, _receive),
     ];
+    if (_ws.haveCapabililty(Capability.Spend)) {
+      menuItems = [
+        MenuItem(MaterialCommunityIcons.chevron_double_up, 'SEND $AssetShortNameUpper', ZapWhite, ZapYellow, _send),
+        MenuItem(MaterialCommunityIcons.qrcode_scan, 'SCAN QR CODE', ZapWhite, ZapBlue, _scanQrCode)
+      ] + menuItems;
+    }
     return FabWithIcons(
               icon: FlutterIcons.bolt_faw5s,
               menuItems: menuItems,
@@ -715,23 +719,32 @@ class _ZapHomePageState extends State<ZapHomePage>
                                 textAlign: TextAlign.center),
                           ])),
                   Divider(),
-                  Container(
-                      child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  ZapButton ?
+                    Container(
+                        child: Column(
                           children: [
-                        RoundedButton(
-                            _showQrCode, ZapBlue, ZapWhite, 'view QR code',
-                            icon: MaterialCommunityIcons.qrcode_scan,
-                            minWidth:
-                                MediaQuery.of(context).size.width / 2 - 20),
-                        RoundedButton(_copyAddrOrAccount, ZapWhite, ZapBlue,
-                            'copy ${_ws.addrOrAccount()}',
-                            minWidth:
-                                MediaQuery.of(context).size.width / 2 - 20),
-                      ]))
+                          QrWidget(_ws.addrOrAccountValue(), size: 200),
+                          RoundedButton(_copyAddrOrAccount, ZapWhite, ZapBlue,
+                              'copy ${_ws.addrOrAccount()}', icon: Icons.copy,),
+                          ])) :
+                    Container(
+                        child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                          RoundedButton(
+                              _showQrCode, ZapBlue, ZapWhite, 'view QR code',
+                              icon: MaterialCommunityIcons.qrcode,
+                              minWidth:
+                                  MediaQuery.of(context).size.width / 2 - 20),
+                          RoundedButton(_copyAddrOrAccount, ZapWhite, ZapBlue,
+                              'copy ${_ws.addrOrAccount()}',
+                              minWidth:
+                                  MediaQuery.of(context).size.width / 2 - 20),
+                        ]))
                 ])),
-            Container(
-                //height: 300, ???
+            ZapButton ?
+              SizedBox() :
+              Container(
                 margin: const EdgeInsets.only(top: 40),
                 padding: const EdgeInsets.only(top: 20),
                 color: ZapWhite,
@@ -774,10 +787,6 @@ class _ZapHomePageState extends State<ZapHomePage>
                       child: ListButton(_settlement, 'make settlement'),
                     ),
                     ListButtonEnd(),
-                    Center(
-                        child: Text(
-                            "${_appVersion?.version}+${_appVersion?.build}",
-                            style: TextStyle(fontSize: 10))),
                   ],
                 )),
           ],
