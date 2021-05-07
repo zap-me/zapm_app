@@ -31,6 +31,10 @@ import 'firebase.dart';
 import 'paydb.dart';
 import 'qrscan.dart';
 import 'wallet_state.dart';
+import 'fab_with_icons.dart';
+import 'layout.dart';
+
+final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 
 void main() {
   // See https://github.com/flutter/flutter/wiki/Desktop-shells#target-platform-override
@@ -88,7 +92,8 @@ class MyApp extends StatelessWidget {
               textTheme: ZapTextThemer(Theme.of(context).textTheme),
               primaryTextTheme: ZapTextThemer(Theme.of(context).textTheme),
             ),
-            home: ZapHomePage(AppTitle)));
+            home: ZapHomePage(AppTitle),
+            navigatorObservers: [routeObserver],));
   }
 }
 
@@ -102,7 +107,7 @@ class ZapHomePage extends StatefulWidget {
 }
 
 class _ZapHomePageState extends State<ZapHomePage>
-    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
+    with WidgetsBindingObserver, SingleTickerProviderStateMixin, RouteAware {
   StreamSubscription? _uniLinksSub; // uni links subscription
 
   bool _showAlerts = true;
@@ -116,6 +121,7 @@ class _ZapHomePageState extends State<ZapHomePage>
   late TabController _tabController;
   late WalletState _ws;
   bool _updatingBalance = true;
+  bool _fabOverlay = true;
 
   _ZapHomePageState() {
     _ws = WalletState(_txNotification, _walletStateUpdate);
@@ -132,6 +138,40 @@ class _ZapHomePageState extends State<ZapHomePage>
     // init async stuff
     _init();
     super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
+
+  @override
+  void dispose() {
+    _ws.dispose();
+    routeObserver.unsubscribe(this);
+    // remove WidgetsBindingObserver
+    WidgetsBinding.instance?.removeObserver(this);
+    // close uni links subscription
+    _uniLinksSub?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    print("App lifestyle state changed: $state");
+    if (state == AppLifecycleState.resumed) if (AppTokenType == TokenType.Waves)
+      _ws.watchAddress(context);
+  }
+
+  @override
+  void didPushNext() {
+    setState(() => _fabOverlay = false);
+  }
+
+  @override
+  void didPopNext() {
+    setState(() => _fabOverlay = true);
   }
 
   Future<bool> processUri(String uri) async {
@@ -273,23 +313,6 @@ class _ZapHomePageState extends State<ZapHomePage>
     }, onError: (err) {
       print('uri stream error: $err');
     });
-  }
-
-  @override
-  void dispose() {
-    _ws.dispose();
-    // remove WidgetsBindingObserver
-    WidgetsBinding.instance?.removeObserver(this);
-    // close uni links subscription
-    _uniLinksSub?.cancel();
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    print("App lifestyle state changed: $state");
-    if (state == AppLifecycleState.resumed) if (AppTokenType == TokenType.Waves)
-      _ws.watchAddress(context);
   }
 
   void _txNotification(String txid, String sender, String recipient,
@@ -495,19 +518,24 @@ class _ZapHomePageState extends State<ZapHomePage>
 
   void _tabChange() {
     print(_tabController.index);
+    if (_tabController.index == 2)
+      _tabController.index = _tabController.previousIndex;
   }
 
   int _buildTabCount() {
-    return WebviewURL != null ? 4 : 3;
+    var count = 3;
+    if (WebviewURL != null) count++;
+    if (ZapButton) count++;
+    return count;
   }
 
   ScrollPhysics _buildTabPhysics() {
-    return WebviewURL != null
+    return WebviewURL != null || ZapButton
         ? NeverScrollableScrollPhysics()
         : ClampingScrollPhysics();
   }
 
-  List<Tab> _buildTabs() {
+  List<Widget> _buildTabs() {
     var tabs = [
       Tab(icon: Icon(Icons.account_balance_wallet_outlined, color: ZapBlue)),
       Tab(icon: Icon(FlutterIcons.bank_transfer_mco, color: ZapBlue)),
@@ -516,7 +544,42 @@ class _ZapHomePageState extends State<ZapHomePage>
     if (WebviewURL != null) {
       tabs.insert(0, Tab(icon: Icon(Icons.home_outlined, color: ZapBlue)));
     }
+    if (ZapButton) {
+      tabs.insert(tabs.length ~/ 2, Tab(child: _buildFab()));
+    }
     return tabs;
+  }
+
+  Widget _buildFab() {
+    final menuItems = [
+      MenuItem(MaterialCommunityIcons.chevron_double_up, 'SEND $AssetShortNameUpper', ZapWhite, ZapYellow, _send),
+      MenuItem(MaterialCommunityIcons.qrcode_scan, 'SCAN QR CODE', ZapWhite, ZapBlue, _scanQrCode),
+      MenuItem(MaterialCommunityIcons.chevron_double_down, 'RECIEVE $AssetShortNameUpper', ZapWhite, ZapGreen, _receive),
+    ];
+    /*return FabWithIcons(
+              icon: FlutterIcons.bolt_faw5s,
+              menuItems: menuItems,
+              onMenuIconTapped: _selectedFab,
+            );*/
+    return AnchoredOverlay(
+        showOverlay: _fabOverlay,
+        overlayBuilder: (context, offset) {
+          return CenterAbout(
+            position: Offset(offset.dx, offset.dy - menuItems.length * 35.0 - 5),
+            child: FabWithIcons(
+              icon: FlutterIcons.bolt_faw5s,
+              menuItems: menuItems,
+              onMenuIconTapped: _selectedFab,
+            ),
+          );
+        },
+        child: SizedBox(height: 2),
+      );
+  }
+
+  void _selectedFab(MenuItem item) {
+    print('FAB: ${item.label}');
+    item.action();
   }
 
   List<Widget> _buildTabBodies(Widget body) {
@@ -535,6 +598,9 @@ class _ZapHomePageState extends State<ZapHomePage>
         },
       );
       content.insert(0, webview);
+    }
+    if (ZapButton) {
+      content.insert(content.length ~/ 2, Text('dummy tab'));
     }
     return content;
   }

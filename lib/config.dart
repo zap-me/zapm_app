@@ -28,6 +28,8 @@ const UseSettlement = false;
 const UseMerchantApi = false;
 // enable/disable a webview homepage (null = disabled)
 const String? WebviewURL = null;
+// enable/disable the centered ZAP button
+const ZapButton = true;
 
 // are we using the waves network or a paydb server
 const TokenType AppTokenType = TokenType.Waves;
