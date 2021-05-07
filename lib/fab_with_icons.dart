@@ -66,8 +66,8 @@ class FabWithIconsState extends State<FabWithIcons> with TickerProviderStateMixi
     if (mi.color != null) foregroundColor = mi.color!;
     if (mi.background != null) backgroundColor = mi.background!;
     return Container(
-      height: 70.0,
-      width: 56.0,
+      height: 100.0,
+      width: 100.0,
       alignment: FractionalOffset.topCenter,
       child: ScaleTransition(
         scale: CurvedAnimation(
@@ -78,12 +78,16 @@ class FabWithIconsState extends State<FabWithIcons> with TickerProviderStateMixi
               curve: Curves.easeOut
           ),
         ),
-        child: FloatingActionButton(
-          backgroundColor: backgroundColor,
-          mini: false,
-          child: Icon(mi.icon, color: foregroundColor),
-          onPressed: () => _onTapped(index),
-        ),
+        child: Column(children: [
+          FloatingActionButton(
+            backgroundColor: backgroundColor,
+            mini: false,
+            child: Icon(mi.icon, color: foregroundColor),
+            onPressed: () => _onTapped(index),
+          ),
+          SizedBox(height: 5),
+          Text(mi.label, style: TextStyle(color: foregroundColor, fontSize: 12),)
+        ])
       ),
     );
   }

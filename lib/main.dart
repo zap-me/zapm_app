@@ -532,7 +532,7 @@ class _ZapHomePageState extends State<ZapHomePage>
 
   FabWithIcons _buildFab() {
     var menuItems = [
-      MenuItem(MaterialCommunityIcons.chevron_double_down, 'RECIEVE $AssetShortNameUpper', ZapWhite, ZapGreen, _receive),
+      MenuItem(MaterialCommunityIcons.chevron_double_down, 'RECEIVE $AssetShortNameUpper', ZapWhite, ZapGreen, _receive),
     ];
     if (_ws.haveCapabililty(Capability.Spend)) {
       menuItems = [
@@ -627,7 +627,7 @@ class _ZapHomePageState extends State<ZapHomePage>
               ])
       ),
       _fabExpanded ? GestureDetector(
-        child: Container(color: Colors.grey.withOpacity(0.5),),
+        child: Container(color: Colors.grey.withOpacity(0.8),),
         onTap: () {
           setState(() => _fabExpanded = false);
       },) : SizedBox(),
