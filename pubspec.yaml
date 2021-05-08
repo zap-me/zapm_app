@@ -53,6 +53,7 @@ dependencies:
       url: https://github.com/adarsh-technocrat/flutter-icons
       ref: 0831af6
   google_api_availability: ^3.0.1
+  mutex: ^3.0.0
 
   zapdart:
     git:

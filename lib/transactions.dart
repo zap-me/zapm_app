@@ -84,6 +84,12 @@ class _TransactionsState extends State<TransactionsScreen> {
         _loading = false;
       });
     } else {
+      setState(() {
+        _more = !widget._ws.txDownloader.foundEnd ||
+            newOffset < widget._ws.txDownloader.txs.length - _displayCount;
+        _less = newOffset > 0;
+        _offset = newOffset;
+      });
       if (dir == LoadDirection.Initial) {
         setState(() => _loadingNewTxs = true);
         var offset = 0;
@@ -100,12 +106,6 @@ class _TransactionsState extends State<TransactionsScreen> {
         }
         setState(() => _loadingNewTxs = false);
       }
-      setState(() {
-        _more = !widget._ws.txDownloader.foundEnd ||
-            newOffset < widget._ws.txDownloader.txs.length - _displayCount;
-        _less = newOffset > 0;
-        _offset = newOffset;
-      });
     }
   }
 
@@ -247,10 +247,6 @@ class _TransactionsState extends State<TransactionsScreen> {
               visible: !_loading && widget._ws.txDownloader.txs.length == 0,
               child: Text("Nothing here..")),
           Visibility(
-            visible: _loadingNewTxs,
-            child: CircularProgressIndicator(),
-          ),
-          Visibility(
               visible: !_loading,
               child: Expanded(
                   child: ListView.builder(
@@ -275,13 +271,15 @@ class _TransactionsState extends State<TransactionsScreen> {
                           'prev',
                           icon: Icons.navigate_before,
                           borderColor: ZapBlue))),
-              Visibility(
-                  visible: !_loading,
-                  child: Container(
-                      padding: const EdgeInsets.all(5),
-                      child: RoundedButton(
-                          () => _exportJson(), ZapBlue, ZapWhite, 'save file',
-                          icon: Icons.save, borderColor: ZapBlue))),
+              _loadingNewTxs
+                  ? CircularProgressIndicator()
+                  : Visibility(
+                      visible: !_loading && !_loadingNewTxs,
+                      child: Container(
+                          padding: const EdgeInsets.all(5),
+                          child: IconButton(
+                              onPressed: _exportJson,
+                              icon: Icon(Icons.save, color: ZapBlue)))),
               Visibility(
                   maintainSize: true,
                   maintainState: true,

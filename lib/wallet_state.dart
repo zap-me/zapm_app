@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'dart:convert';
+import 'package:mutex/mutex.dart';
 import 'package:flutter/material.dart';
 import 'package:device_info/device_info.dart';
 import 'package:decimal/decimal.dart';
@@ -28,20 +28,6 @@ enum NoAccountAction { Register, Login, RequestApiKey }
 enum Capability { Receive, Balance, History, Spend }
 enum InitTokenDetailsResult { None, NoData, Auth, Network }
 
-class GenTx {
-  String id;
-  String action;
-  int timestamp;
-  String sender;
-  String recipient;
-  String? attachment;
-  int amount;
-  int fee;
-
-  GenTx(this.id, this.action, this.timestamp, this.sender, this.recipient,
-      this.attachment, this.amount, this.fee);
-}
-
 class TxDownloadResult {
   final int downloadCount;
   final int validCount;
@@ -55,11 +41,16 @@ typedef WalletStateUpdateCallback = void Function(
     WalletState ws, bool updatingBalance, bool loading, bool inited);
 
 class TxDownloader {
-  TxDownloader(this._ws);
+  TxDownloader(this._ws) {
+    loadTxs();
+  }
 
-  WalletState _ws;
+  final WalletState _ws;
+  final m = Mutex();
+
   var _txsAll = <GenTx>[];
   var _txsFiltered = <GenTx>[];
+  String? _secondLastTxId;
   String? _lastTxId;
   var _foundEnd = false;
 
@@ -71,114 +62,156 @@ class TxDownloader {
     return _foundEnd;
   }
 
-  String wavesAssetId() {
+  String _wavesAssetId() {
     return _ws.testnet
         ? (AssetIdTestnet != null ? AssetIdTestnet! : LibZap.TESTNET_ASSET_ID)
         : (AssetIdMainnet != null ? AssetIdMainnet! : LibZap.MAINNET_ASSET_ID);
   }
 
-  String? wavesAttachment(Tx tx) {
-    if (tx.attachment != null && tx.attachment!.isNotEmpty)
-      return base58decodeString(tx.attachment!);
-    return tx.attachment;
+  String? _wavesAttachment(String? attachment) {
+    if (attachment != null && attachment.isNotEmpty)
+      return base58decodeString(attachment);
+    return attachment;
   }
 
-  void wavesTxsFilter(Iterable<Tx> wavesTxs, String? deviceName,
-      List<GenTx> txs, List<GenTx> txsFiltered) {
+  List<GenTx> _wavesTxsConvert(String? deviceName, Iterable<Tx> wavesTxs) {
+    List<GenTx> txs = [];
     for (var tx in wavesTxs) {
+      var attachment = _wavesAttachment(tx.attachment);
+      var validForWallet = tx.assetId == _wavesAssetId();
+      /*TODO: revisit this merchant feature of hiding txs not for the current (non-spending) wallet
+      if (validForWallet) {
+        // check device name
+        var txDeviceName = '';
+        try {
+          txDeviceName = json.decode(tx.attachment!)['device_name'];
+        } catch (_) {}
+        validForWallet = !_ws.haveCapabililty(Capability.Spend) &&
+            deviceName!.isNotEmpty &&
+            deviceName != txDeviceName;
+      }
+      */
       var genTx = GenTx(tx.id, ActionTransfer, tx.timestamp, tx.sender,
-          tx.recipient, null, tx.amount, tx.fee);
+          tx.recipient, attachment, tx.amount, tx.fee, validForWallet);
       txs.add(genTx);
-      // check asset id
-      if (tx.assetId != wavesAssetId()) continue;
-      // decode attachment
-      genTx.attachment = wavesAttachment(tx);
-      // check device name
-      var txDeviceName = '';
-      try {
-        txDeviceName = json.decode(tx.attachment!)['device_name'];
-      } catch (_) {}
-      if (!_ws.haveCapabililty(Capability.Spend) &&
-          deviceName!.isNotEmpty &&
-          deviceName != txDeviceName) continue;
-      txsFiltered.add(genTx);
     }
+    return txs;
   }
 
-  void paydbTxsFilter(
-      PayDbUserTxsResult paydbTxs, List<GenTx> txs, List<GenTx> txsFiltered) {
+  List<GenTx> _paydbTxsConvert(PayDbUserTxsResult paydbTxs) {
+    List<GenTx> txs = [];
     if (paydbTxs.txs != null && paydbTxs.error == PayDbError.None) {
       for (var tx in paydbTxs.txs!) {
         var genTx = GenTx(tx.token, tx.action, tx.timestamp * 1000, tx.sender,
-            tx.recipient, tx.attachment, tx.amount, 0);
+            tx.recipient, tx.attachment, tx.amount, 0, true);
         txs.add(genTx);
-        txsFiltered.add(genTx);
       }
     }
+    return txs;
   }
 
-  Future<TxDownloadResult> downloadMoreTxs(int count) async {
-    List<GenTx> txs = [];
+  List<GenTx> _addMoreTxs(List<GenTx> txs) {
     List<GenTx> txsFiltered = [];
-    switch (AppTokenType) {
-      case TokenType.Waves:
-        var deviceName = await Prefs.deviceNameGet();
-        var wavesTxs = await LibZap.addressTransactions(
-            _ws.addrOrAccountValue(), count, _lastTxId);
-        wavesTxsFilter(wavesTxs, deviceName, txs, txsFiltered);
-        break;
-      case TokenType.PayDB:
-        var result = await paydbUserTransactions(_txsAll.length, count);
-        paydbTxsFilter(result, txs, txsFiltered);
+    for (var tx in txs) {
+      if (!tx.validForWallet) continue;
+      txsFiltered.add(tx);
     }
     _txsAll += txs;
     _txsFiltered += txsFiltered;
     if (_txsAll.length > 0) _lastTxId = _txsAll[_txsAll.length - 1].id;
-    if (txs.length < count) _foundEnd = true;
-    return TxDownloadResult(
-        txs.length, txsFiltered.length, _foundEnd, _lastTxId);
+    if (_txsAll.length > 1) _secondLastTxId = _txsAll[_txsAll.length - 2].id;
+    return txsFiltered;
   }
 
-  bool containsTx(List<GenTx> txs, String txid) {
+  Future<void> _saveTxs() async {
+    await Prefs.transactionsSet(_txsAll);
+  }
+
+  Future<TxDownloadResult> downloadMoreTxs(int count) async {
+    return await m.protect<TxDownloadResult>(() async {
+      List<GenTx> txs = [];
+      switch (AppTokenType) {
+        case TokenType.Waves:
+          var deviceName = await Prefs.deviceNameGet();
+          var wavesTxs = await LibZap.addressTransactions(
+              _ws.addrOrAccountValue(), count, _secondLastTxId);
+          txs = _wavesTxsConvert(deviceName, wavesTxs);
+          break;
+        case TokenType.PayDB:
+          var result = await paydbUserTransactions(_txsAll.length, count);
+          txs = _paydbTxsConvert(result);
+      }
+      if (txs.length < count) _foundEnd = true;
+      var txsFiltered = _addMoreTxs(txs);
+      _saveTxs();
+      return TxDownloadResult(
+          txs.length, txsFiltered.length, _foundEnd, _lastTxId);
+    });
+  }
+
+  bool _containsTx(List<GenTx> txs, String txid) {
     for (var tx in txs) if (tx.id == txid) return true;
     return false;
   }
 
   Future<TxDownloadResult> downloadNewTxs(
       int count, int offset, String? lastTxid) async {
-    List<GenTx> txs = [];
-    List<GenTx> txsFiltered = [];
-    switch (AppTokenType) {
-      case TokenType.Waves:
-        var deviceName = await Prefs.deviceNameGet();
-        var wavesTxs = await LibZap.addressTransactions(
-            _ws.addrOrAccountValue(), count, lastTxid);
-        wavesTxsFilter(wavesTxs, deviceName, txs, txsFiltered);
-        break;
-      case TokenType.PayDB:
-        var result = await paydbUserTransactions(offset, count);
-        paydbTxsFilter(result, txs, txsFiltered);
-    }
-    var end = false;
-    for (var i = txs.length - 1; i >= 0; i--) {
-      if (containsTx(_txsAll, txs[i].id))
-        end = true;
-      else
-        _txsAll.insert(0, txs[i]);
-    }
-    for (var i = txsFiltered.length - 1; i >= 0; i--) {
-      if (!containsTx(_txsFiltered, txsFiltered[i].id))
-        _txsFiltered.insert(0, txsFiltered[i]);
-    }
-    var lastTxId = txs.length > 0 ? txs.last.id : null;
-    return TxDownloadResult(txs.length, txsFiltered.length, end, lastTxId);
+    return await m.protect<TxDownloadResult>(() async {
+      List<GenTx> txs = [];
+      List<GenTx> txsFiltered = [];
+      switch (AppTokenType) {
+        case TokenType.Waves:
+          var deviceName = await Prefs.deviceNameGet();
+          var wavesTxs = await LibZap.addressTransactions(
+              _ws.addrOrAccountValue(), count, lastTxid);
+          txs = _wavesTxsConvert(deviceName, wavesTxs);
+          break;
+        case TokenType.PayDB:
+          var result = await paydbUserTransactions(offset, count);
+          txs = _paydbTxsConvert(result);
+      }
+      for (var tx in txs) {
+        if (!tx.validForWallet) continue;
+        txsFiltered.add(tx);
+      }
+      var end = false;
+      for (var i = txs.length - 1; i >= 0; i--) {
+        if (_containsTx(_txsAll, txs[i].id))
+          end = true;
+        else
+          _txsAll.insert(0, txs[i]);
+      }
+      for (var i = txsFiltered.length - 1; i >= 0; i--) {
+        if (!_containsTx(_txsFiltered, txsFiltered[i].id))
+          _txsFiltered.insert(0, txsFiltered[i]);
+      }
+      var lastTxId = txs.length > 0 ? txs.last.id : null;
+      if (end) await _saveTxs();
+      return TxDownloadResult(txs.length, txsFiltered.length, end, lastTxId);
+    });
   }
 
-  void reset() {
+  void _clear() {
     _txsAll.clear();
     _txsFiltered.clear();
     _lastTxId = null;
+    _secondLastTxId = null;
     _foundEnd = false;
+  }
+
+  Future<void> loadTxs() async {
+    await m.protect(() async {
+      _clear();
+      var txs = await Prefs.transactionsGet();
+      _addMoreTxs(txs);
+    });
+  }
+
+  Future<void> delTxs() async {
+    await m.protect(() async {
+      _clear();
+      await Prefs.transactionsSet([]);
+    });
   }
 }
 

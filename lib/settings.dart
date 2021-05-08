@@ -125,11 +125,15 @@ class _SettingsState extends State<SettingsScreen> {
   void _toggleTestnet() async {
     if (_secondary) return;
     await Prefs.testnetSet(!_testnet);
-    widget._ws.txDownloader.reset();
+    widget._ws.txDownloader.loadTxs();
     widget._ws.initTokenDetails(context);
     setState(() {
       _testnet = !_testnet;
     });
+  }
+
+  Future<void> _deleteTxs() async {
+    widget._ws.txDownloader.delTxs();
   }
 
   void _addPin() async {
@@ -323,6 +327,14 @@ class _SettingsState extends State<SettingsScreen> {
               onChanged: (value) async {
                 _toggleTestnet();
               },
+            ),
+          ),
+          Container(
+            child: ListTile(
+              title: raisedButtonIcon(
+                  label: Text("Delete Transaction History"),
+                  icon: Icon(Icons.delete),
+                  onPressed: _deleteTxs),
             ),
           ),
           Visibility(

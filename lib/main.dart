@@ -516,15 +516,20 @@ class _ZapHomePageState extends State<ZapHomePage>
   }
 
   Widget _tab(IconData icon, String label) {
-    return Tab(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-      Icon(icon, color: ZapBlue),
-      Text(label, style: TextStyle(color: ZapBlue, fontSize: 8)),
-    ],));
+    return Tab(
+        child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(icon, color: ZapBlue),
+        Text(label, style: TextStyle(color: ZapBlue, fontSize: 8)),
+      ],
+    ));
   }
 
   List<Widget> _buildTabs() {
     var tabs = [
-      _tab(Icons.account_balance_wallet_outlined, _ws.walletOrAccount().toUpperCase()),
+      _tab(Icons.account_balance_wallet_outlined,
+          _ws.walletOrAccount().toUpperCase()),
       _tab(FlutterIcons.swap_horizontal_bold_mco, 'HISTORY'),
       _tab(Icons.settings_applications_outlined, 'SETTINGS'),
     ];

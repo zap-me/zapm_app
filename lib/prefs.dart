@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ini/ini.dart';
 
@@ -34,6 +35,46 @@ class PayDbAccount {
         photo = null,
         photoType = null,
         permissions = [];
+}
+
+class GenTx {
+  String id;
+  String action;
+  int timestamp;
+  String sender;
+  String recipient;
+  String? attachment;
+  int amount;
+  int fee;
+  bool validForWallet;
+
+  GenTx(this.id, this.action, this.timestamp, this.sender, this.recipient,
+      this.attachment, this.amount, this.fee, this.validForWallet);
+
+  Map toJson() => {
+        'id': id,
+        'action': action,
+        'timestamp': timestamp,
+        'sender': sender,
+        'recipient': recipient,
+        'attachment': attachment,
+        'amount': amount,
+        'fee': fee,
+        'validForWallet': validForWallet
+      };
+
+  factory GenTx.fromJson(dynamic json) {
+    return GenTx(
+        json['id'] as String,
+        json['action'] as String,
+        json['timestamp'] as int,
+        json['sender'] as String,
+        json['recipient'] as String,
+        json['attachment'] as String?,
+        json['amount'] as int,
+        json['fee'] as int,
+        json['validForWallet'] as bool);
+  }
 }
 
 class PrefHelper {
@@ -262,5 +303,19 @@ class Prefs {
     var apisecret = await Prefs.paydbApiSecretGet();
     if (apisecret == null || apisecret.isEmpty) return false;
     return true;
+  }
+
+  static Future<List<GenTx>> transactionsGet() async {
+    var txs = <GenTx>[];
+    var data = await getStringNetworkSpecific("transactions", null);
+    if (data != null) {
+      var list = jsonDecode(data) as List<dynamic>;
+      for (var item in list) txs.add(GenTx.fromJson(item));
+    }
+    return txs;
+  }
+
+  static Future<bool> transactionsSet(List<GenTx> txs) async {
+    return await setStringNetworkSpecific("transactions", jsonEncode(txs));
   }
 }
