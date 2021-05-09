@@ -29,12 +29,13 @@ enum Capability { Receive, Balance, History, Spend }
 enum InitTokenDetailsResult { None, NoData, Auth, Network }
 
 class TxDownloadResult {
+  final bool success;
   final int downloadCount;
   final int validCount;
   final bool end;
   final String? lastTxid;
-  TxDownloadResult(
-      this.downloadCount, this.validCount, this.end, this.lastTxid);
+  TxDownloadResult(this.success, this.downloadCount, this.validCount, this.end,
+      this.lastTxid);
 }
 
 typedef WalletStateUpdateCallback = void Function(
@@ -50,7 +51,6 @@ class TxDownloader {
 
   var _txsAll = <GenTx>[];
   var _txsFiltered = <GenTx>[];
-  String? _secondLastTxId;
   String? _lastTxId;
   var _foundEnd = false;
 
@@ -74,26 +74,28 @@ class TxDownloader {
     return attachment;
   }
 
-  List<GenTx> _wavesTxsConvert(String? deviceName, Iterable<Tx> wavesTxs) {
+  List<GenTx> _wavesTxsConvert(String? deviceName, AddrTxsResult wavesTxs) {
     List<GenTx> txs = [];
-    for (var tx in wavesTxs) {
-      var attachment = _wavesAttachment(tx.attachment);
-      var validForWallet = tx.assetId == _wavesAssetId();
-      /*TODO: revisit this merchant feature of hiding txs not for the current (non-spending) wallet
-      if (validForWallet) {
-        // check device name
-        var txDeviceName = '';
-        try {
-          txDeviceName = json.decode(tx.attachment!)['device_name'];
-        } catch (_) {}
-        validForWallet = !_ws.haveCapabililty(Capability.Spend) &&
-            deviceName!.isNotEmpty &&
-            deviceName != txDeviceName;
+    if (wavesTxs.success) {
+      for (var tx in wavesTxs.txs) {
+        var attachment = _wavesAttachment(tx.attachment);
+        var validForWallet = tx.assetId == _wavesAssetId();
+        /*TODO: revisit this merchant feature of hiding txs not for the current (non-spending) wallet
+        if (validForWallet) {
+          // check device name
+          var txDeviceName = '';
+          try {
+            txDeviceName = json.decode(tx.attachment!)['device_name'];
+          } catch (_) {}
+          validForWallet = !_ws.haveCapabililty(Capability.Spend) &&
+              deviceName!.isNotEmpty &&
+              deviceName != txDeviceName;
+        }
+        */
+        var genTx = GenTx(tx.id, ActionTransfer, tx.timestamp, tx.sender,
+            tx.recipient, attachment, tx.amount, tx.fee, validForWallet);
+        txs.add(genTx);
       }
-      */
-      var genTx = GenTx(tx.id, ActionTransfer, tx.timestamp, tx.sender,
-          tx.recipient, attachment, tx.amount, tx.fee, validForWallet);
-      txs.add(genTx);
     }
     return txs;
   }
@@ -119,7 +121,6 @@ class TxDownloader {
     _txsAll += txs;
     _txsFiltered += txsFiltered;
     if (_txsAll.length > 0) _lastTxId = _txsAll[_txsAll.length - 1].id;
-    if (_txsAll.length > 1) _secondLastTxId = _txsAll[_txsAll.length - 2].id;
     return txsFiltered;
   }
 
@@ -129,23 +130,26 @@ class TxDownloader {
 
   Future<TxDownloadResult> downloadMoreTxs(int count) async {
     return await m.protect<TxDownloadResult>(() async {
-      List<GenTx> txs = [];
+      bool success;
+      List<GenTx> txs;
       switch (AppTokenType) {
         case TokenType.Waves:
           var deviceName = await Prefs.deviceNameGet();
-          var wavesTxs = await LibZap.addressTransactions(
-              _ws.addrOrAccountValue(), count, _secondLastTxId);
-          txs = _wavesTxsConvert(deviceName, wavesTxs);
+          var result = await LibZap.addressTransactions(
+              _ws.addrOrAccountValue(), count, _lastTxId);
+          success = result.success;
+          txs = _wavesTxsConvert(deviceName, result);
           break;
         case TokenType.PayDB:
           var result = await paydbUserTransactions(_txsAll.length, count);
+          success = result.error == PayDbError.None;
           txs = _paydbTxsConvert(result);
       }
       if (txs.length < count) _foundEnd = true;
       var txsFiltered = _addMoreTxs(txs);
       _saveTxs();
       return TxDownloadResult(
-          txs.length, txsFiltered.length, _foundEnd, _lastTxId);
+          success, txs.length, txsFiltered.length, _foundEnd, _lastTxId);
     });
   }
 
@@ -157,17 +161,21 @@ class TxDownloader {
   Future<TxDownloadResult> downloadNewTxs(
       int count, int offset, String? lastTxid) async {
     return await m.protect<TxDownloadResult>(() async {
-      List<GenTx> txs = [];
+      bool success;
+      List<GenTx> txs;
       List<GenTx> txsFiltered = [];
+      var newTxs = 0;
       switch (AppTokenType) {
         case TokenType.Waves:
           var deviceName = await Prefs.deviceNameGet();
-          var wavesTxs = await LibZap.addressTransactions(
+          var result = await LibZap.addressTransactions(
               _ws.addrOrAccountValue(), count, lastTxid);
-          txs = _wavesTxsConvert(deviceName, wavesTxs);
+          success = result.success;
+          txs = _wavesTxsConvert(deviceName, result);
           break;
         case TokenType.PayDB:
           var result = await paydbUserTransactions(offset, count);
+          success = result.error == PayDbError.None;
           txs = _paydbTxsConvert(result);
       }
       for (var tx in txs) {
@@ -182,12 +190,14 @@ class TxDownloader {
           _txsAll.insert(0, txs[i]);
       }
       for (var i = txsFiltered.length - 1; i >= 0; i--) {
-        if (!_containsTx(_txsFiltered, txsFiltered[i].id))
+        if (!_containsTx(_txsFiltered, txsFiltered[i].id)) {
           _txsFiltered.insert(0, txsFiltered[i]);
+          newTxs++;
+        }
       }
       var lastTxId = txs.length > 0 ? txs.last.id : null;
       if (end) await _saveTxs();
-      return TxDownloadResult(txs.length, txsFiltered.length, end, lastTxId);
+      return TxDownloadResult(success, txs.length, newTxs, end, lastTxId);
     });
   }
 
@@ -195,7 +205,6 @@ class TxDownloader {
     _txsAll.clear();
     _txsFiltered.clear();
     _lastTxId = null;
-    _secondLastTxId = null;
     _foundEnd = false;
   }
 

@@ -65,7 +65,7 @@ class _TransactionsState extends State<TransactionsScreen> {
         if (!this
             .mounted) // check that the page has not been disposed while we were downloading
           return;
-        if (res.downloadCount == 0) {
+        if (!res.success) {
           flushbarMsg(context, 'failed to load transactions',
               category: MessageCategory.Warning);
           failed = true;
@@ -93,6 +93,7 @@ class _TransactionsState extends State<TransactionsScreen> {
       if (dir == LoadDirection.Initial) {
         setState(() => _loadingNewTxs = true);
         var offset = 0;
+        var newTxs = 0;
         String? lastTxid;
         while (true) {
           var res = await widget._ws.txDownloader
@@ -100,11 +101,18 @@ class _TransactionsState extends State<TransactionsScreen> {
           if (!this
               .mounted) // check that the page has not been disposed while we were downloading
             return;
+          newTxs += res.validCount;
           if (res.downloadCount == 0 || res.end) break;
           offset += res.downloadCount;
           lastTxid = res.lastTxid;
         }
         setState(() => _loadingNewTxs = false);
+        if (newTxs > 0)
+          flushbarMsg(
+              context,
+              newTxs > 1
+                  ? '$newTxs new transactions'
+                  : '$newTxs new transaction');
       }
     }
   }
@@ -208,7 +216,7 @@ class _TransactionsState extends State<TransactionsScreen> {
     });
     while (true) {
       var txs = await widget._ws.txDownloader.downloadMoreTxs(_downloadCount);
-      if (txs.downloadCount == 0) {
+      if (!txs.success) {
         flushbarMsg(context, 'failed to load transactions',
             category: MessageCategory.Warning);
         setState(() {
