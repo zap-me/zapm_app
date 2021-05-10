@@ -322,7 +322,7 @@ class _ZapHomePageState extends State<ZapHomePage>
               width: double.maxFinite,
               child: ListView(
                 shrinkWrap: true,
-                children: <Widget>[
+                children: [
                   ListTile(title: Text("TXID"), subtitle: Text(txid)),
                   ListTile(
                     title: Text("sender"),
@@ -339,7 +339,7 @@ class _ZapHomePageState extends State<ZapHomePage>
                 ],
               ),
             ),
-            actions: <Widget>[
+            actions: [
               RoundedButton(
                   () => Navigator.pop(context), ZapBlue, ZapWhite, 'ok',
                   borderColor: ZapBlue),
@@ -598,34 +598,41 @@ class _ZapHomePageState extends State<ZapHomePage>
     return content;
   }
 
+  Widget _buildPrice({bool small = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _updatingBalance
+            ? SizedBox(
+                child: CircularProgressIndicator(strokeWidth: small ? 2 : 4),
+                height: small ? 14 : 28,
+                width: small ? 14 : 28)
+            : Text(_ws.balanceText,
+                style: TextStyle(color: ZapBlue, fontSize: small ? 12 : 28)),
+        SizedBox(width: small ? 4 : 4),
+        SvgPicture.asset(AssetBalanceIconSvg, height: small ? 12 : 20),
+        SizedBox(width: small ? 2 : 0),
+      ],
+    );
+  }
+
   Widget _appScaffold(Widget body) {
     var fab = _buildFab();
     return Stack(alignment: Alignment.bottomCenter, children: [
       Scaffold(
           appBar: AppBar(
-            leading: Visibility(
-              child: IconButton(
-                  onPressed: _toggleAlerts,
-                  icon: Icon(Icons.warning,
-                      color: _showAlerts ? ZapGrey : ZapWarning)),
-              maintainSize: true,
-              maintainAnimation: true,
-              maintainState: true,
-              visible: _ws.alerts.length > 0,
-            ),
-            title: Center(child: Image.asset(AssetHeaderIconPng, height: 30)),
-            actions: [
-              Visibility(
-                  child: IconButton(
-                    onPressed: _toggleAlerts,
-                    icon: Icon(Icons.settings_outlined, color: ZapBlue),
-                  ),
-                  maintainSize: true,
-                  maintainAnimation: true,
-                  maintainState: true,
-                  visible: false),
-            ],
-          ),
+              title: Stack(alignment: AlignmentDirectional.center, children: [
+            Positioned(
+                left: 0,
+                child: Visibility(
+                    child: IconButton(
+                        onPressed: _toggleAlerts,
+                        icon: Icon(Icons.warning,
+                            color: _showAlerts ? ZapGrey : ZapWarning)),
+                    visible: _ws.alerts.length > 0)),
+            Align(child: Image.asset(AssetHeaderIconPng, height: 30)),
+            Positioned(right: 0, child: _buildPrice(small: true)),
+          ])),
           bottomNavigationBar:
               TabBar(controller: _tabController, tabs: _buildTabs()),
           body: Column(children: [
@@ -679,11 +686,11 @@ class _ZapHomePageState extends State<ZapHomePage>
       RefreshIndicator(
         onRefresh: _updateBalance,
         child: ListView(
-          children: <Widget>[
+          children: [
             Visibility(
                 visible: _ws.haveCapabililty(Capability.Balance),
                 child: Column(
-                  children: <Widget>[
+                  children: [
                     Container(
                       padding: const EdgeInsets.only(top: 28.0),
                       child: Text(
@@ -698,33 +705,7 @@ class _ZapHomePageState extends State<ZapHomePage>
                       width: MediaQuery.of(context).size.width,
                       child: Card(
                         child: Align(
-                            alignment: Alignment.center,
-                            child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: <Widget>[
-                                  Visibility(
-                                      visible: _updatingBalance,
-                                      child: SizedBox(
-                                        child: CircularProgressIndicator(),
-                                        height: 28.0,
-                                        width: 28.0,
-                                      )),
-                                  Visibility(
-                                      visible: !_updatingBalance,
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: <Widget>[
-                                          Text(_ws.balanceText,
-                                              style: TextStyle(
-                                                  color: ZapBlue,
-                                                  fontSize: 28)),
-                                          SizedBox.fromSize(size: Size(4, 1)),
-                                          SvgPicture.asset(AssetBalanceIconSvg,
-                                              height: 20)
-                                        ],
-                                      ))
-                                ])),
+                            alignment: Alignment.center, child: _buildPrice()),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10.0),
                         ),
@@ -735,7 +716,7 @@ class _ZapHomePageState extends State<ZapHomePage>
                 )),
             Visibility(
                 visible: _ws.haveCapabililty(Capability.Receive),
-                child: Column(children: <Widget>[
+                child: Column(children: [
                   Container(
                     padding: const EdgeInsets.only(top: 28.0),
                     child: Text('${_ws.addrOrAccount()}:',
@@ -790,7 +771,7 @@ class _ZapHomePageState extends State<ZapHomePage>
                     padding: const EdgeInsets.only(top: 20),
                     color: ZapWhite,
                     child: Column(
-                      children: <Widget>[
+                      children: [
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: <Widget?>[

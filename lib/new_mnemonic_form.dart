@@ -29,8 +29,10 @@ class MnemonicTestFormState extends State<MnemonicTestForm> {
 
   void _inputChanged(String _) {
     setState(() {
-      _word1Ok = _textController1.text.toLowerCase() == widget._word1 || _textController1.text == 'xbypass';
-      _word2Ok = _textController2.text.toLowerCase() == widget._word2 || _textController1.text == 'xbypass';
+      _word1Ok = _textController1.text.toLowerCase() == widget._word1 ||
+          _textController1.text == 'xbypass';
+      _word2Ok = _textController2.text.toLowerCase() == widget._word2 ||
+          _textController1.text == 'xbypass';
       widget._onFormUpdate(_word1Ok && _word2Ok);
     });
   }
