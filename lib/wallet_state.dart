@@ -539,9 +539,9 @@ class WalletState {
     while (true) {
       String? mnemonic;
       String? address;
-      _update(this, false, true, false);
-      var action = await _noWalletDialog(context);
       _update(this, false, false, false);
+      var action = await _noWalletDialog(context);
+      _update(this, false, true, false);
       switch (action) {
         case NoWalletAction.CreateMnemonic:
           mnemonic = libzap.mnemonicCreate();
@@ -675,9 +675,9 @@ class WalletState {
     assert(await paydbServer() != null);
     while (true) {
       String? accountEmail;
-      _update(this, false, true, false);
-      var action = await _noAccountDialog(context);
       _update(this, false, false, false);
+      var action = await _noAccountDialog(context);
+      _update(this, false, true, false);
       switch (action) {
         case NoAccountAction.Register:
           AccountRegistration? registration;
