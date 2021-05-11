@@ -355,7 +355,7 @@ class _SettingsState extends State<SettingsScreen> {
                     child: Container(
                       child: ListTile(
                         title: raisedButtonIcon(
-                            label: Text("Create Pin"),
+                            label: Text("Set Pin"),
                             icon: Icon(Icons.lock),
                             onPressed: _addPin),
                       ),
