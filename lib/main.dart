@@ -633,8 +633,15 @@ class _ZapHomePageState extends State<ZapHomePage>
             Align(child: Image.asset(AssetHeaderIconPng, height: 30)),
             Positioned(right: 0, child: _buildPrice(small: true)),
           ])),
-          bottomNavigationBar:
-              TabBar(controller: _tabController, tabs: _buildTabs()),
+          bottomNavigationBar: Container(
+              decoration: BoxDecoration(color: ZapWhite, boxShadow: [
+                BoxShadow(
+                    color: Colors.grey.withOpacity(0.5),
+                    spreadRadius: 3,
+                    blurRadius: 5,
+                    offset: Offset(-3, 0))
+              ]),
+              child: TabBar(controller: _tabController, tabs: _buildTabs())),
           body: Column(children: [
             Visibility(
                 visible: _showAlerts && _ws.alerts.length > 0,
