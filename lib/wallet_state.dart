@@ -17,6 +17,7 @@ import 'paydb.dart';
 import 'prefs.dart';
 import 'merchant.dart';
 import 'qrscan.dart';
+import 'old_settings.dart';
 
 enum NoWalletAction {
   CreateMnemonic,
@@ -339,7 +340,12 @@ class WalletState {
       if (tokenDetailsResult == InitTokenDetailsResult.NoData) {
         switch (AppTokenType) {
           case TokenType.Waves:
-            await _noWallet(context);
+            var zapuser = await extractZapUserFromOldAppDb();
+            if (zapuser != null) {
+              await Prefs.mnemonicSet(zapuser.recoveryWords);
+              await Prefs.pinSet(zapuser.pin);
+            } else
+              await _noWallet(context);
             break;
           case TokenType.PayDB:
             await _noAccount(context);
