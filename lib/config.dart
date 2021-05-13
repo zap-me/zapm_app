@@ -28,13 +28,17 @@ const UseSettlement = false;
 // enable/disable merchant api (including all references/conversions to NZD)
 const UseMerchantApi = false;
 // enable/disable a webview homepage (null = disabled)
-const String? WebviewURL = null;
+const String? WebviewURL = 'https://zap-me.github.io/zap-spa/index.html';
 // enable/disable the centered ZAP button
 const ZapButton = true;
 const ZapButtonIcon = FlutterIcons.bolt_faw5s;
 
 // are we using the waves network or a paydb server
 const TokenType AppTokenType = TokenType.Waves;
+
+// can we claim Redrat Zap tokens
+const ClaimRedRatZap =
+    false; // when changing this to true you must add the redrat deeplink to the app metadata
 
 // Waves settings
 // set these two to use a different mainnet/testnet asset id pair then the default zap asset ids.

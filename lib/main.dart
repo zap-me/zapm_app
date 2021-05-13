@@ -32,6 +32,7 @@ import 'paydb.dart';
 import 'qrscan.dart';
 import 'wallet_state.dart';
 import 'fab_with_icons.dart';
+import 'redrat.dart';
 
 void main() {
   // See https://github.com/flutter/flutter/wiki/Desktop-shells#target-platform-override
@@ -171,6 +172,35 @@ class _ZapHomePageState extends State<ZapHomePage>
           );
           if (tx != null) _updateBalance();
           return true;
+        }
+        // process redrat deep links
+        //
+        // https://www.redrat.co.nz/zap-rebate?i={i}&h={h}
+        //
+        if (ClaimRedRatZap) {
+          var claimCode = await RRClaimCode.parseDeepLink(uri, _ws.testnet);
+          if (claimCode != null) {
+            var failed = false;
+            var resultText = '';
+            showAlertDialog(context, 'claiming payment..');
+            try {
+              if (await rrClaim(
+                  claimCode, _ws.testnet, _ws.addrOrAccountValue()))
+                resultText = 'claimed funds to ${_ws.addrOrAccountValue()}';
+              else {
+                resultText = 'claim link failed';
+                failed = true;
+              }
+            } catch (e) {
+              resultText = 'claim link failed: $e';
+              failed = true;
+            }
+            Navigator.pop(context);
+            flushbarMsg(context, resultText,
+                category:
+                    failed ? MessageCategory.Warning : MessageCategory.Info);
+            return true;
+          }
         }
         break;
       case TokenType.PayDB:
@@ -396,12 +426,50 @@ class _ZapHomePageState extends State<ZapHomePage>
         // merchant claim code
         var ccresult = parseClaimCodeUri(value);
         if (ccresult.error == NO_ERROR) {
-          if (await merchantClaim(ccresult.code, _ws.addrOrAccountValue()))
-            flushbarMsg(context, 'claim succeded');
-          else
-            flushbarMsg(context, 'claim failed',
-                category: MessageCategory.Warning);
+          var failed = false;
+          var resultText = '';
+          showAlertDialog(context, 'claiming payment..');
+          try {
+            if (await merchantClaim(ccresult.code, _ws.addrOrAccountValue()))
+              resultText = 'claimed funds to ${_ws.addrOrAccountValue()}';
+            else {
+              resultText = 'claim link failed';
+              failed = true;
+            }
+          } catch (e) {
+            resultText = 'claim link failed: $e';
+            failed = true;
+          }
+          Navigator.pop(context);
+          flushbarMsg(context, resultText,
+              category:
+                  failed ? MessageCategory.Warning : MessageCategory.Info);
           return;
+        }
+        // redrat claim code
+        if (ClaimRedRatZap) {
+          var claimCode = RRClaimCode.parseQrCode(value);
+          if (claimCode != null) {
+            var failed = false;
+            var resultText = '';
+            showAlertDialog(context, 'claiming payment..');
+            try {
+              if (await rrClaim(
+                  claimCode, _ws.testnet, _ws.addrOrAccountValue()))
+                resultText = 'claimed funds to ${_ws.addrOrAccountValue()}';
+              else {
+                resultText = 'claim link failed';
+                failed = true;
+              }
+            } catch (e) {
+              resultText = 'claim link failed: $e';
+              failed = true;
+            }
+            Navigator.pop(context);
+            flushbarMsg(context, resultText,
+                category:
+                    failed ? MessageCategory.Warning : MessageCategory.Info);
+          }
         }
         break;
       case TokenType.PayDB:
