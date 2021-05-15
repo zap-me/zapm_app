@@ -74,7 +74,7 @@ class FabWithIconsState extends State<FabWithIcons>
     if (mi.color != null) foregroundColor = mi.color!;
     if (mi.background != null) backgroundColor = mi.background!;
     return Container(
-      height: 85,
+      height: 65,
       width: MediaQuery.of(context).size.width,
       alignment: FractionalOffset.topCenter,
       child: ScaleTransition(
@@ -87,7 +87,7 @@ class FabWithIconsState extends State<FabWithIcons>
             Expanded(child: SizedBox()),
             FloatingActionButton(
               backgroundColor: backgroundColor,
-              mini: false,
+              mini: true,
               child: Icon(mi.icon, color: foregroundColor),
               onPressed: () => _onTapped(index),
             ),

@@ -100,7 +100,7 @@ class CentrapayZapResult {
   CentrapayZapResult(this.zapRequired, this.zapTx, this.centrapayResult);
 }
 
-Future<http.Response?> postAndCatch(String url, Map<String, dynamic> params,
+Future<http.Response?> _postAndCatch(String url, Map<String, dynamic> params,
     {bool usePost = true}) async {
   assert(CentrapayApiKey != null);
   try {
@@ -129,7 +129,7 @@ Future<http.Response?> postAndCatch(String url, Map<String, dynamic> params,
 Future<CentrapayRequestInfoResult> centrapayRequestInfo(CentrapayQr qr) async {
   var url = qr.baseUrl + "/payments/api/requests.info";
   var params = {"requestId": qr.reqId};
-  var response = await postAndCatch(url, params, usePost: false);
+  var response = await _postAndCatch(url, params, usePost: false);
   if (response == null)
     return CentrapayRequestInfoResult(null, CentrapayError.Network);
   if (response.statusCode == 200) {
@@ -163,7 +163,7 @@ Future<CentrapayRequestPayResult> centrapayRequestPay(
     "ledger": payment.ledger,
     "authorization": authorization
   };
-  var response = await postAndCatch(url, params);
+  var response = await _postAndCatch(url, params);
   if (response == null)
     return CentrapayRequestPayResult(null, CentrapayError.Network);
   if (response.statusCode == 200) {

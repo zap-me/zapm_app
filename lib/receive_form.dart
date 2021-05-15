@@ -198,7 +198,7 @@ class ReceiveFormState extends State<ReceiveForm> {
                   return 'Please enter a value';
                 }
                 final dv = Decimal.parse(value!);
-                if (dv <= Decimal.fromInt(0)) {
+                if (dv <= Decimal.zero) {
                   return 'Please enter a value greater then zero';
                 }
                 return null;

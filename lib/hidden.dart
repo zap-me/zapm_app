@@ -38,6 +38,11 @@ class _HiddenState extends State<HiddenScreen> {
     Prefs.paydbApiSecretSet('');
   }
 
+  void _deleteBronzeApiKey() {
+    Prefs.bronzeApiKeySet(null);
+    Prefs.bronzeApiSecretSet(null);
+  }
+
   void _paydbIssue() async {
     assert(AppTokenType == TokenType.PayDB);
     if (widget.account == null) return;
@@ -75,6 +80,9 @@ class _HiddenState extends State<HiddenScreen> {
               raisedButton(
                   onPressed: _deleteMnemonicAndAccount,
                   child: Text("Delete Mnemonic/Account")),
+              raisedButton(
+                  onPressed: _deleteBronzeApiKey,
+                  child: Text("Delete Bronze API KEY")),
               raisedButton(
                   onPressed: _paydbIssue,
                   child: Text("PayDb Issue 100 tokens")),

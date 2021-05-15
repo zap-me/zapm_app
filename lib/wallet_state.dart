@@ -615,7 +615,7 @@ class WalletState {
     }
   }
 
-  Future<String> _deviceName() async {
+  Future<String> deviceName() async {
     var device = 'app';
     if (Platform.isAndroid)
       device = (await DeviceInfoPlugin().androidInfo).model;
@@ -626,9 +626,8 @@ class WalletState {
   }
 
   Future<String?> _paydbLogin(BuildContext context, AccountLogin login) async {
-    var deviceName = await _deviceName();
-    var result =
-        await paydbApiKeyCreate(login.email, login.password, deviceName);
+    var devName = await deviceName();
+    var result = await paydbApiKeyCreate(login.email, login.password, devName);
     switch (result.error) {
       case PayDbError.Auth:
         await alert(context, "Authentication not valid",
@@ -726,11 +725,11 @@ class WalletState {
           break;
         case NoAccountAction.RequestApiKey:
           // request api key form
-          var deviceName = await _deviceName();
+          var devName = await deviceName();
           var req = await Navigator.push<AccountRequestApiKey>(
             context,
             MaterialPageRoute(
-                builder: (context) => AccountRequestApiKeyForm(deviceName)),
+                builder: (context) => AccountRequestApiKeyForm(devName)),
           );
           if (req == null) break;
           var result = await paydbApiKeyRequest(req.email, req.deviceName);

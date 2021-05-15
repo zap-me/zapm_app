@@ -5,7 +5,6 @@ import 'package:decimal/decimal.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:zapdart/utils.dart';
-import 'config.dart';
 
 Future<http.Response?> _postAndCatch(String url, String body,
     {Map<String, String>? extraHeaders}) async {

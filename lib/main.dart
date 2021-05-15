@@ -33,6 +33,7 @@ import 'qrscan.dart';
 import 'wallet_state.dart';
 import 'fab_with_icons.dart';
 import 'redrat.dart';
+import 'bronze.dart';
 
 void main() {
   // See https://github.com/flutter/flutter/wiki/Desktop-shells#target-platform-override
@@ -512,6 +513,20 @@ class _ZapHomePageState extends State<ZapHomePage>
     );
   }
 
+  void _buyZap() async {
+    await Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => BronzeScreen(_ws, BronzeApiSide.Buy)));
+  }
+
+  void _sellZap() async {
+    await Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => BronzeScreen(_ws, BronzeApiSide.Sell)));
+  }
+
   void _zapReward() async {
     var sentFunds = await Navigator.push<bool>(
       context,
@@ -623,6 +638,15 @@ class _ZapHomePageState extends State<ZapHomePage>
                 ZapWhite, ZapBlue, _scanQrCode)
           ] +
           menuItems;
+    }
+    if (BuySellZapOnBronze && AppTokenType == TokenType.Waves) {
+      if (_ws.haveCapabililty(Capability.Spend))
+        menuItems.insert(
+            0,
+            MenuItem(
+                Icons.trending_down, 'SELL ZAP', ZapWhite, ZapBlue, _sellZap));
+      menuItems.insert(0,
+          MenuItem(Icons.trending_up, 'BUY ZAP', ZapWhite, ZapBlue, _buyZap));
     }
     return FabWithIcons(
       icon: ZapButtonIcon,

@@ -318,4 +318,30 @@ class Prefs {
   static Future<bool> transactionsSet(List<GenTx> txs) async {
     return await setStringNetworkSpecific("transactions", jsonEncode(txs));
   }
+
+  static Future<String?> bronzeApiKeyGet() async {
+    return await getStringNetworkSpecific("bronze_apikey", null);
+  }
+
+  static Future<bool> bronzeApiKeySet(String? value) async {
+    await setStringNetworkSpecific("bronze_apikey", value);
+    return true;
+  }
+
+  static Future<String?> bronzeApiSecretGet() async {
+    return await getStringNetworkSpecific("bronze_apisecret", null);
+  }
+
+  static Future<bool> bronzeApiSecretSet(String? value) async {
+    await setStringNetworkSpecific("bronze_apisecret", value);
+    return true;
+  }
+
+  static Future<bool> hasBronzeApiKey() async {
+    var apikey = await Prefs.bronzeApiKeyGet();
+    if (apikey == null || apikey.isEmpty) return false;
+    var apisecret = await Prefs.bronzeApiSecretGet();
+    if (apisecret == null || apisecret.isEmpty) return false;
+    return true;
+  }
 }
