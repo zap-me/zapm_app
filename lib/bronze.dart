@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:zapdart/widgets.dart';
 import 'package:zapdart/colors.dart';
@@ -38,40 +39,65 @@ class BronzeApikey {
   BronzeApikey(this.key, this.secret);
 }
 
-enum BronzeApiError { None, Auth, Network }
+enum BronzeError { None, Auth, Network }
 
 class BronzeApikeyValidateResult {
   final bool value;
-  final BronzeApiError error;
+  final BronzeError error;
   BronzeApikeyValidateResult(this.value, this.error);
+}
+
+class BronzeAccountKycResult {
+  final String level;
+  final Decimal withdrawalLimit;
+  final String withdrawalAsset;
+  final String withdrawalPeriod;
+  final Decimal withdrawalTotal;
+  final BronzeError error;
+  BronzeAccountKycResult(this.level, this.withdrawalLimit, this.withdrawalAsset,
+      this.withdrawalPeriod, this.withdrawalTotal, this.error);
+
+  static BronzeAccountKycResult makeError(BronzeError error) =>
+      BronzeAccountKycResult('', Decimal.zero, '', '', Decimal.zero, error);
+}
+
+class BronzeAccountKycUpgradeResult {
+  final String token;
+  final String serviceUrl;
+  final String status;
+  final BronzeError error;
+  BronzeAccountKycUpgradeResult(
+      this.token, this.serviceUrl, this.status, this.error);
+
+  static BronzeAccountKycUpgradeResult makeError(BronzeError error) =>
+      BronzeAccountKycUpgradeResult('', '', '', error);
 }
 
 enum BronzeApiSide { Buy, Sell }
 
 const BronzeZapNzdMarket = 'ZAPNZD';
 
-class BronzeApiQuote {
+class BronzeQuote {
   final String market;
   final BronzeApiSide side;
   final Decimal amount;
   final bool amountAsQuoteCurrency;
-  BronzeApiQuote(
-      this.market, this.side, this.amount, this.amountAsQuoteCurrency);
+  BronzeQuote(this.market, this.side, this.amount, this.amountAsQuoteCurrency);
 }
 
-class BronzeApiQuoteResult {
+class BronzeQuoteResult {
   final String assetSend;
   final Decimal amountSend;
   final String assetReceive;
   final Decimal amountReceive;
   final int timeLimit;
-  final BronzeApiError error;
+  final BronzeError error;
   final String? errorMessage;
-  BronzeApiQuoteResult(this.assetSend, this.amountSend, this.assetReceive,
+  BronzeQuoteResult(this.assetSend, this.amountSend, this.assetReceive,
       this.amountReceive, this.timeLimit, this.error, this.errorMessage);
 
-  static BronzeApiQuoteResult makeError(BronzeApiError error, String? msg) =>
-      BronzeApiQuoteResult('', Decimal.zero, '', Decimal.zero, 0, error, msg);
+  static BronzeQuoteResult makeError(BronzeError error, String? msg) =>
+      BronzeQuoteResult('', Decimal.zero, '', Decimal.zero, 0, error, msg);
 }
 
 class Bronze {
@@ -160,40 +186,98 @@ class Bronze {
         'ApiKeyCreateStatus', registration.apikeyToken);
   }
 
-  Future<BronzeApikeyValidateResult> apikeyValidate(BronzeApikey apikey) async {
-    var body = jsonEncode({
-      'key': apikey.key,
-      'nonce': _nonce(),
-    });
+  Future<http.Response?> _privateRequest(BronzeApikey apikey, String endpoint,
+      {Map<String, dynamic>? params}) async {
+    if (params == null) params = {};
+    params['key'] = apikey.key;
+    params['nonce'] = _nonce();
+    var body = jsonEncode(params);
     var sig = createHmacSig(apikey.secret, body);
-    var response = await _postAndCatch('ApiKeyValidate', body,
+    return await _postAndCatch(endpoint, body,
         extraHeaders: {'X-Signature': sig});
-    if (response != null) {
-      if (response.statusCode == 400)
-        return BronzeApikeyValidateResult(false, BronzeApiError.Auth);
-      if (response.statusCode == 200)
-        return BronzeApikeyValidateResult(true, BronzeApiError.None);
-    }
-    return BronzeApikeyValidateResult(false, BronzeApiError.Network);
   }
 
-  Future<BronzeApiQuoteResult> brokerQuote(
-      BronzeApikey apikey, BronzeApiQuote quote) async {
-    var body = jsonEncode({
+  Future<BronzeApikeyValidateResult> apikeyValidate(BronzeApikey apikey) async {
+    var response = await _privateRequest(apikey, 'ApiKeyValidate');
+    if (response != null) {
+      if (response.statusCode == 400)
+        return BronzeApikeyValidateResult(false, BronzeError.Auth);
+      if (response.statusCode == 200)
+        return BronzeApikeyValidateResult(true, BronzeError.None);
+    }
+    return BronzeApikeyValidateResult(false, BronzeError.Network);
+  }
+
+  Future<BronzeAccountKycResult> accountKyc(BronzeApikey apikey) async {
+    var response = await _privateRequest(apikey, 'AccountKyc');
+    if (response != null) {
+      if (response.statusCode == 400)
+        return BronzeAccountKycResult.makeError(BronzeError.Auth);
+      if (response.statusCode == 200) {
+        var json = jsonDecode(response.body);
+        var level = json['level'];
+        var withdrawalLimit = Decimal.parse(json['withdrawalLimit']);
+        var withdrawalAsset = json['withdrawalAsset'];
+        var withdrawalPeriod = json['withdrawalPeriod'];
+        var withdrawalTotal = Decimal.parse(json['withdrawalTotal']);
+        return BronzeAccountKycResult(level, withdrawalLimit, withdrawalAsset,
+            withdrawalPeriod, withdrawalTotal, BronzeError.None);
+      }
+    }
+    return BronzeAccountKycResult.makeError(BronzeError.Network);
+  }
+
+  Future<BronzeAccountKycUpgradeResult> accountKycUpgrade(
+      BronzeApikey apikey) async {
+    var response = await _privateRequest(apikey, 'AccountKycUpgrade');
+    if (response != null) {
+      if (response.statusCode == 400)
+        return BronzeAccountKycUpgradeResult.makeError(BronzeError.Auth);
+      if (response.statusCode == 200) {
+        var json = jsonDecode(response.body);
+        var token = json['token'];
+        var serviceUrl = json['serviceUrl'];
+        var status = json['status'];
+        return BronzeAccountKycUpgradeResult(
+            token, serviceUrl, status, BronzeError.None);
+      }
+    }
+    return BronzeAccountKycUpgradeResult.makeError(BronzeError.Network);
+  }
+
+  Future<BronzeAccountKycUpgradeResult> accountKycUpgradeStatus(
+      BronzeApikey apikey, String token) async {
+    var response = await _privateRequest(apikey, 'AccountKycUpgradeStatus',
+        params: {'token': token});
+    if (response != null) {
+      if (response.statusCode == 400)
+        return BronzeAccountKycUpgradeResult.makeError(BronzeError.Auth);
+      if (response.statusCode == 200) {
+        var json = jsonDecode(response.body);
+        var token = json['token'];
+        var serviceUrl = json['serviceUrl'];
+        var status = json['status'];
+        return BronzeAccountKycUpgradeResult(
+            token, serviceUrl, status, BronzeError.None);
+      }
+    }
+    return BronzeAccountKycUpgradeResult.makeError(BronzeError.Network);
+  }
+
+  Future<BronzeQuoteResult> brokerQuote(
+      BronzeApikey apikey, BronzeQuote quote) async {
+    var params = {
       'key': apikey.key,
       'nonce': _nonce(),
       'market': quote.market,
       'side': describeEnum(quote.side).toLowerCase(),
       'amount': quote.amount.toString(),
       'amountAsQuoteCurrency': quote.amountAsQuoteCurrency,
-    });
-    var sig = createHmacSig(apikey.secret, body);
-    var response = await _postAndCatch('BrokerQuote', body,
-        extraHeaders: {'X-Signature': sig});
+    };
+    var response = await _privateRequest(apikey, 'BrokerQuote', params: params);
     if (response != null) {
       if (response.statusCode == 400)
-        return BronzeApiQuoteResult.makeError(
-            BronzeApiError.Auth, response.body);
+        return BronzeQuoteResult.makeError(BronzeError.Auth, response.body);
       if (response.statusCode == 200) {
         var json = jsonDecode(response.body);
         var assetSend = json['assetSend'];
@@ -201,11 +285,11 @@ class Bronze {
         var assetReceive = json['assetReceive'];
         var amountReceive = Decimal.parse(json['amountReceive']);
         var timeLimit = json['timeLimit'];
-        return BronzeApiQuoteResult(assetSend, amountSend, assetReceive,
-            amountReceive, timeLimit, BronzeApiError.None, null);
+        return BronzeQuoteResult(assetSend, amountSend, assetReceive,
+            amountReceive, timeLimit, BronzeError.None, null);
       }
     }
-    return BronzeApiQuoteResult.makeError(BronzeApiError.Network, null);
+    return BronzeQuoteResult.makeError(BronzeError.Network, null);
   }
 }
 
@@ -265,6 +349,9 @@ class BronzeFormState extends State<BronzeForm> {
   bool _amountNzdValid = true;
   bool _amountZapValid = true;
   bool _apikeyValid = false;
+  BronzeAccountKycResult? _accountKyc;
+  BronzeAccountKycUpgradeResult? _accountKycUpgrade;
+  bool _accountKycIncomplete = true;
   Timer? _amountTimer;
   ProcessingQuote _processingQuote = ProcessingQuote.None;
 
@@ -272,7 +359,7 @@ class BronzeFormState extends State<BronzeForm> {
   @mustCallSuper
   void initState() {
     super.initState();
-    _initApiKey();
+    _initBronze();
   }
 
   @protected
@@ -280,6 +367,10 @@ class BronzeFormState extends State<BronzeForm> {
   void dispose() {
     super.dispose();
     _amountTimer?.cancel();
+  }
+
+  Future<bool> _canLeave() {
+    return Future<bool>.value(true);
   }
 
   Future<bool> _createApiKey(String email) async {
@@ -307,43 +398,69 @@ class BronzeFormState extends State<BronzeForm> {
     return true;
   }
 
-  void _initApiKey() async {
+  Future<bool> _initApiKey() async {
+    var bronze = Bronze(widget._ws.testnet);
     while (true) {
-      var bronze = Bronze(widget._ws.testnet);
+      var createdKey = false;
       // create api key if none present
       if (!await Prefs.hasBronzeApiKey()) {
         var email =
             await askString(context, 'Enter email to connect to Bronze', null);
         if (email == null || email.isEmpty) {
           Navigator.pop(context);
-          return;
+          return false;
         }
         if (!await _createApiKey(email)) {
           await alert(context, 'Registration failed',
               'Unable to register with Bronze at this time');
           Navigator.pop(context);
-          return;
-        }
+          return false;
+        } else
+          createdKey = true;
       }
       // validate api key
       showAlertDialog(context, 'validating api key...');
       var validationResult = await bronze.apikeyValidate(await _apikey());
       Navigator.pop(context);
       if (!validationResult.value) {
-        // reset key and create again
-        if (validationResult.error == BronzeApiError.Auth) {
+        if (validationResult.error == BronzeError.Auth) {
+          // exit if newly created key does not work
+          if (createdKey) {
+            await alert(context, 'Unable to connect',
+                'Unable to connect to Bronze at this time');
+            Navigator.pop(context);
+            return false;
+          }
+          // delete existing non functional key
           await Prefs.bronzeApiKeySet(null);
+          continue; // continue (to create a new key) if an old key has been revoked
         } else {
           await alert(context, 'Unable to connect',
               'Unable to connect to Bronze at this time');
           Navigator.pop(context);
-          break;
+          return false;
         }
-      } else {
-        setState(() => _apikeyValid = true);
-        break;
-      }
+      } else
+        return true;
     }
+  }
+
+  void _initBronze() async {
+    if (!await _initApiKey()) return;
+    setState(() => _apikeyValid = true);
+    var apikey = await _apikey();
+    var bronze = Bronze(widget._ws.testnet);
+    // get withdrawal limit
+    showAlertDialog(context, 'checking withdrawal limit...');
+    var kycResult = await bronze.accountKyc(apikey);
+    Navigator.pop(context);
+    if (kycResult.error == BronzeError.None)
+      setState(() => _accountKyc = kycResult);
+    else
+      return;
+    // get kyc request status
+    var kycStatus = await _kycStatus(apikey);
+    setState(() => _accountKycUpgrade = kycStatus);
   }
 
   Future<BronzeApikey> _apikey() async {
@@ -352,8 +469,34 @@ class BronzeFormState extends State<BronzeForm> {
     return BronzeApikey(key!, secret!);
   }
 
-  Future<bool> _canLeave() {
-    return Future<bool>.value(true);
+  Future<BronzeAccountKycUpgradeResult?> _kycStatus(BronzeApikey apikey) async {
+    var token = await Prefs.bronzeKycTokenGet();
+    if (token != null) {
+      var bronze = Bronze(widget._ws.testnet);
+      showAlertDialog(context, 'checking kyc upgrade request...');
+      var result = await bronze.accountKycUpgradeStatus(apikey, token);
+      Navigator.pop(context);
+      if (result.error == BronzeError.None) {
+        setState(() => _accountKycIncomplete = result.status != 'completed');
+        return result;
+      }
+    }
+    return null;
+  }
+
+  void _upgradeKyc() async {
+    if (_accountKycUpgrade == null) {
+      var bronze = Bronze(widget._ws.testnet);
+      var apikey = await _apikey();
+      showAlertDialog(context, 'requesting kyc upgrade...');
+      var result = await bronze.accountKycUpgrade(apikey);
+      Navigator.pop(context);
+      if (result.error != BronzeError.None) return;
+      await Prefs.bronzeKycTokenSet(result.token);
+      _accountKycUpgrade = result;
+      setState(() => _accountKycUpgrade = result);
+    }
+    launch(_accountKycUpgrade!.serviceUrl);
   }
 
   void _updateQuote() async {
@@ -383,23 +526,23 @@ class BronzeFormState extends State<BronzeForm> {
     var amount = Decimal.tryParse(controllerAmount.text);
     if (amount == null) return;
     if (amount < Decimal.zero) return;
-    var quote = BronzeApiQuote(BronzeZapNzdMarket, widget._side, amount,
+    var quote = BronzeQuote(BronzeZapNzdMarket, widget._side, amount,
         _processingQuote == ProcessingQuote.ZAP);
     var bronze = Bronze(widget._ws.testnet);
     var quoteResult = await bronze.brokerQuote(await _apikey(), quote);
     switch (quoteResult.error) {
-      case BronzeApiError.None:
+      case BronzeError.None:
         var quoteAmountReceive = (widget._side == BronzeApiSide.Sell) ^
             (_processingQuote == ProcessingQuote.ZAP);
         controllerQuote.text = quoteAmountReceive
             ? quoteResult.amountReceive.toString()
             : quoteResult.amountSend.toString();
         break;
-      case BronzeApiError.Network:
+      case BronzeError.Network:
         flushbarMsg(context, 'Network error',
             category: MessageCategory.Warning);
         break;
-      case BronzeApiError.Auth:
+      case BronzeError.Auth:
         if (quoteResult.errorMessage != null)
           flushbarMsg(context, quoteResult.errorMessage!,
               category: MessageCategory.Warning);
@@ -517,6 +660,24 @@ class BronzeFormState extends State<BronzeForm> {
                 setState(() => _processingQuote = _processingQuote);
               },
             ),
+            _accountKyc != null
+                ? Column(children: [
+                    Padding(
+                        padding: const EdgeInsets.only(top: 24.0),
+                        child: Text(
+                            'Bronze ${_accountKyc!.withdrawalPeriod.toLowerCase()} withdrawal limit is ${_accountKyc!.withdrawalLimit} ${_accountKyc!.withdrawalAsset}')),
+                    _accountKycIncomplete
+                        ? Padding(
+                            padding: const EdgeInsets.only(top: 24.0),
+                            child: raisedButton(
+                                onPressed: _upgradeKyc,
+                                child: _accountKycUpgrade == null
+                                    ? Text('Increase withdrawal limit')
+                                    : Text(
+                                        'Complete KYC (${_accountKycUpgrade?.status})')))
+                        : SizedBox(),
+                  ])
+                : SizedBox(),
             Padding(
               padding: const EdgeInsets.only(top: 24.0),
               child: RoundedButton(

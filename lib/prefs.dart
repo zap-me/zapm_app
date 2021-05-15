@@ -344,4 +344,13 @@ class Prefs {
     if (apisecret == null || apisecret.isEmpty) return false;
     return true;
   }
+
+  static Future<String?> bronzeKycTokenGet() async {
+    return await getStringNetworkSpecific("bronze_kyc_token", null);
+  }
+
+  static Future<bool> bronzeKycTokenSet(String? value) async {
+    await setStringNetworkSpecific("bronze_kyc_token", value);
+    return true;
+  }
 }

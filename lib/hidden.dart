@@ -41,6 +41,7 @@ class _HiddenState extends State<HiddenScreen> {
   void _deleteBronzeApiKey() {
     Prefs.bronzeApiKeySet(null);
     Prefs.bronzeApiSecretSet(null);
+    Prefs.bronzeKycTokenSet(null);
   }
 
   void _paydbIssue() async {
