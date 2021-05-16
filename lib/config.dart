@@ -40,7 +40,7 @@ const TokenType AppTokenType = TokenType.Waves;
 const ClaimRedRatZap =
     false; // when changing this to true you must add the redrat deeplink to the app metadata
 // can we buy/sell zap on bronze
-const BuySellZapOnBronze = true;
+const UseBronze = true;
 
 // Waves settings
 // set these two to use a different mainnet/testnet asset id pair then the default zap asset ids.

@@ -639,7 +639,7 @@ class _ZapHomePageState extends State<ZapHomePage>
           ] +
           menuItems;
     }
-    if (BuySellZapOnBronze && AppTokenType == TokenType.Waves) {
+    if (UseBronze && AppTokenType == TokenType.Waves) {
       if (_ws.haveCapabililty(Capability.Spend))
         menuItems.insert(
             0,

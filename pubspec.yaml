@@ -55,6 +55,7 @@ dependencies:
   google_api_availability: ^3.0.1
   mutex: ^3.0.0
   sqflite: ^2.0.0+3
+  extended_masked_text: ^2.1.0
 
   zapdart:
     git:

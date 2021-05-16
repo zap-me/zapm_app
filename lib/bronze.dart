@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:extended_masked_text/extended_masked_text.dart';
 
 import 'package:zapdart/widgets.dart';
 import 'package:zapdart/colors.dart';
@@ -345,9 +346,12 @@ class BronzeFormState extends State<BronzeForm> {
   final _formKey = GlobalKey<FormState>();
   final _amountZapController = TextEditingController();
   final _amountNzdController = TextEditingController();
+  final _bankAccountController =
+      MaskedTextController(mask: '00-0000-0000000-000');
 
   bool _amountNzdValid = true;
   bool _amountZapValid = true;
+  bool _bankAccountValid = true;
   bool _apikeyValid = false;
   BronzeAccountKycResult? _accountKyc;
   BronzeAccountKycUpgradeResult? _accountKycUpgrade;
@@ -446,6 +450,8 @@ class BronzeFormState extends State<BronzeForm> {
   }
 
   void _initBronze() async {
+    var bankAccount = await Prefs.bronzeBankAccountGet();
+    if (bankAccount != null) _bankAccountController.text = bankAccount;
     if (!await _initApiKey()) return;
     setState(() => _apikeyValid = true);
     var apikey = await _apikey();
@@ -549,6 +555,14 @@ class BronzeFormState extends State<BronzeForm> {
         break;
     }
     setState(() => _processingQuote = ProcessingQuote.None);
+  }
+
+  bool _validBankAccount(String? value) {
+    if (value == null) return false;
+    value = value.replaceAll('-', '');
+    if (value.length == 15 || value.length == 16)
+      return int.tryParse(value) != null;
+    return false;
   }
 
   @override
@@ -677,6 +691,36 @@ class BronzeFormState extends State<BronzeForm> {
                                         'Complete KYC (${_accountKycUpgrade?.status})')))
                         : SizedBox(),
                   ])
+                : SizedBox(),
+            widget._side == BronzeApiSide.Sell
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 24.0),
+                    child: TextFormField(
+                      controller: _bankAccountController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(labelText: 'bank account'),
+                      style:
+                          _bankAccountValid ? null : TextStyle(color: ZapRed),
+                      validator: (value) {
+                        if (value != null && value.isEmpty)
+                          return 'Please enter a value';
+                        if (!_validBankAccount(value))
+                          return 'Invalid bank account';
+                        return null;
+                      },
+                      onChanged: (value) {
+                        // hack to get around MaskedTextController not stopping the input before it hits this event
+                        _bankAccountController.updateText(value);
+                        value = _bankAccountController.text;
+
+                        if (value.isEmpty)
+                          _bankAccountValid = false;
+                        else
+                          _bankAccountValid = _validBankAccount(value);
+                        setState(() => _bankAccountValid = _bankAccountValid);
+                      },
+                    ),
+                  )
                 : SizedBox(),
             Padding(
               padding: const EdgeInsets.only(top: 24.0),

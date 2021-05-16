@@ -353,4 +353,13 @@ class Prefs {
     await setStringNetworkSpecific("bronze_kyc_token", value);
     return true;
   }
+
+  static Future<String?> bronzeBankAccountGet() async {
+    return await getStringNetworkSpecific("bronze_bank_account", null);
+  }
+
+  static Future<bool> bronzeBankAccountSet(String? value) async {
+    await setStringNetworkSpecific("bronze_bank_account", value);
+    return true;
+  }
 }

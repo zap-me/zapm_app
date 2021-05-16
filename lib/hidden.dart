@@ -42,6 +42,7 @@ class _HiddenState extends State<HiddenScreen> {
     Prefs.bronzeApiKeySet(null);
     Prefs.bronzeApiSecretSet(null);
     Prefs.bronzeKycTokenSet(null);
+    Prefs.bronzeBankAccountSet(null);
   }
 
   void _paydbIssue() async {

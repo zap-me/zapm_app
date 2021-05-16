@@ -57,10 +57,14 @@ class _SettingsState extends State<SettingsScreen> {
   AppVersion? _appVersion;
   int _libzapVersion = -1;
   bool _testnet = false;
+  String? _bronzeApikey;
+  String? _bronzeApisecret;
+  String? _bronzeKycToken;
+  String? _bronzeBankAccount;
   String? _deviceName;
-  String? _apikey;
-  String? _apisecret;
-  String? _apiserver;
+  String? _merchantApikey;
+  String? _merchantApisecret;
+  String? _merchantApiserver;
   int _versionTaps = 0;
   String? _paydbServer;
 
@@ -89,18 +93,27 @@ class _SettingsState extends State<SettingsScreen> {
     setState(() {
       _testnet = testnet;
     });
-    // api key
+    // bronze api key
+    var bronzeApikey = await Prefs.bronzeApiKeyGet();
+    var bronzeApisecret = await Prefs.bronzeApiSecretGet();
+    var bronzeKycToken = await Prefs.bronzeKycTokenGet();
+    var bronzeBankAccount = await Prefs.bronzeBankAccountGet();
+    // merchant api key
     var deviceName = await Prefs.deviceNameGet();
-    var apikey = await Prefs.merchantApiKeyGet();
-    var apisecret = await Prefs.merchantApiSecretGet();
-    var apiserver = await Prefs.merchantApiServerGet();
+    var merchantApikey = await Prefs.merchantApiKeyGet();
+    var merchantApisecret = await Prefs.merchantApiSecretGet();
+    var merchantApiserver = await Prefs.merchantApiServerGet();
     // paydb server
     var paydbserver = await paydbServer();
     setState(() {
+      _bronzeApikey = bronzeApikey;
+      _bronzeApisecret = bronzeApisecret;
+      _bronzeKycToken = bronzeKycToken;
+      _bronzeBankAccount = bronzeBankAccount;
       _deviceName = deviceName;
-      _apikey = apikey;
-      _apisecret = apisecret;
-      _apiserver = apiserver;
+      _merchantApikey = merchantApikey;
+      _merchantApisecret = merchantApisecret;
+      _merchantApiserver = merchantApiserver;
       _paydbServer = paydbserver;
     });
   }
@@ -202,7 +215,7 @@ class _SettingsState extends State<SettingsScreen> {
     }
   }
 
-  void _scanApikey() async {
+  void _scanMerchantApikey() async {
     var value = await QrScan.scan(context);
     if (value != null) {
       var result = parseApiKeyUri(value);
@@ -214,9 +227,10 @@ class _SettingsState extends State<SettingsScreen> {
           await Prefs.merchantApiServerSet(result.apiserver);
         setState(() {
           _deviceName = result.deviceName;
-          _apikey = result.apikey;
-          _apisecret = result.apisecret;
-          if (result.apiserver.isNotEmpty) _apiserver = result.apiserver;
+          _merchantApikey = result.apikey;
+          _merchantApisecret = result.apisecret;
+          if (result.apiserver.isNotEmpty)
+            _merchantApiserver = result.apiserver;
         });
         flushbarMsg(context, 'API KEY set');
         if (result.accountAdmin &&
@@ -251,32 +265,35 @@ class _SettingsState extends State<SettingsScreen> {
     }
   }
 
-  void _editApikey() async {
-    var apikey = await askString(context, "Set Api Key", _apikey);
+  void _editMerchantApikey() async {
+    var apikey =
+        await askString(context, "Set Merchant Api Key", _merchantApikey);
     if (apikey != null) {
       await Prefs.merchantApiKeySet(apikey);
       setState(() {
-        _apikey = apikey;
+        _merchantApikey = apikey;
       });
     }
   }
 
-  void _editApisecret() async {
-    var apisecret = await askString(context, "Set Api Secret", _apisecret);
+  void _editMerchantApisecret() async {
+    var apisecret =
+        await askString(context, "Set Merchant Api Secret", _merchantApisecret);
     if (apisecret != null) {
       await Prefs.merchantApiSecretSet(apisecret);
       setState(() {
-        _apisecret = apisecret;
+        _merchantApisecret = apisecret;
       });
     }
   }
 
-  void _editApiserver() async {
-    var apiserver = await askString(context, "Set Api Server", _apiserver);
+  void _editMerchantApiserver() async {
+    var apiserver =
+        await askString(context, "Set Merchant Api Server", _merchantApiserver);
     if (apiserver != null) {
       await Prefs.merchantApiServerSet(apiserver);
       setState(() {
-        _apiserver = apiserver;
+        _merchantApiserver = apiserver;
       });
     }
   }
@@ -428,15 +445,38 @@ class _SettingsState extends State<SettingsScreen> {
                 ],
               )),
           Visibility(
+              visible: UseBronze,
+              child: Column(children: <Widget>[
+                Container(
+                  padding: const EdgeInsets.only(top: 18.0),
+                  child: ListTile(
+                    title: Text("Bronze Api Key"),
+                    subtitle: Text("$_bronzeApikey"),
+                  ),
+                ),
+              ])),
+          ListTile(
+            title: Text("Bronze Api Secret"),
+            subtitle: Text("$_bronzeApisecret"),
+          ),
+          ListTile(
+            title: Text("Bronze Kyc Upgrade Token"),
+            subtitle: Text("$_bronzeKycToken"),
+          ),
+          ListTile(
+            title: Text("Bronze Bank Account"),
+            subtitle: Text("$_bronzeBankAccount"),
+          ),
+          Visibility(
               visible: UseMerchantApi,
               child: Column(children: <Widget>[
                 Container(
                   padding: const EdgeInsets.only(top: 18.0),
                   child: ListTile(
                     title: raisedButtonIcon(
-                        label: Text("Scan Api Key"),
+                        label: Text("Scan Merchant Api Key"),
                         icon: Icon(MaterialCommunityIcons.qrcode_scan),
-                        onPressed: !_secondary ? _scanApikey : null),
+                        onPressed: !_secondary ? _scanMerchantApikey : null),
                   ),
                 ),
                 ListTile(
@@ -448,28 +488,28 @@ class _SettingsState extends State<SettingsScreen> {
                       onPressed: !_secondary ? _editDeviceName : null),
                 ),
                 ListTile(
-                  title: Text("Api Key"),
-                  subtitle: Text("$_apikey"),
+                  title: Text("Merchant Api Key"),
+                  subtitle: Text("$_merchantApikey"),
                   trailing: raisedButtonIcon(
                       label: Text("Edit"),
                       icon: Icon(Icons.edit),
-                      onPressed: !_secondary ? _editApikey : null),
+                      onPressed: !_secondary ? _editMerchantApikey : null),
                 ),
                 ListTile(
-                  title: Text("Api Secret"),
-                  subtitle: Text("$_apisecret"),
+                  title: Text("Merchant Api Secret"),
+                  subtitle: Text("$_merchantApisecret"),
                   trailing: raisedButtonIcon(
                       label: Text("Edit"),
                       icon: Icon(Icons.edit),
-                      onPressed: !_secondary ? _editApisecret : null),
+                      onPressed: !_secondary ? _editMerchantApisecret : null),
                 ),
                 ListTile(
                   title: Text("Api Server"),
-                  subtitle: Text("$_apiserver"),
+                  subtitle: Text("$_merchantApiserver"),
                   trailing: raisedButtonIcon(
                       label: Text("Edit"),
                       icon: Icon(Icons.edit),
-                      onPressed: !_secondary ? _editApiserver : null),
+                      onPressed: !_secondary ? _editMerchantApiserver : null),
                 ),
               ]))
         ],
