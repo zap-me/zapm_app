@@ -72,15 +72,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-        onTap: () {
-          // unfocus any text fields when touching non interactive part of app
-          // this should hide any keyboards
-          var currentFocus = FocusScope.of(context);
-          if (!currentFocus.hasPrimaryFocus &&
-              currentFocus.focusedChild != null) {
-            FocusManager.instance.primaryFocus?.unfocus();
-          }
-        },
+        onTap: () => dismissKeyboard(context),
         child: MaterialApp(
           //debugShowCheckedModeBanner: false,
           title: AppTitle,
@@ -517,14 +509,14 @@ class _ZapHomePageState extends State<ZapHomePage>
     await Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => BronzeScreen(_ws, BronzeApiSide.Buy)));
+            builder: (context) => BronzeScreen(_ws, BronzeSide.Buy)));
   }
 
   void _sellZap() async {
     await Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => BronzeScreen(_ws, BronzeApiSide.Sell)));
+            builder: (context) => BronzeScreen(_ws, BronzeSide.Sell)));
   }
 
   void _zapReward() async {

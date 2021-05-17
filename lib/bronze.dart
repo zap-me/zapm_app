@@ -12,10 +12,12 @@ import 'package:extended_masked_text/extended_masked_text.dart';
 import 'package:zapdart/widgets.dart';
 import 'package:zapdart/colors.dart';
 import 'package:zapdart/utils.dart';
+import 'package:zapdart/libzap.dart';
 
 import 'hmac.dart';
 import 'prefs.dart';
 import 'wallet_state.dart';
+import 'send_receive.dart';
 
 class BronzeRegister {
   final String? accountToken;
@@ -74,13 +76,13 @@ class BronzeAccountKycUpgradeResult {
       BronzeAccountKycUpgradeResult('', '', '', error);
 }
 
-enum BronzeApiSide { Buy, Sell }
+enum BronzeSide { Buy, Sell }
 
 const BronzeZapNzdMarket = 'ZAPNZD';
 
 class BronzeQuote {
   final String market;
-  final BronzeApiSide side;
+  final BronzeSide side;
   final Decimal amount;
   final bool amountAsQuoteCurrency;
   BronzeQuote(this.market, this.side, this.amount, this.amountAsQuoteCurrency);
@@ -99,6 +101,78 @@ class BronzeQuoteResult {
 
   static BronzeQuoteResult makeError(BronzeError error, String? msg) =>
       BronzeQuoteResult('', Decimal.zero, '', Decimal.zero, 0, error, msg);
+}
+
+class BronzeOrderResult {
+  final String assetSend;
+  final Decimal amountSend;
+  final String assetReceive;
+  final Decimal amountReceive;
+  final int expiry;
+  final String token;
+  final String? invoiceId;
+  final String? paymentAddress;
+  final String? paymentUrl;
+  final String? txIdPayment;
+  final String recipient;
+  final String? txIdRecipient;
+  final String status;
+
+  final BronzeError error;
+  final String? errorMessage;
+  BronzeOrderResult(
+      this.assetSend,
+      this.amountSend,
+      this.assetReceive,
+      this.amountReceive,
+      this.expiry,
+      this.token,
+      this.invoiceId,
+      this.paymentAddress,
+      this.paymentUrl,
+      this.txIdPayment,
+      this.recipient,
+      this.txIdRecipient,
+      this.status,
+      this.error,
+      this.errorMessage);
+
+  static BronzeOrderResult makeError(BronzeError error, String? msg) =>
+      BronzeOrderResult('', Decimal.zero, '', Decimal.zero, 0, '', null, null,
+          null, null, '', null, '', error, msg);
+
+  static BronzeOrderResult fromJson(String data) {
+    var json = jsonDecode(data);
+    var assetSend = json['assetSend'];
+    var amountSend = Decimal.parse(json['amountSend']);
+    var assetReceive = json['assetReceive'];
+    var amountReceive = Decimal.parse(json['amountReceive']);
+    var expiry = json['expiry'];
+    var token = json['token'];
+    var invoiceId = json['invoiceId'];
+    var paymentAddress = json['paymentAddress'];
+    var paymentUrl = json['paymentUrl'];
+    var txIdPayment = json['txIdPayment'];
+    var recipient = json['recipient'];
+    var txIdRecipient = json['txIdRecipient'];
+    var status = json['status'];
+    return BronzeOrderResult(
+        assetSend,
+        amountSend,
+        assetReceive,
+        amountReceive,
+        expiry,
+        token,
+        invoiceId,
+        paymentAddress,
+        paymentUrl,
+        txIdPayment,
+        recipient,
+        txIdRecipient,
+        status,
+        BronzeError.None,
+        null);
+  }
 }
 
 class Bronze {
@@ -268,8 +342,6 @@ class Bronze {
   Future<BronzeQuoteResult> brokerQuote(
       BronzeApikey apikey, BronzeQuote quote) async {
     var params = {
-      'key': apikey.key,
-      'nonce': _nonce(),
       'market': quote.market,
       'side': describeEnum(quote.side).toLowerCase(),
       'amount': quote.amount.toString(),
@@ -292,12 +364,61 @@ class Bronze {
     }
     return BronzeQuoteResult.makeError(BronzeError.Network, null);
   }
+
+  Future<BronzeOrderResult> brokerCreate(
+      BronzeApikey apikey, BronzeQuote quote, String recipient) async {
+    var params = {
+      'market': quote.market,
+      'side': describeEnum(quote.side).toLowerCase(),
+      'amount': quote.amount.toString(),
+      'amountAsQuoteCurrency': quote.amountAsQuoteCurrency,
+      'recipient': recipient,
+    };
+    var response =
+        await _privateRequest(apikey, 'BrokerCreate', params: params);
+    if (response != null) {
+      if (response.statusCode == 400)
+        return BronzeOrderResult.makeError(BronzeError.Auth, response.body);
+      if (response.statusCode == 200)
+        return BronzeOrderResult.fromJson(response.body);
+    }
+    return BronzeOrderResult.makeError(BronzeError.Network, null);
+  }
+
+  Future<BronzeOrderResult> brokerAccept(
+      BronzeApikey apikey, String token) async {
+    var response =
+        await _privateRequest(apikey, 'BrokerAccept', params: {'token': token});
+    if (response != null) {
+      if (response.statusCode == 400)
+        return BronzeOrderResult.makeError(BronzeError.Auth, response.body);
+      if (response.statusCode == 200)
+        return BronzeOrderResult.fromJson(response.body);
+    }
+    return BronzeOrderResult.makeError(BronzeError.Network, null);
+  }
+
+  Future<BronzeOrderResult> brokerStatus(
+      BronzeApikey apikey, String token) async {
+    var params = {
+      'token': token,
+    };
+    var response =
+        await _privateRequest(apikey, 'BrokerStatus', params: params);
+    if (response != null) {
+      if (response.statusCode == 400)
+        return BronzeOrderResult.makeError(BronzeError.Auth, response.body);
+      if (response.statusCode == 200)
+        return BronzeOrderResult.fromJson(response.body);
+    }
+    return BronzeOrderResult.makeError(BronzeError.Network, null);
+  }
 }
 
 class BronzeScreen extends StatelessWidget {
   BronzeScreen(this._ws, this._side) : super();
 
-  final BronzeApiSide _side;
+  final BronzeSide _side;
   final WalletState _ws;
 
   String _zapVerb() {
@@ -305,7 +426,7 @@ class BronzeScreen extends StatelessWidget {
   }
 
   String _nzdVerb() {
-    return _side == BronzeApiSide.Sell ? 'Receive' : 'Send';
+    return _side == BronzeSide.Sell ? 'Receive' : 'Send';
   }
 
   @override
@@ -328,7 +449,7 @@ class BronzeScreen extends StatelessWidget {
 
 class BronzeForm extends StatefulWidget {
   final WalletState _ws;
-  final BronzeApiSide _side;
+  final BronzeSide _side;
   final String Function() _zapVerb;
   final String Function() _nzdVerb;
 
@@ -506,6 +627,7 @@ class BronzeFormState extends State<BronzeForm> {
   }
 
   void _updateQuote() async {
+    dismissKeyboard(context);
     TextEditingController controllerAmount;
     TextEditingController controllerQuote;
     switch (_processingQuote) {
@@ -538,7 +660,7 @@ class BronzeFormState extends State<BronzeForm> {
     var quoteResult = await bronze.brokerQuote(await _apikey(), quote);
     switch (quoteResult.error) {
       case BronzeError.None:
-        var quoteAmountReceive = (widget._side == BronzeApiSide.Sell) ^
+        var quoteAmountReceive = (widget._side == BronzeSide.Sell) ^
             (_processingQuote == ProcessingQuote.ZAP);
         controllerQuote.text = quoteAmountReceive
             ? quoteResult.amountReceive.toString()
@@ -563,6 +685,65 @@ class BronzeFormState extends State<BronzeForm> {
     if (value.length == 15 || value.length == 16)
       return int.tryParse(value) != null;
     return false;
+  }
+
+  void _execute() async {
+    if (_formKey.currentState == null) return;
+    if (_formKey.currentState!.validate()) {
+      var bronze = Bronze(widget._ws.testnet);
+      var apikey = await _apikey();
+      var amount = Decimal.parse(_amountZapController.text);
+      switch (widget._side) {
+        case BronzeSide.Buy:
+          flushbarMsg(context, 'not yet implemented');
+          break;
+        case BronzeSide.Sell:
+          Prefs.bronzeBankAccountSet(_bankAccountController.text);
+          var quote =
+              BronzeQuote(BronzeZapNzdMarket, widget._side, amount, false);
+          showAlertDialog(context, 'creating order...');
+          var result = await bronze.brokerCreate(
+              apikey, quote, _bankAccountController.text);
+          Navigator.pop(context);
+          if (result.error != BronzeError.None)
+            flushbarMsg(
+                context, 'failed to create order - ${result.errorMessage}');
+          else {
+            var yes = await askYesNo(context,
+                'Would you like to confirm your order to send ${result.amountSend} ${result.assetSend} and receive ${result.amountReceive} ${result.assetReceive}?');
+            if (yes) {
+              showAlertDialog(context, 'confirming order...');
+              result = await bronze.brokerAccept(apikey, result.token);
+              Navigator.pop(context);
+              if (result.error != BronzeError.None ||
+                  result.status.toLowerCase() != 'ready' ||
+                  result.invoiceId == null ||
+                  result.paymentAddress == null)
+                flushbarMsg(context,
+                    'failed to confirm order - ${result.errorMessage}');
+              else {
+                var addr = result.paymentAddress!;
+                var assetId = LibZap().assetIdGet();
+                var attachment = jsonEncode({'invoiceId': result.invoiceId});
+                var uri = WavesRequest(addr, assetId,
+                        amount * Decimal.fromInt(100), attachment, 0)
+                    .toUri();
+                var tx = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => SendScreen(widget._ws, uri)),
+                );
+                if (tx != null) {
+                  widget._ws.updateBalance();
+                  Navigator.pop(context);
+                } else
+                  flushbarMsg(context, 'failed to send transaction');
+              }
+            }
+          }
+          break;
+      }
+    }
   }
 
   @override
@@ -692,7 +873,7 @@ class BronzeFormState extends State<BronzeForm> {
                         : SizedBox(),
                   ])
                 : SizedBox(),
-            widget._side == BronzeApiSide.Sell
+            widget._side == BronzeSide.Sell
                 ? Padding(
                     padding: const EdgeInsets.only(top: 24.0),
                     child: TextFormField(
@@ -720,6 +901,15 @@ class BronzeFormState extends State<BronzeForm> {
                         setState(() => _bankAccountValid = _bankAccountValid);
                       },
                     ),
+                  )
+                : SizedBox(),
+            _processingQuote == ProcessingQuote.None
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 24.0),
+                    child: RoundedButton(_execute, ZapWhite, ZapYellow,
+                        '${widget._zapVerb().toLowerCase()}',
+                        minWidth: MediaQuery.of(context).size.width / 2,
+                        holePunch: true),
                   )
                 : SizedBox(),
             Padding(
