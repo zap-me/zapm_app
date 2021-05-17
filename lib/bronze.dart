@@ -687,60 +687,78 @@ class BronzeFormState extends State<BronzeForm> {
     return false;
   }
 
+  Future<BronzeOrderResult?> _createAndConfirmOrder(
+      BronzeQuote quote, String recipient) async {
+    var bronze = Bronze(widget._ws.testnet);
+    var apikey = await _apikey();
+    showAlertDialog(context, 'creating order...');
+    var result = await bronze.brokerCreate(apikey, quote, recipient);
+    Navigator.pop(context);
+    if (result.error != BronzeError.None) {
+      flushbarMsg(context, 'failed to create order - ${result.errorMessage}',
+          category: MessageCategory.Warning);
+      return null;
+    }
+    var yes = await askYesNo(context,
+        'Would you like to confirm your order to send ${result.amountSend} ${result.assetSend} and receive ${result.amountReceive} ${result.assetReceive}?');
+    if (!yes) return null;
+    showAlertDialog(context, 'confirming order...');
+    result = await bronze.brokerAccept(apikey, result.token);
+    Navigator.pop(context);
+    if (result.error != BronzeError.None ||
+        result.status.toLowerCase() != 'ready') {
+      flushbarMsg(context, 'failed to confirm order - ${result.errorMessage}',
+          category: MessageCategory.Warning);
+      return null;
+    }
+    return result;
+  }
+
   void _execute() async {
     if (_formKey.currentState == null) return;
     if (_formKey.currentState!.validate()) {
-      var bronze = Bronze(widget._ws.testnet);
-      var apikey = await _apikey();
       var amount = Decimal.parse(_amountZapController.text);
+      var quote = BronzeQuote(BronzeZapNzdMarket, widget._side, amount, false);
       switch (widget._side) {
         case BronzeSide.Buy:
-          flushbarMsg(context, 'not yet implemented');
+          var result = await _createAndConfirmOrder(
+              quote, widget._ws.addrOrAccountValue());
+          if (result == null) break;
+          if (result.paymentUrl == null) {
+            flushbarMsg(context, 'invalid order',
+                category: MessageCategory.Warning);
+            break;
+          }
+          launch(result.paymentUrl!);
+          Navigator.pop(context);
           break;
         case BronzeSide.Sell:
           Prefs.bronzeBankAccountSet(_bankAccountController.text);
-          var quote =
-              BronzeQuote(BronzeZapNzdMarket, widget._side, amount, false);
-          showAlertDialog(context, 'creating order...');
-          var result = await bronze.brokerCreate(
-              apikey, quote, _bankAccountController.text);
-          Navigator.pop(context);
-          if (result.error != BronzeError.None)
-            flushbarMsg(
-                context, 'failed to create order - ${result.errorMessage}');
-          else {
-            var yes = await askYesNo(context,
-                'Would you like to confirm your order to send ${result.amountSend} ${result.assetSend} and receive ${result.amountReceive} ${result.assetReceive}?');
-            if (yes) {
-              showAlertDialog(context, 'confirming order...');
-              result = await bronze.brokerAccept(apikey, result.token);
-              Navigator.pop(context);
-              if (result.error != BronzeError.None ||
-                  result.status.toLowerCase() != 'ready' ||
-                  result.invoiceId == null ||
-                  result.paymentAddress == null)
-                flushbarMsg(context,
-                    'failed to confirm order - ${result.errorMessage}');
-              else {
-                var addr = result.paymentAddress!;
-                var assetId = LibZap().assetIdGet();
-                var attachment = jsonEncode({'invoiceId': result.invoiceId});
-                var uri = WavesRequest(addr, assetId,
-                        amount * Decimal.fromInt(100), attachment, 0)
-                    .toUri();
-                var tx = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => SendScreen(widget._ws, uri)),
-                );
-                if (tx != null) {
-                  widget._ws.updateBalance();
-                  Navigator.pop(context);
-                } else
-                  flushbarMsg(context, 'failed to send transaction');
-              }
-            }
+          var result =
+              await _createAndConfirmOrder(quote, _bankAccountController.text);
+          if (result == null) break;
+          if (result.invoiceId == null || result.paymentAddress == null) {
+            flushbarMsg(context, 'invalid order',
+                category: MessageCategory.Warning);
+            break;
           }
+          var addr = result.paymentAddress!;
+          var assetId = LibZap().assetIdGet();
+          var attachment = jsonEncode({'invoiceId': result.invoiceId});
+          var uri = WavesRequest(
+                  addr, assetId, amount * Decimal.fromInt(100), attachment, 0)
+              .toUri();
+          var tx = await Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => SendScreen(widget._ws, uri)),
+          );
+          if (tx != null) {
+            widget._ws.updateBalance();
+            Navigator.pop(context);
+          } else
+            flushbarMsg(context, 'failed to send transaction',
+                category: MessageCategory.Warning);
           break;
       }
     }
@@ -903,22 +921,17 @@ class BronzeFormState extends State<BronzeForm> {
                     ),
                   )
                 : SizedBox(),
-            _processingQuote == ProcessingQuote.None
-                ? Padding(
-                    padding: const EdgeInsets.only(top: 24.0),
-                    child: RoundedButton(_execute, ZapWhite, ZapYellow,
-                        '${widget._zapVerb().toLowerCase()}',
-                        minWidth: MediaQuery.of(context).size.width / 2,
-                        holePunch: true),
-                  )
-                : SizedBox(),
             Padding(
               padding: const EdgeInsets.only(top: 24.0),
-              child: RoundedButton(
-                  () => Navigator.pop(context), ZapBlue, ZapWhite, 'cancel',
-                  borderColor: ZapBlue,
-                  minWidth: MediaQuery.of(context).size.width / 2),
+              child: RoundedButton(_execute, ZapWhite, ZapYellow,
+                  '${widget._zapVerb().toLowerCase()}',
+                  minWidth: MediaQuery.of(context).size.width / 2,
+                  holePunch: true),
             ),
+            RoundedButton(
+                () => Navigator.pop(context), ZapBlue, ZapWhite, 'cancel',
+                borderColor: ZapBlue,
+                minWidth: MediaQuery.of(context).size.width / 2),
           ],
         ),
       )),
