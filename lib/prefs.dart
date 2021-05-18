@@ -7,6 +7,7 @@ import 'package:zapdart/libzap.dart';
 
 import 'config.dart';
 import 'paydb.dart';
+import 'bronze_order.dart';
 
 class WavesWallet {
   final String mnemonic;
@@ -361,5 +362,32 @@ class Prefs {
   static Future<bool> bronzeBankAccountSet(String? value) async {
     await setStringNetworkSpecific("bronze_bank_account", value);
     return true;
+  }
+
+  static Future<List<BronzeOrder>> bronzeOrdersGet() async {
+    var orders = <BronzeOrder>[];
+    var data = await getStringNetworkSpecific("bronze_orders", null);
+    if (data != null && data.isNotEmpty)
+      for (var item in jsonDecode(data)) orders.add(BronzeOrder.fromJson(item));
+    return orders;
+  }
+
+  static Future<bool> bronzeOrdersSet(List<BronzeOrder> orders) async {
+    return await setStringNetworkSpecific("bronze_orders", jsonEncode(orders));
+  }
+
+  static Future<bool> bronzeOrderAdd(BronzeOrder order) async {
+    var orders = await bronzeOrdersGet();
+    orders.add(order);
+    return await bronzeOrdersSet(orders);
+  }
+
+  static Future<List<BronzeOrder>> bronzeOrderUpdate(
+      BronzeOrder updatedOrder) async {
+    var orders = await bronzeOrdersGet();
+    for (var order in orders)
+      if (order.token == updatedOrder.token) order.status = updatedOrder.status;
+    await bronzeOrdersSet(orders);
+    return orders;
   }
 }

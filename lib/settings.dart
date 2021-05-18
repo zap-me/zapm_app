@@ -19,6 +19,7 @@ import 'hidden.dart';
 import 'firebase.dart';
 import 'paydb.dart';
 import 'qrscan.dart';
+import 'bronze.dart';
 
 class AppVersion {
   final String version;
@@ -316,6 +317,13 @@ class _SettingsState extends State<SettingsScreen> {
     return Text('n/a');
   }
 
+  void _bronzeOrders() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => BronzeOrdersScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -454,19 +462,25 @@ class _SettingsState extends State<SettingsScreen> {
                     subtitle: Text("$_bronzeApikey"),
                   ),
                 ),
+                ListTile(
+                  title: Text("Bronze Api Secret"),
+                  subtitle: Text("$_bronzeApisecret"),
+                ),
+                ListTile(
+                  title: Text("Bronze Kyc Upgrade Token"),
+                  subtitle: Text("$_bronzeKycToken"),
+                ),
+                ListTile(
+                  title: Text("Bronze Bank Account"),
+                  subtitle: Text("$_bronzeBankAccount"),
+                ),
+                ListTile(
+                  title: raisedButtonIcon(
+                      label: Text("Bronze Orders"),
+                      icon: Icon(MaterialCommunityIcons.format_list_bulleted),
+                      onPressed: _bronzeOrders),
+                ),
               ])),
-          ListTile(
-            title: Text("Bronze Api Secret"),
-            subtitle: Text("$_bronzeApisecret"),
-          ),
-          ListTile(
-            title: Text("Bronze Kyc Upgrade Token"),
-            subtitle: Text("$_bronzeKycToken"),
-          ),
-          ListTile(
-            title: Text("Bronze Bank Account"),
-            subtitle: Text("$_bronzeBankAccount"),
-          ),
           Visibility(
               visible: UseMerchantApi,
               child: Column(children: <Widget>[
