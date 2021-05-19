@@ -7,20 +7,6 @@ import 'package:google_api_availability/google_api_availability.dart';
 
 import 'package:zapdart/utils.dart';
 
-Future<dynamic> fcmBackgroundMessageHandler(RemoteMessage message) async {
-  if (message.data.containsKey('data')) {
-    // handle data message
-    final dynamic data = message.data['data'];
-    print('fcmBackgroundMessageHander data: $data');
-  }
-
-  if (message.data.containsKey('notification')) {
-    // handle notification message
-    final dynamic notification = message.data['notification'];
-    print('fcmBackgroundMessageHander notification: $notification');
-  }
-}
-
 class FCM {
   final BuildContext _context;
   final String? _premioStageIndexUrl;
@@ -60,13 +46,13 @@ class FCM {
         handleMessage(message);
       });
       FirebaseMessaging.onBackgroundMessage(
-          (RemoteMessage message) => fcmBackgroundMessageHandler(message));
+          (RemoteMessage message) => handleBackgroundMessage(message));
     } on TypeError catch (e) {
       print(e);
     }
   }
 
-  void handleMessage(RemoteMessage? message) {
+  void handleMessage(RemoteMessage? message) async {
     if (message == null) return;
     if (message.data.containsKey('notification')) {
       var title = message.data['notification']['title'];
@@ -81,6 +67,28 @@ class FCM {
         if (title != null && body != null) alert(_context, title, body);
       }
     }
+    if (message.notification?.title != null &&
+        message.notification?.body != null) {
+      var title = message.notification!.title!;
+      var body = message.notification!.body!;
+      alert(_context, title, body);
+    }
+  }
+
+  Future<void> handleBackgroundMessage(RemoteMessage message) async {
+    if (message.data.containsKey('data')) {
+      // handle data message
+      final dynamic data = message.data['data'];
+      print('handleBackgroundMessage data: $data');
+    }
+
+    if (message.data.containsKey('notification')) {
+      // handle notification message
+      final dynamic notification = message.data['notification'];
+      print('handleBackgroundMessage notification: $notification');
+    }
+
+    handleMessage(message);
   }
 
   void setToken(String? token) async {
