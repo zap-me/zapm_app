@@ -3,21 +3,21 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>710131684076-neiegdsp7qef3evefhrri72r6bm25r6o.apps.googleusercontent.com</string>
+	<string>885566605623-5iscoqqe2qq5vvim6boet7as5a0o5q24.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.710131684076-neiegdsp7qef3evefhrri72r6bm25r6o</string>
+	<string>com.googleusercontent.apps.885566605623-5iscoqqe2qq5vvim6boet7as5a0o5q24</string>
 	<key>API_KEY</key>
-	<string>AIzaSyDhZ9Zul9rSRKn_p9sXhNHHkMI4sc6Q_KQ</string>
+	<string>AIzaSyCen1ZPJSM_--eLTmUbqwqgAXlWsUGjXc8</string>
 	<key>GCM_SENDER_ID</key>
-	<string>710131684076</string>
+	<string>885566605623</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>me.zap.merchantapp</string>
+	<string>me.zap.zapapp.newbeta</string>
 	<key>PROJECT_ID</key>
-	<string>premio-whitelabel-demo</string>
+	<string>zap-app-new-beta</string>
 	<key>STORAGE_BUCKET</key>
-	<string>premio-whitelabel-demo.appspot.com</string>
+	<string>zap-app-new-beta.appspot.com</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -29,6 +29,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:710131684076:ios:2c4a1a727fe12c7641cbc9</string>
+	<string>1:885566605623:ios:458c8367f3f65d10c132b2</string>
 </dict>
 </plist>

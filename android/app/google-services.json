@@ -1,34 +1,41 @@
 {
   "project_info": {
-    "project_number": "710131684076",
-    "project_id": "premio-whitelabel-demo",
-    "storage_bucket": "premio-whitelabel-demo.appspot.com"
+    "project_number": "885566605623",
+    "project_id": "zap-app-new-beta",
+    "storage_bucket": "zap-app-new-beta.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:710131684076:android:eb166d5aa40109d641cbc9",
+        "mobilesdk_app_id": "1:885566605623:android:b2f63502ad50fcf8c132b2",
         "android_client_info": {
-          "package_name": "me.zap.merchantapp"
+          "package_name": "me.zap.zapapp.newbeta"
         }
       },
       "oauth_client": [
         {
-          "client_id": "710131684076-ul4mmcbg2ss9ocai71snq18lt51klvbg.apps.googleusercontent.com",
+          "client_id": "885566605623-in96ej6v15pto31i7884boshj28sfhnh.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyCDrWHxCVbYHfVnQFW_zGbYwpH_F0tXEnE"
+          "current_key": "AIzaSyDWcWh6_wtchrlTUYLNrxg41ZL6k9XwoO4"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "710131684076-ul4mmcbg2ss9ocai71snq18lt51klvbg.apps.googleusercontent.com",
+              "client_id": "885566605623-in96ej6v15pto31i7884boshj28sfhnh.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "885566605623-5iscoqqe2qq5vvim6boet7as5a0o5q24.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "me.zap.zapapp.newbeta"
+              }
             }
           ]
         }

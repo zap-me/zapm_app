@@ -1,6 +1,6 @@
-name: zap_merchant
-description: zap.me retailer app
-version: 1.3.1+43
+name: zap_app
+description: zap.me zap app
+version: 1.5.0+0
 publish_to: none
 
 environment:

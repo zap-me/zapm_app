@@ -10,7 +10,7 @@ enum TokenType { Waves, PayDB }
 // the default testnet value
 const TestnetDefault = false;
 // the app title
-const AppTitle = 'Zap Retailer';
+const AppTitle = 'Zap';
 // all instances where the asset short name has the first letter capitalized
 const AssetShortName = 'Zap';
 // all instances where the asset short name is lower case
@@ -55,11 +55,11 @@ const String? PayDBServerMainnet = null;
 const String? PayDBServerTestnet = null;
 
 // If set the app will try to register with the premio stage server for push notifications
-const String? PremioStageIndexUrl = null;
-const String? PremioStageName = null;
+const String? PremioStageIndexUrl = 'https://gist.githubusercontent.com/djpnewton/7e1dc85fd6f4c80468ca4949b3735b03/raw/73a6c58d16e448a5a00f59b1998104afd906d015/premio_servers.json';
+const String? PremioStageName = 'zap-prod';
 
 // If set the app will add the option of saving (waves) recovery words to the stash server
-const String? StashServer = null;
+const String? StashServer = 'https://premio.zap.me/stash/';
 
 // If set the app will use this api key to get info about centrapay payment requests
 // but why/how do we need an api key just to pay an invoice!!

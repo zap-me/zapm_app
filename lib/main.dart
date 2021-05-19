@@ -212,10 +212,10 @@ class _ZapHomePageState extends State<ZapHomePage>
 
     // process premio stage links (scheme parameter is optional - default to 'https')
     //
-    // premiostagelink://<HOST>/claim_payment/<CLAIM_CODE>[?scheme=<SCHEME>]
+    // premiostagezap://<HOST>/claim_payment/<CLAIM_CODE>[?scheme=<SCHEME>]
     //
     var uri2 = Uri.tryParse(uri);
-    if (uri2 != null && uri2.isScheme('premiostagelink')) {
+    if (uri2 != null && uri2.isScheme('premiostagezap')) {
       if (uri2.pathSegments.length == 2 &&
           uri2.pathSegments[0] == 'claim_payment') {
         var scheme = 'https';
