@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:decimal/decimal.dart';
+import 'package:flutter_icons/flutter_icons.dart';
 
 import 'package:zapdart/utils.dart';
 import 'package:zapdart/widgets.dart';
@@ -7,6 +8,8 @@ import 'package:zapdart/widgets.dart';
 import 'config.dart';
 import 'claiming_form.dart';
 import 'prefs.dart';
+import 'paydb.dart';
+import 'qrscan.dart';
 
 class RewardForm extends StatefulWidget {
   final String _seed;
@@ -23,8 +26,14 @@ class RewardForm extends StatefulWidget {
 
 class RewardFormState extends State<RewardForm> {
   final _formKey = GlobalKey<FormState>();
-  final _amountController = new TextEditingController();
-  final _msgController = new TextEditingController();
+  final _paydbRecipientController = TextEditingController();
+  final _amountController = TextEditingController();
+  final _msgController = TextEditingController();
+
+  void scanRecipient() async {
+    var data = await QrScan.scan(context);
+    if (data != null) _paydbRecipientController.text = data;
+  }
 
   void send() async {
     if (_formKey.currentState == null) return;
@@ -63,13 +72,30 @@ class RewardFormState extends State<RewardForm> {
           return;
         }
         // start claim process
-        var sentFunds = await Navigator.push<bool>(
-          context,
-          MaterialPageRoute(
-              builder: (context) =>
-                  ClaimingForm(amountDec, widget._seed, amount, fee, msg)),
-        );
-        if (sentFunds != null && sentFunds) Navigator.pop(context, true);
+        switch (AppTokenType) {
+          case TokenType.Waves:
+            var sentFunds = await Navigator.push<bool>(
+              context,
+              MaterialPageRoute(
+                  builder: (context) =>
+                      ClaimingForm(amountDec, widget._seed, amount, fee, msg)),
+            );
+            if (sentFunds != null && sentFunds) Navigator.pop(context, true);
+            break;
+          case TokenType.PayDB:
+            showAlertDialog(context, 'sending reward..');
+            //TODO: get reason and category values to choose from from the server
+            var reason = 'Customer reward';
+            var category = 'marketing';
+            var result = await paydbRewardCreate(reason, category,
+                _paydbRecipientController.text, amount, _msgController.text);
+            Navigator.pop(context);
+            if (result != PayDbError.None)
+              flushbarMsg(context, 'reward failed',
+                  category: MessageCategory.Warning);
+            else
+              alert(context, 'Success', 'Reward successfully sent');
+        }
       }
     } else
       flushbarMsg(context, 'validation failed',
@@ -90,6 +116,24 @@ class RewardFormState extends State<RewardForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
+          AppTokenType == TokenType.PayDB
+              ? TextFormField(
+                  controller: _paydbRecipientController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: InputDecoration(
+                      labelText: 'Recipient',
+                      suffixIcon: IconButton(
+                          icon: Icon(MaterialCommunityIcons.qrcode_scan),
+                          onPressed: scanRecipient)),
+                  validator: (value) {
+                    if (value == null || value.isEmpty)
+                      return 'Please enter a value';
+                    if (!paydbRecipientCheck(_paydbRecipientController.text))
+                      return 'Invalid recipient';
+                    return null;
+                  },
+                )
+              : SizedBox(),
           TextFormField(
             controller: _amountController,
             keyboardType: TextInputType.numberWithOptions(decimal: true),

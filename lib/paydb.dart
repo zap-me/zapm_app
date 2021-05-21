@@ -25,6 +25,7 @@ const ActionDestroy = 'destroy';
 enum PayDbError { None, Network, Auth }
 
 enum PayDbPermission { receive, balance, history, transfer, issue }
+enum PayDbRole { admin, proposer, authorizer }
 
 class PayDbUri {
   final String account;
@@ -104,9 +105,10 @@ class UserInfo {
   final String? photo;
   final String? photoType;
   final Iterable<PayDbPermission> permissions;
+  final Iterable<PayDbRole> roles;
 
-  UserInfo(
-      this.email, this.balance, this.photo, this.photoType, this.permissions);
+  UserInfo(this.email, this.balance, this.photo, this.photoType,
+      this.permissions, this.roles);
 }
 
 class UserInfoResult {
@@ -333,8 +335,12 @@ Future<UserInfoResult> paydbUserInfo({String? email}) async {
     for (var permName in jsnObj["permissions"])
       for (var perm in PayDbPermission.values)
         if (describeEnum(perm) == permName) perms.add(perm);
+    var roles = <PayDbRole>[];
+    for (var roleName in jsnObj["roles"])
+      for (var role in PayDbRole.values)
+        if (describeEnum(role) == roleName) roles.add(role);
     var info = UserInfo(jsnObj["email"], jsnObj["balance"], jsnObj["photo"],
-        jsnObj["photo_type"], perms);
+        jsnObj["photo_type"], perms, roles);
     return UserInfoResult(info, PayDbError.None);
   } else if (response.statusCode == 400)
     return UserInfoResult(null, PayDbError.Auth);
@@ -410,4 +416,34 @@ Future<PayDbTxResult> paydbTransactionCreate(
     return PayDbTxResult(null, PayDbError.Auth);
   print(response.statusCode);
   return PayDbTxResult(null, PayDbError.Network);
+}
+
+Future<PayDbError> paydbRewardCreate(String reason, String category,
+    String recipient, int amount, String? message) async {
+  var baseUrl = await _server();
+  if (baseUrl == null) return PayDbError.Network;
+  var url = baseUrl.replaceAll('/paydb', '') +
+      "payment_create"; //TODO: hacky url fiddling
+  var apikey = await Prefs.paydbApiKeyGet();
+  var apisecret = await Prefs.paydbApiSecretGet();
+  checkApiKey(apikey, apisecret);
+  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
+  var body = jsonEncode({
+    "api_key": apikey,
+    "nonce": nonce,
+    "reason": reason,
+    "category": category,
+    "recipient": recipient,
+    "amount": amount,
+    "message": message
+  });
+  var sig = createHmacSig(apisecret!, body);
+  var response =
+      await postAndCatch(url, body, extraHeaders: {"X-Signature": sig});
+  if (response == null) return PayDbError.Network;
+  if (response.statusCode == 200) {
+    return PayDbError.None;
+  } else if (response.statusCode == 400) return PayDbError.Auth;
+  print(response.statusCode);
+  return PayDbError.Network;
 }

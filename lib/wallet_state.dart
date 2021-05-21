@@ -752,7 +752,7 @@ class WalletState {
           break;
       }
       if (accountEmail != null && accountEmail.isNotEmpty) {
-        _account = PayDbAccount(accountEmail, '', '', []);
+        _account = PayDbAccount(accountEmail, '', '', [], []);
         await alert(context, "Login successful", ":)");
         break;
       }
@@ -864,8 +864,12 @@ class WalletState {
         switch (result.error) {
           case PayDbError.None:
             assert(result.info != null);
-            _account = PayDbAccount(result.info!.email, result.info!.photo,
-                result.info!.photoType, result.info!.permissions);
+            _account = PayDbAccount(
+                result.info!.email,
+                result.info!.photo,
+                result.info!.photoType,
+                result.info!.permissions,
+                result.info!.roles);
             break;
           case PayDbError.Auth:
             var yes = await askYesNo(
@@ -938,6 +942,11 @@ class WalletState {
             return _account.permissions.contains(PayDbPermission.transfer);
         }
     }
+  }
+
+  bool haveRole(PayDbRole role) {
+    assert(AppTokenType == TokenType.PayDB);
+    return _account.roles.contains(role);
   }
 
   Future<bool> _setTestnet() async {

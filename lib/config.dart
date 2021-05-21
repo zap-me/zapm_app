@@ -22,7 +22,7 @@ const AssetHeaderIconPng = 'assets/icon.png';
 // the lightning icon on the home page balance widget
 const AssetBalanceIconSvg = 'assets/icon-bolt.svg';
 // enable/disable reward UI/feature
-const UseReward = false;
+const UseReward = true;
 // enable/disable settlement UI/feature
 const UseSettlement = false;
 // enable/disable merchant api (including all references/conversions to NZD)

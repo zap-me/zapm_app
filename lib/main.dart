@@ -519,7 +519,20 @@ class _ZapHomePageState extends State<ZapHomePage>
             builder: (context) => BronzeScreen(_ws, BronzeSide.Sell)));
   }
 
-  void _zapReward() async {
+  bool _canReward() {
+    switch (AppTokenType) {
+      case TokenType.Waves:
+        return UseMerchantApi &&
+            UseReward &&
+            _ws.haveCapabililty(Capability.Spend);
+      case TokenType.PayDB:
+        return UseReward &&
+            (_ws.haveRole(PayDbRole.admin) ||
+                _ws.haveRole(PayDbRole.authorizer));
+    }
+  }
+
+  void _reward() async {
     var sentFunds = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
@@ -631,6 +644,11 @@ class _ZapHomePageState extends State<ZapHomePage>
           ] +
           menuItems;
     }
+    if (_canReward())
+      menuItems.insert(
+          0,
+          MenuItem(MaterialCommunityIcons.gift, '$AssetShortNameUpper REWARDS',
+              ZapWhite, ZapBlue, _reward));
     if (UseBronze && AppTokenType == TokenType.Waves) {
       if (_ws.haveCapabililty(Capability.Spend))
         menuItems.insert(
@@ -892,10 +910,9 @@ class _ZapHomePageState extends State<ZapHomePage>
                         ),
                         SizedBox.fromSize(size: Size(1, 10)),
                         Visibility(
-                          visible: _ws.haveCapabililty(Capability.Spend) &&
-                              UseReward,
+                          visible: _canReward(),
                           child: ListButton(
-                              _zapReward, '$AssetShortNameLower rewards'),
+                              _reward, '$AssetShortNameLower rewards'),
                         ),
                         Visibility(
                           visible: _ws.haveCapabililty(Capability.Spend) &&

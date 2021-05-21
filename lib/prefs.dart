@@ -29,13 +29,16 @@ class PayDbAccount {
   final String? photo;
   final String? photoType;
   final Iterable<PayDbPermission> permissions;
+  final Iterable<PayDbRole> roles;
 
-  PayDbAccount(this.email, this.photo, this.photoType, this.permissions);
+  PayDbAccount(
+      this.email, this.photo, this.photoType, this.permissions, this.roles);
   PayDbAccount.empty()
       : email = '',
         photo = null,
         photoType = null,
-        permissions = [];
+        permissions = [],
+        roles = [];
 }
 
 class GenTx {
