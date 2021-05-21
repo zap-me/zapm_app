@@ -10,17 +10,17 @@ enum TokenType { Waves, PayDB }
 // the default testnet value
 const TestnetDefault = false;
 // the app title
-const AppTitle = 'Whitelabel Demo';
+const AppTitle = 'Premio Demo';
 // all instances where the asset short name has the first letter capitalized
-const AssetShortName = 'Paz';
+const AssetShortName = 'Prem';
 // all instances where the asset short name is lower case
-const AssetShortNameLower = 'paz';
+const AssetShortNameLower = 'prem';
 // all instances where the asset short name is upper case
-const AssetShortNameUpper = 'PAZ';
+const AssetShortNameUpper = 'PREM';
 // the 'zap' icon on the header of the home page
 const AssetHeaderIconPng = 'assets/icon.png';
 // the lightning icon on the home page balance widget
-const AssetBalanceIcon = 'assets/paz.svg';
+const AssetBalanceIcon = 'assets/icon-bolt.svg';
 // whether to disable some repeated/redundant titles
 const DontRepeatTitles = true;
 // enable/disable reward UI/feature
@@ -41,13 +41,13 @@ const UseCapitalizeFirstWord = false;
 const UseCapitalizeAsset = false;
 
 // are we using the waves network or a paydb server
-const TokenType AppTokenType = TokenType.Waves;
+const TokenType AppTokenType = TokenType.PayDB;
 
 // can we claim Redrat Zap tokens
 const ClaimRedRatZap =
     false; // when changing this to true you must add the redrat deeplink to the app metadata
 // can we buy/sell zap on bronze
-const UseBronze = true;
+const UseBronze = false;
 
 // Waves settings
 // set these two to use a different mainnet/testnet asset id pair then the default zap asset ids.
@@ -59,7 +59,7 @@ const String? NodeUrlTestnet = null;
 
 // PayDB settings
 const String? PayDBServerMainnet = null;
-const String? PayDBServerTestnet = null;
+const String? PayDBServerTestnet = 'https://premio-demo.caprover.acuerdo.dev/paydb/';
 // registration
 const bool RequireMobileNumber = false;
 const String? InitialMobileCountry = null;
@@ -71,8 +71,8 @@ const String? LocationIqApiKeyIOS = null;
 const String? LocationIqApiKeyAndroid = null;
 
 // If set the app will try to register with the premio stage server for push notifications
-const String? PremioStageIndexUrl = null;
-const String? PremioStageName = null;
+const String? PremioStageIndexUrl = 'https://gist.githubusercontent.com/djpnewton/7e1dc85fd6f4c80468ca4949b3735b03/raw/premio_servers.json';
+const String? PremioStageName = 'premio-demo';
 
 // If set the app will add the option of saving (waves) recovery words to the stash server
 const String? StashServer = null;
@@ -86,9 +86,10 @@ const String PremioPayScheme = 'premiopay';
 const String PremioPayPrefix = '$PremioPayScheme://';
 
 // PremioStageLink scheme and prefix (also needs to be changed in AndroidManifest.xml and Info.plist)
-const String PremioStageLinkScheme = 'premiostagelink';
+const String PremioStageLinkScheme = 'premiostagedemo';
 
 void initConfig() {
+  /*
   overrideTheme(
     zapWhite: Colors.lightBlue[50],
     zapYellow: Colors.teal[100],
@@ -101,4 +102,5 @@ void initConfig() {
     zapOutgoingFunds: Colors.red,
     zapIncomingFunds: Colors.green,
     zapTextThemer: GoogleFonts.sansitaTextTheme);
+  */
 }

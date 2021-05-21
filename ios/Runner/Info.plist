@@ -11,7 +11,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Whitelabel Demo</string>
+	<string>Premio Demo</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -78,7 +78,7 @@
 			<string>Premo Stage Link</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>premiostagelink</string>
+				<string>premiostagedemo</string>
 			</array>
 		</dict>
 	</array>
