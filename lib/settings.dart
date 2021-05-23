@@ -4,7 +4,6 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:package_info/package_info.dart';
 import 'package:yaml/yaml.dart';
-import 'package:zap_merchant/wallet_state.dart';
 
 import 'package:zapdart/libzap.dart';
 import 'package:zapdart/utils.dart';
@@ -20,6 +19,7 @@ import 'firebase.dart';
 import 'paydb.dart';
 import 'qrscan.dart';
 import 'bronze.dart';
+import 'wallet_state.dart';
 
 class AppVersion {
   final String version;

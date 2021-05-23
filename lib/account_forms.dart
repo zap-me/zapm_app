@@ -58,7 +58,7 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
     }
   }
 
-  Future<String> _imgDataEdited(PickedFile file) async {
+  Future<String?> _imgDataEdited(PickedFile file) async {
     final editorKey = GlobalKey<ExtendedImageEditorState>();
     final imageEditor = ExtendedImage.memory(
       await file.readAsBytes(),
@@ -73,8 +73,6 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
             cropAspectRatio: CropAspectRatios.ratio1_1);
       },
     );
-    var editorKeyState = editorKey.currentState;
-    if (editorKeyState == null) return '';
     await showGeneralDialog(
       context: context,
       barrierColor: Colors.black12.withOpacity(0.6),
@@ -91,25 +89,25 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
               IconButton(
                 icon: const Icon(Icons.flip),
                 onPressed: () {
-                  editorKeyState.flip();
+                  editorKey.currentState?.flip();
                 },
               ),
               IconButton(
                 icon: const Icon(Icons.rotate_left),
                 onPressed: () {
-                  editorKeyState.rotate(right: false);
+                  editorKey.currentState?.rotate(right: false);
                 },
               ),
               IconButton(
                 icon: const Icon(Icons.rotate_right),
                 onPressed: () {
-                  editorKeyState.rotate(right: true);
+                  editorKey.currentState?.rotate(right: true);
                 },
               ),
               IconButton(
                 icon: const Icon(Icons.restore),
                 onPressed: () {
-                  editorKeyState.reset();
+                  editorKey.currentState?.reset();
                 },
               ),
               IconButton(
@@ -121,10 +119,12 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
         ])));
       },
     );
+    var editorKeyState = editorKey.currentState;
+    if (editorKeyState == null) return null;
     var editAction = editorKeyState.editAction;
     var cropRect = editorKeyState.getCropRect();
     var src = decodeImage(editorKeyState.rawImageData);
-    if (src == null) return '';
+    if (src == null) return null;
     if (editAction != null && cropRect != null) {
       if (editAction.needCrop)
         src = copyCrop(src, cropRect.left.toInt(), cropRect.top.toInt(),
