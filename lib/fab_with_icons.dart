@@ -95,7 +95,7 @@ class FabWithIconsState extends State<FabWithIcons>
                 child: Container(
                     margin: EdgeInsets.only(left: 10),
                     child: GestureDetector(
-                        onTap: () => _controller.reverse(),
+                        onTap: () => _onTapped(index),
                         child: Material(
                             color: Colors.transparent,
                             child: Text(
