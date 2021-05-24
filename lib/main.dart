@@ -7,11 +7,12 @@ import 'package:flutter/services.dart';
 import 'package:decimal/decimal.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:uni_links/uni_links.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:audioplayers/audio_cache.dart';
+import 'package:location/location.dart';
 
 import 'package:zapdart/colors.dart';
 import 'package:zapdart/qrwidget.dart';
@@ -122,8 +123,6 @@ class _ZapHomePageState extends State<ZapHomePage>
 
   @override
   void initState() {
-    // Enable hybrid composition (needed for webview to handle '_blank' links)
-    if (Platform.isAndroid) WebView.platform = SurfaceAndroidWebView();
     // add WidgetsBindingObserver
     WidgetsBinding.instance?.addObserver(this);
     // init async stuff
@@ -680,16 +679,51 @@ class _ZapHomePageState extends State<ZapHomePage>
   List<Widget> _buildTabBodies(Widget body) {
     var content = [body, TransactionsScreen(_ws), SettingsScreen(_ws, _fcm)];
     if (WebviewURL != null) {
-      var webview = WebView(
-        initialUrl: WebviewURL,
-        javascriptMode: JavascriptMode.unrestricted,
-        gestureNavigationEnabled: true,
-        navigationDelegate: (nr) {
-          if (nr.isForMainFrame && !nr.url.startsWith(WebviewURL!)) {
-            launch(nr.url);
-            return NavigationDecision.prevent;
+      if (Platform.isAndroid)
+        AndroidInAppWebViewController.setWebContentsDebuggingEnabled(true);
+      var options = InAppWebViewGroupOptions(
+          crossPlatform: InAppWebViewOptions(
+            useShouldOverrideUrlLoading: true,
+            mediaPlaybackRequiresUserGesture: false,
+          ),
+          android: AndroidInAppWebViewOptions(
+            useHybridComposition: true,
+          ),
+          ios: IOSInAppWebViewOptions(
+            allowsInlineMediaPlayback: true,
+          ));
+      var webview = InAppWebView(
+        initialUrlRequest: URLRequest(url: Uri.parse(WebviewURL!)),
+        initialOptions: options,
+        androidOnPermissionRequest: (controller, origin, resources) async {
+          return PermissionRequestResponse(
+              resources: resources,
+              action: PermissionRequestResponseAction.GRANT);
+        },
+        shouldOverrideUrlLoading: (controller, navigationAction) async {
+          var url = navigationAction.request.url!.toString();
+          if (!url.startsWith(WebviewURL!)) {
+            launch(url);
+            return NavigationActionPolicy.CANCEL;
           }
-          return NavigationDecision.navigate;
+          return NavigationActionPolicy.ALLOW;
+        },
+        onWebViewCreated: (InAppWebViewController controller) {
+          controller.addJavaScriptHandler(
+            handlerName: 'getLocation',
+            callback: (args) async {
+              var location = Location();
+              if (!await location.serviceEnabled() && !await location.requestService())
+                  return null;
+              var granted = await location.hasPermission();
+              if (granted == PermissionStatus.denied) {
+                granted = await location.requestPermission();
+                if (granted != PermissionStatus.granted)
+                  return null;
+              }
+              var loc = await location.getLocation();
+              return {'lat': loc.latitude, 'long': loc.longitude};
+            });
         },
       );
       content.insert(0, webview);

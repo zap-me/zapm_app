@@ -26,3 +26,29 @@ See https://firebase.google.com/docs/flutter/setup
 
 Android: change the android/app/google-services.json file
 iOS: change the ios/Runner/GoogleService-Info.plist file
+
+## accessing location from webview
+
+```
+/*
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    </head>
+    <body>
+      ....
+      <script>
+window.addEventListener("flutterInAppWebViewPlatformReady", function(event) {
+  if (typeof window.flutter_inappwebview !== "undefined") {
+    window.flutter_inappwebview.callHandler('getLocation').then(function(loc) {
+      console.log(JSON.stringify(loc));
+      alert(JSON.stringify(loc));
+    });
+  }
+});
+      </script>
+    </body>
+</html>
+```
