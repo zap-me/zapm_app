@@ -1,6 +1,6 @@
 name: whitelabel_demo
 description: zap.me whitelabel demo
-version: 1.3.2+44
+version: 1.3.2+49
 publish_to: none
 
 environment:
