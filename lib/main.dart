@@ -608,7 +608,7 @@ class _ZapHomePageState extends State<ZapHomePage>
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Icon(icon, color: ZapBlue),
-        Text(label, style: TextStyle(color: ZapBlue, fontSize: 8)),
+        Text(label, style: TextStyle(color: ZapBlue, fontSize: 8), overflow: TextOverflow.visible, maxLines: 1,),
       ],
     ));
   }
@@ -688,9 +688,11 @@ class _ZapHomePageState extends State<ZapHomePage>
           ),
           android: AndroidInAppWebViewOptions(
             useHybridComposition: true,
+            useWideViewPort: true,
           ),
           ios: IOSInAppWebViewOptions(
             allowsInlineMediaPlayback: true,
+            enableViewportScale: true,
           ));
       var webview = InAppWebView(
         initialUrlRequest: URLRequest(url: Uri.parse(WebviewURL!)),
@@ -777,7 +779,7 @@ class _ZapHomePageState extends State<ZapHomePage>
                     blurRadius: 5,
                     offset: Offset(-3, 0))
               ]),
-              child: TabBar(controller: _tabController, tabs: _buildTabs())),
+              child: TabBar(controller: _tabController, tabs: _buildTabs(), labelPadding: EdgeInsets.symmetric(horizontal: 4))),
           body: Column(children: [
             Visibility(
                 visible: _showAlerts && _ws.alerts.length > 0,
