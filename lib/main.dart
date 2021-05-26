@@ -177,9 +177,10 @@ class _ZapHomePageState extends State<ZapHomePage>
             showAlertDialog(context, 'claiming payment..');
             try {
               if (await rrClaim(
-                  claimCode, _ws.testnet, _ws.addrOrAccountValue()))
+                  claimCode, _ws.testnet, _ws.addrOrAccountValue())) {
                 resultText = 'claimed funds to ${_ws.addrOrAccountValue()}';
-              else {
+                _updateBalance();
+              } else {
                 resultText = 'claim link failed';
                 failed = true;
               }
@@ -244,9 +245,10 @@ class _ZapHomePageState extends State<ZapHomePage>
         showAlertDialog(context, 'claiming payment..');
         try {
           var response = await httpPost(url, body);
-          if (response.statusCode == 200)
+          if (response.statusCode == 200) {
             resultText = 'claimed funds to $recipient';
-          else {
+            _updateBalance();
+          } else {
             resultText =
                 'claim link failed: ${response.statusCode} - ${response.body}';
             failed = true;
@@ -608,7 +610,12 @@ class _ZapHomePageState extends State<ZapHomePage>
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Icon(icon, color: ZapBlue),
-        Text(label, style: TextStyle(color: ZapBlue, fontSize: 8), overflow: TextOverflow.visible, maxLines: 1,),
+        Text(
+          label,
+          style: TextStyle(color: ZapBlue, fontSize: 8),
+          overflow: TextOverflow.visible,
+          maxLines: 1,
+        ),
       ],
     ));
   }
@@ -712,20 +719,19 @@ class _ZapHomePageState extends State<ZapHomePage>
         },
         onWebViewCreated: (InAppWebViewController controller) {
           controller.addJavaScriptHandler(
-            handlerName: 'getLocation',
-            callback: (args) async {
-              var location = Location();
-              if (!await location.serviceEnabled() && !await location.requestService())
-                  return null;
-              var granted = await location.hasPermission();
-              if (granted == PermissionStatus.denied) {
-                granted = await location.requestPermission();
-                if (granted != PermissionStatus.granted)
-                  return null;
-              }
-              var loc = await location.getLocation();
-              return {'lat': loc.latitude, 'long': loc.longitude};
-            });
+              handlerName: 'getLocation',
+              callback: (args) async {
+                var location = Location();
+                if (!await location.serviceEnabled() &&
+                    !await location.requestService()) return null;
+                var granted = await location.hasPermission();
+                if (granted == PermissionStatus.denied) {
+                  granted = await location.requestPermission();
+                  if (granted != PermissionStatus.granted) return null;
+                }
+                var loc = await location.getLocation();
+                return {'lat': loc.latitude, 'long': loc.longitude};
+              });
         },
       );
       content.insert(0, webview);
@@ -779,7 +785,10 @@ class _ZapHomePageState extends State<ZapHomePage>
                     blurRadius: 5,
                     offset: Offset(-3, 0))
               ]),
-              child: TabBar(controller: _tabController, tabs: _buildTabs(), labelPadding: EdgeInsets.symmetric(horizontal: 4))),
+              child: TabBar(
+                  controller: _tabController,
+                  tabs: _buildTabs(),
+                  labelPadding: EdgeInsets.symmetric(horizontal: 4))),
           body: Column(children: [
             Visibility(
                 visible: _showAlerts && _ws.alerts.length > 0,
