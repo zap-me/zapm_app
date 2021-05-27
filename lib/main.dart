@@ -7,12 +7,9 @@ import 'package:flutter/services.dart';
 import 'package:decimal/decimal.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:uni_links/uni_links.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:audioplayers/audio_cache.dart';
-import 'package:location/location.dart';
 
 import 'package:zapdart/colors.dart';
 import 'package:zapdart/qrwidget.dart';
@@ -35,6 +32,7 @@ import 'wallet_state.dart';
 import 'fab_with_icons.dart';
 import 'redrat.dart';
 import 'bronze.dart';
+import 'webview.dart';
 
 void main() {
   // See https://github.com/flutter/flutter/wiki/Desktop-shells#target-platform-override
@@ -686,55 +684,7 @@ class _ZapHomePageState extends State<ZapHomePage>
   List<Widget> _buildTabBodies(Widget body) {
     var content = [body, TransactionsScreen(_ws), SettingsScreen(_ws, _fcm)];
     if (WebviewURL != null) {
-      if (Platform.isAndroid)
-        AndroidInAppWebViewController.setWebContentsDebuggingEnabled(true);
-      var options = InAppWebViewGroupOptions(
-          crossPlatform: InAppWebViewOptions(
-            useShouldOverrideUrlLoading: true,
-            mediaPlaybackRequiresUserGesture: false,
-          ),
-          android: AndroidInAppWebViewOptions(
-            useHybridComposition: true,
-            useWideViewPort: true,
-          ),
-          ios: IOSInAppWebViewOptions(
-            allowsInlineMediaPlayback: true,
-            enableViewportScale: true,
-          ));
-      var webview = InAppWebView(
-        initialUrlRequest: URLRequest(url: Uri.parse(WebviewURL!)),
-        initialOptions: options,
-        androidOnPermissionRequest: (controller, origin, resources) async {
-          return PermissionRequestResponse(
-              resources: resources,
-              action: PermissionRequestResponseAction.GRANT);
-        },
-        shouldOverrideUrlLoading: (controller, navigationAction) async {
-          var url = navigationAction.request.url!.toString();
-          if (!url.startsWith(WebviewURL!)) {
-            launch(url);
-            return NavigationActionPolicy.CANCEL;
-          }
-          return NavigationActionPolicy.ALLOW;
-        },
-        onWebViewCreated: (InAppWebViewController controller) {
-          controller.addJavaScriptHandler(
-              handlerName: 'getLocation',
-              callback: (args) async {
-                var location = Location();
-                if (!await location.serviceEnabled() &&
-                    !await location.requestService()) return null;
-                var granted = await location.hasPermission();
-                if (granted == PermissionStatus.denied) {
-                  granted = await location.requestPermission();
-                  if (granted != PermissionStatus.granted) return null;
-                }
-                var loc = await location.getLocation();
-                return {'lat': loc.latitude, 'long': loc.longitude};
-              });
-        },
-      );
-      content.insert(0, webview);
+      content.insert(0, Webview(WebviewURL!));
     }
     if (ZapButton) {
       content.insert(content.length ~/ 2, Text('dummy tab'));
