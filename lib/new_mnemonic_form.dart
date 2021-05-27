@@ -1,10 +1,170 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'dart:async';
+import 'package:flutter_icons/flutter_icons.dart';
 
 import 'package:zapdart/bip39widget.dart';
+import 'package:zapdart/utils.dart';
 import 'package:zapdart/widgets.dart';
 
 import 'config.dart';
+import 'stash.dart';
+
+class StashMetadataForm extends StatefulWidget {
+  @override
+  StashMetadataFormState createState() {
+    return StashMetadataFormState();
+  }
+}
+
+class StashMetadataFormState extends State<StashMetadataForm> {
+  final formKey = GlobalKey<FormState>();
+  final emailController = TextEditingController();
+  final answerController = TextEditingController();
+  String question = StashQuestions[0];
+
+  void submit() {
+    var cs = formKey.currentState;
+    if (cs != null && cs.validate()) {
+      Navigator.pop(context,
+          StashMetadata(emailController.text, question, answerController.text));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      key: formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          ListTile(title: Text('Email'),
+            subtitle: 
+          TextFormField(
+            controller: emailController,
+            keyboardType: TextInputType.emailAddress,
+            //decoration: new InputDecoration(labelText: 'Email'),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter a value';
+              }
+              return null;
+            },
+          )),
+          SizedBox(height: 8),
+          ListTile(title: Text('Question'),
+            subtitle: 
+          DropdownButton(
+            isExpanded: true,
+            value: question,
+            onChanged: (String? newValue) =>
+                setState(() => question = newValue!),
+            items: StashQuestions.map<DropdownMenuItem<String>>((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(value),
+              );
+            }).toList(),
+          )),
+          SizedBox(height: 8),
+          ListTile(title: Text('Answer'),
+            subtitle: 
+          TextFormField(
+            controller: answerController,
+            keyboardType: TextInputType.text,
+            //decoration: new InputDecoration(labelText: 'Answer'),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter a value';
+              }
+              return null;
+            },
+          )),
+          SizedBox(height: 8),
+          Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                raisedButtonIcon(
+                    onPressed: () => Navigator.pop(context),
+                    icon: Icon(Icons.cancel),
+                    label: Text('Cancel')),
+                raisedButtonIcon(
+                    onPressed: submit,
+                    icon: Icon(Icons.check),
+                    label: Text('Submit')),
+              ]),
+        ],
+      ),
+    );
+  }
+}
+
+class StashMetadataCheckForm extends StatefulWidget {
+  final StashMetadata meta;
+
+  StashMetadataCheckForm(this.meta);
+
+  @override
+  StashMetadataCheckFormState createState() {
+    return StashMetadataCheckFormState();
+  }
+}
+
+class StashMetadataCheckFormState extends State<StashMetadataCheckForm> {
+  bool emailChecked = false;
+  bool questionChecked = false;
+  bool answerChecked = false;
+
+  void submit() {
+    Navigator.pop(context, true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          CheckboxListTile(
+            value: emailChecked,
+            onChanged: (b) => setState(() => emailChecked = b!),
+            title: Text('Email'),
+            subtitle: Text(widget.meta.email),
+          ),
+          SizedBox(height: 18),
+          CheckboxListTile(
+            value: questionChecked,
+            onChanged: (b) => setState(() => questionChecked = b!),
+            title: Text('Question'),
+            subtitle: Text(widget.meta.question),
+          ),
+          SizedBox(height: 18),
+          CheckboxListTile(
+            value: answerChecked,
+            onChanged: (b) => setState(() => answerChecked = b!),
+            title: Text('Answer'),
+            subtitle: Text(widget.meta.email),
+          ),
+          SizedBox(height: 18),
+          Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                raisedButtonIcon(
+                    onPressed: () => Navigator.pop(context),
+                    icon: Icon(Icons.cancel),
+                    label: Text('Cancel')),
+                raisedButtonIcon(
+                    onPressed: emailChecked && questionChecked && answerChecked
+                        ? submit
+                        : null,
+                    icon: Icon(Icons.check),
+                    label: Text('Submit')),
+              ]),
+        ],
+      ),
+    );
+  }
+}
 
 class MnemonicTestForm extends StatefulWidget {
   final Function(bool) _onFormUpdate;
@@ -104,6 +264,57 @@ class NewMnemonicFormState extends State<NewMnemonicForm> {
     _word2 = words[_word2Index!];
   }
 
+  Future<StashMetadata?> askStashMetadata(BuildContext context) async {
+    return showDialog<StashMetadata?>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Email and security question"),
+          content: StashMetadataForm(),
+        );
+      },
+    );
+  }
+
+  Future<bool> checkStashMetadata(
+      BuildContext context, StashMetadata meta) async {
+    var res = await showDialog<bool?>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Check email and security question"),
+          content: StashMetadataCheckForm(meta),
+        );
+      },
+    );
+    if (res == null) return false;
+    return res;
+  }
+
+  void saveToServer() async {
+    var meta = await askStashMetadata(context);
+    if (meta == null) return;
+    if (!await checkStashMetadata(context, meta)) return;
+    showAlertDialog(context, 'Storing on server..');
+    var stash = Stash();
+    var token = await stash.save(StashKeyRecoveryWords, meta, widget._mnemonic);
+    Navigator.pop(context);
+    if (token == null) {
+      flushbarMsg(context, 'failed to store recovery words',
+          category: MessageCategory.Warning);
+      return;
+    }
+    showAlertDialog(context, 'Waiting for email to be verified..');
+    while (true) {
+      if (await stash.saveCheck(token)) break;
+      Future.delayed(Duration(seconds: 5));
+    }
+    Navigator.pop(context);
+    setState(() {
+      _savedWords = true;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -135,8 +346,9 @@ class NewMnemonicFormState extends State<NewMnemonicForm> {
                           padding: const EdgeInsets.only(top: 18.0),
                           child: ListTile(
                               title: Text("New recovery words"),
-                              subtitle: Text(
-                                  "You need to write down your recovery words and take care of that copy, if you lose them you could lose your $AssetShortNameUpper")),
+                              subtitle: Text(_savedWords
+                                  ? "Recovery words saved to server"
+                                  : "You need to write down your recovery words and take care of that copy, if you lose them you could lose your $AssetShortNameUpper")),
                         ),
                         Container(
                           padding: const EdgeInsets.only(top: 18.0),
@@ -156,14 +368,28 @@ class NewMnemonicFormState extends State<NewMnemonicForm> {
                                 },
                                 icon: Icon(Icons.arrow_back),
                                 label: Text('Show me the recovery words')))
-                    : Container(
-                        padding: const EdgeInsets.only(top: 18.0),
-                        child: raisedButtonIcon(
-                            onPressed: () =>
-                                setState(() => _testingWords = true),
-                            icon: Icon(Icons.check),
-                            label:
-                                Text('I have written down my recovery words'))),
+                    : _savedWords
+                        ? SizedBox()
+                        : Column(children: [
+                            Container(
+                                padding: const EdgeInsets.only(top: 18.0),
+                                child: raisedButtonIcon(
+                                    onPressed: () =>
+                                        setState(() => _testingWords = true),
+                                    icon: Icon(Icons.check),
+                                    label: Text(
+                                        'I have written down my recovery words'))),
+                            StashServer != null
+                                ? Container(
+                                    padding: const EdgeInsets.only(top: 18.0),
+                                    child: raisedButtonIcon(
+                                        onPressed: saveToServer,
+                                        icon: Icon(
+                                            FlutterIcons.server_security_mco),
+                                        label: Text(
+                                            'Save my recovery words on the $AssetShortName server')))
+                                : SizedBox(),
+                          ]),
                 Container(
                     padding: const EdgeInsets.only(top: 18.0),
                     child: raisedButtonIcon(
