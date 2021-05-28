@@ -562,17 +562,16 @@ class WalletState {
         case NoWalletAction.RecoverMnemonic:
           // recover mnemonic
           mnemonic = await _recoverMnemonic(context);
-          if (mnemonic != null) {
+          if (mnemonic != null && mnemonic.isNotEmpty) {
             mnemonic = mnemonic.trim();
             mnemonic = mnemonic.replaceAll(RegExp(r"\s+"), " ");
             mnemonic = mnemonic.toLowerCase();
             if (!libzap.mnemonicCheck(mnemonic)) {
               mnemonic = null;
+              await alert(context, "Recovery words not valid",
+                  "The recovery words you entered are not valid");
             }
           }
-          if (mnemonic == null)
-            await alert(context, "Recovery words not valid",
-                "The recovery words you entered are not valid");
           break;
         case NoWalletAction.RecoverRaw:
           // recover raw seed string

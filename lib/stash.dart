@@ -22,6 +22,15 @@ class StashMetadata {
   StashMetadata(this.email, this.question, this.answer);
 }
 
+class StashData {
+  final String key;
+  final String iv;
+  final String cyphertext;
+  final String question;
+
+  StashData(this.key, this.iv, this.cyphertext, this.question);
+}
+
 class Stash {
   String get baseUrl {
     return StashServer!;
@@ -85,7 +94,7 @@ class Stash {
     var body = jsonEncode({
       'key': key,
       'email': email,
-      'IV': em.iv,
+      'iv': em.iv,
       'cyphertext': em.encryptedMnemonic,
       'question': meta.question
     });
@@ -100,16 +109,55 @@ class Stash {
   }
 
   Future<bool> saveCheck(String? token) async {
-    var completed = false;
+    var confirmed = false;
     if (token != null) {
       var response = await _getAndCatch('save_check/' + token);
       if (response != null && response.statusCode == 200) {
         try {
           var json = jsonDecode(response.body);
-          completed = json['confirmed'] as bool;
+          confirmed = json['confirmed'] as bool;
         } catch (e) {}
       }
     }
-    return completed;
+    return confirmed;
+  }
+
+  Future<String?> load(String key, String email) async {
+    email = _trimAndLower(email);
+    var body = jsonEncode({
+      'key': key,
+      'email': email,
+    });
+    String? saveToken;
+    var response = await _postAndCatch('load', body);
+    if (response != null && response.statusCode == 200)
+      try {
+        var json = jsonDecode(response.body);
+        saveToken = json['token'] as String;
+      } catch (e) {}
+    return saveToken;
+  }
+
+  Future<StashData?> loadCheck(String? token) async {
+    var confirmed = false;
+    if (token != null) {
+      var response = await _getAndCatch('load_check/' + token);
+      if (response != null && response.statusCode == 200) {
+        try {
+          var json = jsonDecode(response.body);
+          confirmed = json['confirmed'] as bool;
+          if (confirmed)
+            return StashData(
+                json['key'], json['iv'], json['cyphertext'], json['question']);
+        } catch (e) {}
+      }
+    }
+    return null;
+  }
+
+  String? decrypt(StashData data, String email, String answer) {
+    email = _trimAndLower(email);
+    answer = _trimAndLower(answer);
+    return decryptMnemonic(data.cyphertext, data.iv, email + answer);
   }
 }

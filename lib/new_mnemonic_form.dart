@@ -38,48 +38,49 @@ class StashMetadataFormState extends State<StashMetadataForm> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          ListTile(title: Text('Email'),
-            subtitle: 
-          TextFormField(
-            controller: emailController,
-            keyboardType: TextInputType.emailAddress,
-            //decoration: new InputDecoration(labelText: 'Email'),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter a value';
-              }
-              return null;
-            },
-          )),
+          ListTile(
+              title: Text('Recovery Email'),
+              subtitle: TextFormField(
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                //decoration: new InputDecoration(labelText: 'Email'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a value';
+                  }
+                  return null;
+                },
+              )),
           SizedBox(height: 8),
-          ListTile(title: Text('Question'),
-            subtitle: 
-          DropdownButton(
-            isExpanded: true,
-            value: question,
-            onChanged: (String? newValue) =>
-                setState(() => question = newValue!),
-            items: StashQuestions.map<DropdownMenuItem<String>>((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              );
-            }).toList(),
-          )),
+          ListTile(
+              title: Text('Recovery Question'),
+              subtitle: DropdownButton(
+                isExpanded: true,
+                value: question,
+                onChanged: (String? newValue) =>
+                    setState(() => question = newValue!),
+                items: StashQuestions.map<DropdownMenuItem<String>>(
+                    (String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+              )),
           SizedBox(height: 8),
-          ListTile(title: Text('Answer'),
-            subtitle: 
-          TextFormField(
-            controller: answerController,
-            keyboardType: TextInputType.text,
-            //decoration: new InputDecoration(labelText: 'Answer'),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter a value';
-              }
-              return null;
-            },
-          )),
+          ListTile(
+              title: Text('Answer'),
+              subtitle: TextFormField(
+                controller: answerController,
+                keyboardType: TextInputType.text,
+                //decoration: new InputDecoration(labelText: 'Answer'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a value';
+                  }
+                  return null;
+                },
+              )),
           SizedBox(height: 8),
           Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -143,7 +144,7 @@ class StashMetadataCheckFormState extends State<StashMetadataCheckForm> {
             value: answerChecked,
             onChanged: (b) => setState(() => answerChecked = b!),
             title: Text('Answer'),
-            subtitle: Text(widget.meta.email),
+            subtitle: Text(widget.meta.answer),
           ),
           SizedBox(height: 18),
           Row(
@@ -387,7 +388,7 @@ class NewMnemonicFormState extends State<NewMnemonicForm> {
                                         icon: Icon(
                                             FlutterIcons.server_security_mco),
                                         label: Text(
-                                            'Save my recovery words on the $AssetShortName server')))
+                                            'Save my recovery words on the Stash server')))
                                 : SizedBox(),
                           ]),
                 Container(
