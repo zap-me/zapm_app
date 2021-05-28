@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
@@ -12,7 +13,7 @@ class ZapUser {
 
 Future<ZapUser?> extractZapUserFromOldAppDb() async {
   var path = join(await getDatabasesPath(), DB_NAME); // android db location
-  if (!await databaseExists(path))
+  if (!await databaseExists(path) && (Platform.isIOS || Platform.isMacOS))
     path = join(join((await getLibraryDirectory()).path, 'LocalDatabase'),
         DB_NAME); // ios db location
   if (await databaseExists(path)) {
