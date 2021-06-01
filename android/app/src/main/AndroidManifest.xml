@@ -17,6 +17,14 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- Default push notification icon -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_stat_bolt" />
+        <!-- Default push notification color -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/zap_blue" />
         <activity
             android:name="io.flutter.embedding.android.FlutterActivity"
             android:launchMode="singleTop"

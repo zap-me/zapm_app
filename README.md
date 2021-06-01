@@ -27,6 +27,15 @@ See https://firebase.google.com/docs/flutter/setup
 Android: change the android/app/google-services.json file
 iOS: change the ios/Runner/GoogleService-Info.plist file
 
+### Update Android push notification icon
+
+ - Generate icon resource: https://romannurik.github.io/AndroidAssetStudio/icons-notification.html
+ - Update Manifest: https://firebase.google.com/docs/cloud-messaging/android/client#manifest
+
+ ### Authorize iOS app on APNS
+
+  - Upload APNS auth key https://firebase.google.com/docs/cloud-messaging/ios/client#upload_your_apns_authentication_key
+
 ## accessing location from webview
 
 ```
