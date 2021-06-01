@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:zap_merchant/config.dart';
 
 import 'package:zapdart/bip39widget.dart';
 import 'package:zapdart/widgets.dart';
 import 'package:zapdart/utils.dart';
 
 import 'stash.dart';
+import 'config.dart';
 
 class RecoveryForm extends StatefulWidget {
   final String? instructions;

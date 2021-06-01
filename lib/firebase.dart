@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:google_api_availability/google_api_availability.dart';
+import 'package:flutter_html/flutter_html.dart';
 
 import 'package:zapdart/utils.dart';
 
@@ -71,7 +72,19 @@ class FCM {
         message.notification?.body != null) {
       var title = message.notification!.title!;
       var body = message.notification!.body!;
-      alert(_context, title, body);
+      var imageUrl = message.notification!.apple?.imageUrl;
+      if (imageUrl == null) imageUrl = message.notification!.android?.imageUrl;
+      if (message.data.containsKey('html')) {
+        var html = Html(data: message.data['html'].toString());
+        alert(_context, title, html);
+      } else if (imageUrl != null) {
+        var image = Image.network(imageUrl);
+        var content = Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [image, Divider(), Text(body)]);
+        alert(_context, title, content);
+      } else
+        alert(_context, title, body);
     }
   }
 

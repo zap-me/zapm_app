@@ -35,11 +35,11 @@ iOS: change the ios/Runner/GoogleService-Info.plist file
  ### Authorize iOS app on APNS
 
   - Upload APNS auth key https://firebase.google.com/docs/cloud-messaging/ios/client#upload_your_apns_authentication_key
+  - Or upload an APNS certificate https://developer.apple.com/account/resources/certificates/list (which you will need to convert from cer to p12 format, on mac the easiest way is to import then export from keychain - https://stackoverflow.com/a/44696730/206529)
 
 ## accessing location from webview
 
 ```
-/*
 <!DOCTYPE html>
 <html lang="en">
     <head>
