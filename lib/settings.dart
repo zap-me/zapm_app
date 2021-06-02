@@ -306,7 +306,7 @@ class _SettingsState extends State<SettingsScreen> {
         context,
         MaterialPageRoute(
             builder: (context) => HiddenScreen(_testnet,
-                widget._fcm?.getToken(), widget._ws.mnemonicOrAccount())),
+                widget._fcm, widget._ws.mnemonicOrAccount())),
       );
     }
   }

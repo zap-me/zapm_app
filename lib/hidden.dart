@@ -10,13 +10,14 @@ import 'multisig.dart';
 import 'prefs.dart';
 import 'paydb.dart';
 import 'config.dart';
+import 'firebase.dart';
 
 class HiddenScreen extends StatefulWidget {
   final bool testnet;
-  final String? fcmRegistrationToken;
+  final FCM? fcm;
   final String? account;
 
-  HiddenScreen(this.testnet, this.fcmRegistrationToken, this.account) : super();
+  HiddenScreen(this.testnet, this.fcm, this.account) : super();
 
   @override
   _HiddenState createState() => _HiddenState();
@@ -26,10 +27,33 @@ class _HiddenState extends State<HiddenScreen> {
   _HiddenState();
 
   void _copyFCMToken() {
-    Clipboard.setData(ClipboardData(text: widget.fcmRegistrationToken))
+    Clipboard.setData(ClipboardData(text: widget.fcm?.getToken()))
         .then((value) {
       flushbarMsg(context, 'copied FCM registration token to clipboard');
     });
+  }
+
+  void _registerPushNotifications() async {
+    if (widget.fcm == null) {
+      flushbarMsg(context, 'Firebase not available', category: MessageCategory.Warning);
+      return;
+    }
+    showAlertDialog(context, 'getting location..');
+    var loc = await widget.fcm!.getLocation();
+    Navigator.pop(context);
+    if (loc == null) {
+      flushbarMsg(context, 'Location not available', category: MessageCategory.Warning);
+      return;
+    }
+    var locString = await askString(context, 'Set location GPS coordinates', '${loc.latitude}, ${loc.longitude}');
+    if (locString != null) {
+      var parts = locString.split(',');
+      var lat = double.parse(parts[0]);
+      var long = double.parse(parts[1]);
+      var result = await widget.fcm!.registerPushNotifications(lat: lat, long: long);
+      if (!result)
+        flushbarMsg(context, 'failed to re-register push noitifcations', category: MessageCategory.Warning);
+    };
   }
 
   void _deleteMnemonicAndAccount() {
@@ -76,10 +100,13 @@ class _HiddenState extends State<HiddenScreen> {
                   child: Text("Multisig")),
               ListTile(
                   title: Text("FCM Registration Token"),
-                  subtitle: Text("${widget.fcmRegistrationToken}")),
+                  subtitle: Text("${widget.fcm?.getToken()}")),
               raisedButton(
                   onPressed: _copyFCMToken,
                   child: Text("Copy FCM Registration Token")),
+              raisedButton(
+                  onPressed: _registerPushNotifications,
+                  child: Text("Re-register push notifications")),
               raisedButton(
                   onPressed: _deleteMnemonicAndAccount,
                   child: Text("Delete Mnemonic/Account")),

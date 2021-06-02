@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:google_api_availability/google_api_availability.dart';
 import 'package:flutter_html/flutter_html.dart';
+import 'package:location/location.dart';
 
 import 'package:zapdart/utils.dart';
 
@@ -74,9 +75,9 @@ class FCM {
       var body = message.notification!.body!;
       var imageUrl = message.notification!.apple?.imageUrl;
       if (imageUrl == null) imageUrl = message.notification!.android?.imageUrl;
-      if (message.data.containsKey('html')) {
-        var html = Html(data: message.data['html'].toString());
-        alert(_context, title, html);
+      var html = message.data.containsKey('html') ? message.data['html'].toString() : '';
+      if (html.isNotEmpty) {
+        alert(_context, title, Html(data: html));
       } else if (imageUrl != null) {
         var image = Image.network(imageUrl);
         var content = Column(
@@ -104,9 +105,21 @@ class FCM {
     handleMessage(message);
   }
 
-  void setToken(String? token) async {
-    print('FCM Token: $token');
-    _token = token;
+  Future<LocationData?> getLocation() async {
+    // get location
+    var location = Location();
+    if (!await location.serviceEnabled() &&
+        !await location.requestService()) return null;
+    var granted = await location.hasPermission();
+    if (granted == PermissionStatus.denied) {
+      granted = await location.requestPermission();
+      if (granted != PermissionStatus.granted) return null;
+    }
+    return await location.getLocation();
+  }
+
+  Future<bool> registerPushNotifications({double? lat, double? long}) async {
+    if (_token == null) return false;
     // try and register on premio stage for push notifications
     if (_premioStageIndexUrl != null && _premioStageName != null) {
       try {
@@ -116,22 +129,37 @@ class FCM {
         if (response.statusCode != 200) {
           print(
               'error: failed to get premio stage index (${response.statusCode} - $_premioStageIndexUrl)');
-          return;
+          return false;
         }
         var premioStages = jsonDecode(response.body) as Map<String, dynamic>;
         if (premioStages.containsKey(_premioStageName)) {
+          if (lat == null || long == null) {
+            var loc = await getLocation();
+            lat = loc?.latitude;
+            long = loc?.longitude;
+          }
+          // call push notifcations register
           var url =
               premioStages[_premioStageName] + '/push_notifications_register';
           var response =
-              await httpPost(Uri.parse(url), {'registration_token': token});
+              await httpPost(Uri.parse(url), {'registration_token': _token, 'latitude': lat, 'longitude': long});
           if (response.statusCode != 200)
             print(
                 'error: failed to regsiter for push notifications (${response.statusCode} - $url)');
+          else
+            return true;
         }
       } catch (e) {
         print('error: failed to register for push notifications - $e');
       }
     }
+    return false;
+  }
+
+  void setToken(String? token) async {
+    print('FCM Token: $token');
+    _token = token;
+    registerPushNotifications();
   }
 
   String? getToken() {
