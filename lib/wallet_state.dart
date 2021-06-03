@@ -344,6 +344,10 @@ class WalletState {
             if (zapuser != null) {
               await Prefs.mnemonicSet(zapuser.recoveryWords);
               await Prefs.pinSet(zapuser.pin);
+              if (zapuser.bronzeApiKey != null && zapuser.bronzeApiSecret != null) {
+                await Prefs.bronzeApiKeySet(zapuser.bronzeApiKey);
+                await Prefs.bronzeApiSecretSet(zapuser.bronzeApiSecret);
+              }
             } else
               await _noWallet(context);
             break;
