@@ -10,7 +10,8 @@ class ZapUser {
   String recoveryWords;
   String? bronzeApiKey;
   String? bronzeApiSecret;
-  ZapUser(this.pin, this.recoveryWords, this.bronzeApiKey, this.bronzeApiSecret);
+  ZapUser(
+      this.pin, this.recoveryWords, this.bronzeApiKey, this.bronzeApiSecret);
 }
 
 Future<ZapUser?> extractZapUserFromOldAppDb() async {

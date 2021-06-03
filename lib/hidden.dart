@@ -35,25 +35,30 @@ class _HiddenState extends State<HiddenScreen> {
 
   void _registerPushNotifications() async {
     if (widget.fcm == null) {
-      flushbarMsg(context, 'Firebase not available', category: MessageCategory.Warning);
+      flushbarMsg(context, 'Firebase not available',
+          category: MessageCategory.Warning);
       return;
     }
     showAlertDialog(context, 'getting location..');
     var loc = await widget.fcm!.getLocation();
     Navigator.pop(context);
     if (loc == null) {
-      flushbarMsg(context, 'Location not available', category: MessageCategory.Warning);
+      flushbarMsg(context, 'Location not available',
+          category: MessageCategory.Warning);
       return;
     }
-    var locString = await askString(context, 'Set location GPS coordinates', '${loc.latitude}, ${loc.longitude}');
+    var locString = await askString(context, 'Set location GPS coordinates',
+        '${loc.latitude}, ${loc.longitude}');
     if (locString != null) {
       var parts = locString.split(',');
       var lat = double.parse(parts[0]);
       var long = double.parse(parts[1]);
-      var result = await widget.fcm!.registerPushNotifications(lat: lat, long: long);
+      var result =
+          await widget.fcm!.registerPushNotifications(lat: lat, long: long);
       if (!result)
-        flushbarMsg(context, 'failed to re-register push noitifcations', category: MessageCategory.Warning);
-    };
+        flushbarMsg(context, 'failed to re-register push noitifcations',
+            category: MessageCategory.Warning);
+    }
   }
 
   void _deleteMnemonicAndAccount() {

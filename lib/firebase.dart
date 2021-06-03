@@ -75,7 +75,9 @@ class FCM {
       var body = message.notification!.body!;
       var imageUrl = message.notification!.apple?.imageUrl;
       if (imageUrl == null) imageUrl = message.notification!.android?.imageUrl;
-      var html = message.data.containsKey('html') ? message.data['html'].toString() : '';
+      var html = message.data.containsKey('html')
+          ? message.data['html'].toString()
+          : '';
       if (html.isNotEmpty) {
         alert(_context, title, Html(data: html));
       } else if (imageUrl != null) {
@@ -108,8 +110,8 @@ class FCM {
   Future<LocationData?> getLocation() async {
     // get location
     var location = Location();
-    if (!await location.serviceEnabled() &&
-        !await location.requestService()) return null;
+    if (!await location.serviceEnabled() && !await location.requestService())
+      return null;
     var granted = await location.hasPermission();
     if (granted == PermissionStatus.denied) {
       granted = await location.requestPermission();
@@ -141,8 +143,11 @@ class FCM {
           // call push notifcations register
           var url =
               premioStages[_premioStageName] + '/push_notifications_register';
-          var response =
-              await httpPost(Uri.parse(url), {'registration_token': _token, 'latitude': lat, 'longitude': long});
+          var response = await httpPost(Uri.parse(url), {
+            'registration_token': _token,
+            'latitude': lat,
+            'longitude': long
+          });
           if (response.statusCode != 200)
             print(
                 'error: failed to regsiter for push notifications (${response.statusCode} - $url)');

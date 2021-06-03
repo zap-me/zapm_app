@@ -305,8 +305,8 @@ class _SettingsState extends State<SettingsScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => HiddenScreen(_testnet,
-                widget._fcm, widget._ws.mnemonicOrAccount())),
+            builder: (context) => HiddenScreen(
+                _testnet, widget._fcm, widget._ws.mnemonicOrAccount())),
       );
     }
   }
