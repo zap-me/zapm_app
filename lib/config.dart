@@ -20,7 +20,7 @@ const AssetShortNameUpper = 'ZAP';
 // the 'zap' icon on the header of the home page
 const AssetHeaderIconPng = 'assets/icon.png';
 // the lightning icon on the home page balance widget
-const AssetBalanceIconSvg = 'assets/icon-bolt.svg';
+const AssetBalanceIcon = 'assets/icon-bolt.svg';
 // enable/disable reward UI/feature
 const UseReward = true;
 // enable/disable settlement UI/feature
@@ -64,6 +64,13 @@ const String? StashServer = null;
 // If set the app will use this api key to get info about centrapay payment requests
 // but why/how do we need an api key just to pay an invoice!!
 const String? CentrapayApiKey = 'PvfgoXxDv2FCzsgVsk1izM41e5tWd7C8AGuThG9M1';
+
+// PremioPay scheme and prefix (also needs to be changed in AndroidManifest.xml and Info.plist)
+const String PremioPayScheme = 'premiopay';
+const String PremioPayPrefix = '$PremioPayScheme://';
+
+// PremioStageLink scheme and prefix (also needs to be changed in AndroidManifest.xml and Info.plist)
+const String PremioStageLinkScheme = 'premiostagelink';
 
 void initConfig() {
   overrideTheme();

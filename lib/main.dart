@@ -197,7 +197,7 @@ class _ZapHomePageState extends State<ZapHomePage>
       case TokenType.PayDB:
         // process paydb links
         //
-        // premiopay://<acct>...
+        // <PremioPayScheme>://<acct>...
         //
         if (PayDbUri.parse(uri) != null) {
           var tx = await Navigator.push(
@@ -212,10 +212,10 @@ class _ZapHomePageState extends State<ZapHomePage>
 
     // process premio stage links (scheme parameter is optional - default to 'https')
     //
-    // premiostagelink://<HOST>/claim_payment/<CLAIM_CODE>[?scheme=<SCHEME>]
+    // <PremioStageLinkScheme>://<HOST>/claim_payment/<CLAIM_CODE>[?scheme=<SCHEME>]
     //
     var uri2 = Uri.tryParse(uri);
-    if (uri2 != null && uri2.isScheme('premiostagelink')) {
+    if (uri2 != null && uri2.isScheme(PremioStageLinkScheme)) {
       if (uri2.pathSegments.length == 2 &&
           uri2.pathSegments[0] == 'claim_payment') {
         var scheme = 'https';
@@ -704,7 +704,9 @@ class _ZapHomePageState extends State<ZapHomePage>
             : Text(_ws.balanceText,
                 style: TextStyle(color: ZapBlue, fontSize: small ? 12 : 28)),
         SizedBox(width: small ? 4 : 4),
-        SvgPicture.asset(AssetBalanceIconSvg, height: small ? 12 : 20),
+        AssetBalanceIcon.toLowerCase().endsWith('.svg')
+            ? SvgPicture.asset(AssetBalanceIcon, height: small ? 12 : 20)
+            : Image.asset(AssetBalanceIcon, height: small ? 12 : 20),
         SizedBox(width: small ? 2 : 0),
       ],
     );

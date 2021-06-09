@@ -47,19 +47,20 @@ class PayDbUri {
     }
     if (attachment != null && attachment!.isNotEmpty)
       queryParts = _addPart(queryParts, 'attachment=$attachment');
-    return 'premiopay://$account$queryParts';
+    return '$PremioPayPrefix$account$queryParts';
   }
 
   static PayDbUri? parse(String uri) {
     //
-    // premiopay://<email>?amount=<AMOUNT_CENTS>&attachment=<ATTACHMENT>
+    // <PremioPayScheme>://<email>?amount=<AMOUNT_CENTS>&attachment=<ATTACHMENT>
     //
     var account = '';
     var amount = Decimal.fromInt(0);
     var attachment = '';
-    if (uri.length > 12 &&
-        uri.substring(0, 12).toLowerCase() == 'premiopay://') {
-      var parts = uri.substring(12).split('?');
+    if (uri.length > PremioPayPrefix.length &&
+        uri.substring(0, PremioPayPrefix.length).toLowerCase() ==
+            PremioPayPrefix) {
+      var parts = uri.substring(PremioPayPrefix.length).split('?');
       if (parts.length == 1 || parts.length == 2) {
         account = parts[0];
         if (account.endsWith('/'))
