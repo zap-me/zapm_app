@@ -277,6 +277,28 @@ class WalletState {
     return _txDownloader;
   }
 
+  String? get accountPhoto {
+    return _account.photo;
+  }
+
+  String? get accountPhotoType {
+    return _account.photoType;
+  }
+
+  void accountInfoUpdate() async {
+    var result = await paydbUserInfo();
+    if (result.error == PayDbError.None) {
+      assert(result.info != null);
+      _account = PayDbAccount(result.info!.email, result.info!.photo,
+          result.info!.photoType, result.info!.permissions, result.info!.roles);
+    }
+  }
+
+  AccountRegistration accountRegistration() {
+    return AccountRegistration(
+        '', '', _account.email, '', _account.photo, _account.photoType);
+  }
+
   String walletOrAccount() {
     switch (AppTokenType) {
       case TokenType.Waves:

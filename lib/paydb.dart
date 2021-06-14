@@ -349,6 +349,52 @@ Future<UserInfoResult> paydbUserInfo({String? email}) async {
   return UserInfoResult(null, PayDbError.Network);
 }
 
+Future<PayDbError> paydbUserUpdateEmail(String email) async {
+  var baseUrl = await _server();
+  if (baseUrl == null) return PayDbError.Network;
+  var url = baseUrl + "user_update_email";
+  var apikey = await Prefs.paydbApiKeyGet();
+  var apisecret = await Prefs.paydbApiSecretGet();
+  checkApiKey(apikey, apisecret);
+  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
+  var body = jsonEncode({"api_key": apikey, "nonce": nonce, "email": email});
+  var sig = createHmacSig(apisecret!, body);
+  var response =
+      await postAndCatch(url, body, extraHeaders: {"X-Signature": sig});
+  if (response == null) return PayDbError.Network;
+  if (response.statusCode == 200) {
+    return PayDbError.None;
+  } else if (response.statusCode == 400) return PayDbError.Auth;
+  print(response.statusCode);
+  return PayDbError.Network;
+}
+
+Future<PayDbError> paydbUserUpdatePhoto(
+    String? photo, String? photoType) async {
+  var baseUrl = await _server();
+  if (baseUrl == null) return PayDbError.Network;
+  var url = baseUrl + "user_update_photo";
+  var apikey = await Prefs.paydbApiKeyGet();
+  var apisecret = await Prefs.paydbApiSecretGet();
+  checkApiKey(apikey, apisecret);
+  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
+  var body = jsonEncode({
+    "api_key": apikey,
+    "nonce": nonce,
+    "photo": photo,
+    "photo_type": photoType
+  });
+  var sig = createHmacSig(apisecret!, body);
+  var response =
+      await postAndCatch(url, body, extraHeaders: {"X-Signature": sig});
+  if (response == null) return PayDbError.Network;
+  if (response.statusCode == 200) {
+    return PayDbError.None;
+  } else if (response.statusCode == 400) return PayDbError.Auth;
+  print(response.statusCode);
+  return PayDbError.Network;
+}
+
 PayDbTx parseTx(dynamic jsn) {
   return PayDbTx(jsn["token"], jsn["action"], jsn["timestamp"], jsn["sender"],
       jsn["recipient"], jsn["amount"], jsn["attachment"]);

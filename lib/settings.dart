@@ -20,6 +20,7 @@ import 'paydb.dart';
 import 'qrscan.dart';
 import 'bronze.dart';
 import 'wallet_state.dart';
+import 'account_forms.dart';
 
 class AppVersion {
   final String version;
@@ -144,6 +145,40 @@ class _SettingsState extends State<SettingsScreen> {
     setState(() {
       _testnet = !_testnet;
     });
+  }
+
+  void _updateProfile() async {
+    var reg = widget._ws.accountRegistration();
+    var newReg = await Navigator.push<AccountRegistration>(
+        context,
+        MaterialPageRoute(
+            builder: (context) => AccountRegisterForm(reg,
+                instructions: 'Enter your details to update',
+                showName: false,
+                showPassword: false)));
+    if (newReg != null) {
+      if (newReg.email != reg.email) {
+        showAlertDialog(context, 'sending update email request..');
+        var result = await paydbUserUpdateEmail(newReg.email);
+        Navigator.of(context).pop();
+        if (result == PayDbError.None)
+          flushbarMsg(context, 'update email request created');
+        else {
+          flushbarMsg(context, 'failed to create update email request');
+          return;
+        }
+      }
+      if (newReg.photo != reg.photo) {
+        showAlertDialog(context, 'updating photo..');
+        var result = await paydbUserUpdatePhoto(newReg.photo, newReg.photoType);
+        Navigator.of(context).pop();
+        if (result == PayDbError.None) {
+          flushbarMsg(context, 'update photo completed');
+        } else
+          flushbarMsg(context, 'failed to update photo');
+      }
+      widget._ws.accountInfoUpdate();
+    }
   }
 
   Future<void> _deleteTxs() async {
@@ -352,6 +387,17 @@ class _SettingsState extends State<SettingsScreen> {
               onChanged: (value) async {
                 _toggleTestnet();
               },
+            ),
+          ),
+          Visibility(
+            visible: AppTokenType == TokenType.PayDB,
+            child: Container(
+              padding: const EdgeInsets.only(top: 18.0),
+              child: ListTile(
+                  title: raisedButtonIcon(
+                      label: Text("Update Profile"),
+                      icon: Icon(Icons.portrait),
+                      onPressed: _updateProfile)),
             ),
           ),
           Container(
