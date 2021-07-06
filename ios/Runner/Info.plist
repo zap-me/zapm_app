@@ -58,7 +58,7 @@
 			<string>PayDb Link</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>premiofrankiepoints</string>
+				<string>premiofrankie</string>
 			</array>
 		</dict>
 		<dict>
@@ -68,7 +68,7 @@
 			<string>Premo Stage Link</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>premiostagefrankiepoints</string>
+				<string>premiostagefrankie</string>
 			</array>
 		</dict>
 	</array>
