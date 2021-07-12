@@ -723,9 +723,12 @@ class WalletState {
             var result = await paydbUserRegister(registration);
             switch (result) {
               case PayDbError.Auth:
+                await alert(context, "Authorisation error",
+                    "An authorisation error occured when trying to register (user may already exist)");
+                break;
               case PayDbError.Network:
                 await alert(context, "Network error",
-                    "A network error occured when trying to login");
+                    "A network error occured when trying to register");
                 break;
               case PayDbError.None:
                 if (await _directLoginAccountDialog(context))
