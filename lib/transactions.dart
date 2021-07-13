@@ -2,12 +2,13 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:decimal/decimal.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
-import 'package:zapdart/utils.dart';
 import 'package:zapdart/widgets.dart';
 import 'package:zapdart/colors.dart';
 
@@ -121,6 +122,11 @@ class _TransactionsState extends State<TransactionsScreen> {
     return min(widget._ws.txDownloader.txs.length - _offset, _displayCount);
   }
 
+  void _copyText(String text) {
+    Clipboard.setData(ClipboardData(text: text));
+    flushbarMsg(context, 'copied "$text" to clipboard');
+  }
+
   Widget _buildTxList(BuildContext context, int index) {
     var offsetIndex = _offset + index;
     var tx = widget._ws.txDownloader.txs[offsetIndex];
@@ -176,10 +182,10 @@ class _TransactionsState extends State<TransactionsScreen> {
                           ListTile(
                               title: Text('date'), subtitle: Text(dateStrLong)),
                           ListTile(
-                              title: Text('sender'), subtitle: Text(tx.sender)),
+                              title: Text('sender'), subtitle: Text(tx.sender), onTap: () => _copyText(tx.sender)),
                           ListTile(
                               title: Text('recipient'),
-                              subtitle: Text(tx.recipient)),
+                              subtitle: Text(tx.recipient), onTap: () => _copyText(tx.recipient)),
                           ListTile(
                               title: Text('amount'),
                               subtitle: Text(
@@ -225,13 +231,13 @@ class _TransactionsState extends State<TransactionsScreen> {
         return;
       } else if (widget._ws.txDownloader.foundEnd) {
         var json = jsonEncode(widget._ws.txDownloader.txs);
-        var filename = "zap_txs.json";
+        var filename = "transaction_history.json";
         if (Platform.isAndroid || Platform.isIOS) {
-          var dir = await getExternalStorageDirectory();
-          if (dir != null) filename = dir.path + "/" + filename;
+          var dir = await getApplicationSupportDirectory();
+          filename = dir.path + "/" + filename;
         }
         await File(filename).writeAsString(json);
-        alert(context, "Wrote JSON", filename);
+        await Share.shareFiles([filename], mimeTypes: ['json'], subject: 'transaction history');
         setState(() {
           _loading = false;
         });
@@ -253,7 +259,7 @@ class _TransactionsState extends State<TransactionsScreen> {
         children: <Widget>[
           Visibility(
               visible: !_loading && widget._ws.txDownloader.txs.length == 0,
-              child: Text("Nothing here..")),
+              child: Text("No history yet..")),
           Visibility(
               visible: !_loading,
               child: Expanded(
@@ -287,7 +293,7 @@ class _TransactionsState extends State<TransactionsScreen> {
                           padding: const EdgeInsets.all(5),
                           child: IconButton(
                               onPressed: _exportJson,
-                              icon: Icon(Icons.save, color: ZapBlue)))),
+                              icon: Icon(Icons.share, color: ZapBlue)))),
               Visibility(
                   maintainSize: true,
                   maintainState: true,

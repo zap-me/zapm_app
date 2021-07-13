@@ -58,6 +58,7 @@ dependencies:
   extended_masked_text: ^2.1.0
   location: ^4.1.1
   flutter_html: ^2.0.0
+  share_plus: ^2.1.4
 
   zapdart:
     git:
