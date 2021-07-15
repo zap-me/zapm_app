@@ -16,12 +16,14 @@ class FabWithIcons extends StatefulWidget {
       required this.menuItems,
       required this.onTapped,
       required this.onMenuIconTapped,
-      required this.expanded});
+      required this.expanded,
+      this.size = 56.0});
   final IconData icon;
   final List<MenuItem> menuItems;
   final ValueChanged<bool> onTapped;
   final ValueChanged<MenuItem> onMenuIconTapped;
   final bool expanded;
+  final double size;
 
   @override
   State createState() => FabWithIconsState();
@@ -108,18 +110,22 @@ class FabWithIconsState extends State<FabWithIcons>
   }
 
   Widget _buildFab() {
-    return FloatingActionButton(
-      onPressed: () {
-        widget.onTapped(_controller.isDismissed);
-        if (_controller.isDismissed) {
-          _controller.forward();
-        } else {
-          _controller.reverse();
-        }
-      },
-      child: Icon(!widget.expanded ? widget.icon : Icons.remove),
-      elevation: 2.0,
-    );
+    return SizedBox(
+        height: widget.size,
+        width: widget.size,
+        child: FittedBox(
+            child: FloatingActionButton(
+          onPressed: () {
+            widget.onTapped(_controller.isDismissed);
+            if (_controller.isDismissed) {
+              _controller.forward();
+            } else {
+              _controller.reverse();
+            }
+          },
+          child: Icon(!widget.expanded ? widget.icon : Icons.remove),
+          elevation: 2.0,
+        )));
   }
 
   void _onTapped(int index) {

@@ -182,10 +182,13 @@ class _TransactionsState extends State<TransactionsScreen> {
                           ListTile(
                               title: Text('date'), subtitle: Text(dateStrLong)),
                           ListTile(
-                              title: Text('sender'), subtitle: Text(tx.sender), onTap: () => _copyText(tx.sender)),
+                              title: Text('sender'),
+                              subtitle: Text(tx.sender),
+                              onTap: () => _copyText(tx.sender)),
                           ListTile(
                               title: Text('recipient'),
-                              subtitle: Text(tx.recipient), onTap: () => _copyText(tx.recipient)),
+                              subtitle: Text(tx.recipient),
+                              onTap: () => _copyText(tx.recipient)),
                           ListTile(
                               title: Text('amount'),
                               subtitle: Text(
@@ -237,7 +240,8 @@ class _TransactionsState extends State<TransactionsScreen> {
           filename = dir.path + "/" + filename;
         }
         await File(filename).writeAsString(json);
-        await Share.shareFiles([filename], mimeTypes: ['json'], subject: 'transaction history');
+        await Share.shareFiles([filename],
+            mimeTypes: ['json'], subject: 'transaction history');
         setState(() {
           _loading = false;
         });

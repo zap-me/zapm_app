@@ -87,6 +87,26 @@ class MyApp extends StatelessWidget {
   }
 }
 
+enum DimensionClass { Small, Med, Large }
+
+class ScreenSizeClass {
+  final DimensionClass width;
+  final DimensionClass height;
+
+  ScreenSizeClass(this.width, this.height);
+
+  static ScreenSizeClass calc(BuildContext context) {
+    var w = DimensionClass.Small;
+    var h = DimensionClass.Small;
+    var size = MediaQuery.of(context).size;
+    if (size.width > 400) w = DimensionClass.Med;
+    if (size.width > 500) w = DimensionClass.Large;
+    if (size.height > 800) h = DimensionClass.Med;
+    if (size.height > 1000) h = DimensionClass.Large;
+    return ScreenSizeClass(w, h);
+  }
+}
+
 class ZapHomePage extends StatefulWidget {
   ZapHomePage(this.title, {Key? key}) : super(key: key);
 
@@ -603,14 +623,26 @@ class _ZapHomePageState extends State<ZapHomePage>
   }
 
   Widget _tab(IconData icon, String label) {
+    var fontSize = 8.0;
+    var iconSize = 24.0;
+    var ssc = ScreenSizeClass.calc(context);
+    if (ssc.width != DimensionClass.Small) {
+      fontSize = 10;
+      iconSize = 28;
+    }
+    if (ssc.width == DimensionClass.Large &&
+        ssc.height != DimensionClass.Small) {
+      fontSize = 12;
+      iconSize = 32;
+    }
     return Tab(
         child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(icon, color: ZapBlue),
+        Icon(icon, size: iconSize, color: ZapBlue),
         Text(
           label,
-          style: TextStyle(color: ZapBlue, fontSize: 8),
+          style: TextStyle(color: ZapBlue, fontSize: fontSize),
           overflow: TextOverflow.visible,
           maxLines: 1,
         ),
@@ -662,12 +694,17 @@ class _ZapHomePageState extends State<ZapHomePage>
       menuItems.insert(0,
           MenuItem(Icons.trending_up, 'BUY ZAP', ZapWhite, ZapBlue, _buyZap));
     }
+    var fabSize = 56.0;
+    var ssc = ScreenSizeClass.calc(context);
+    if (ssc.width != DimensionClass.Small) fabSize = 60;
+    if (ssc.width == DimensionClass.Large) fabSize = 64;
     return FabWithIcons(
       icon: ZapButtonIcon,
       menuItems: menuItems,
       onTapped: _fabTapped,
       onMenuIconTapped: _selectedMenuItem,
       expanded: _fabExpanded,
+      size: fabSize,
     );
   }
 
@@ -713,6 +750,10 @@ class _ZapHomePageState extends State<ZapHomePage>
   }
 
   Widget _appScaffold(Widget body) {
+    var navHeight = 50.0;
+    var ssc = ScreenSizeClass.calc(context);
+    if (ssc.height != DimensionClass.Small) navHeight = 55;
+    if (ssc.height == DimensionClass.Large) navHeight = 60;
     var fab = _buildFab();
     return Stack(alignment: Alignment.bottomCenter, children: [
       Scaffold(
@@ -729,18 +770,20 @@ class _ZapHomePageState extends State<ZapHomePage>
             Align(child: Image.asset(AssetHeaderIconPng, height: 30)),
             Positioned(right: 0, child: _buildPrice(small: true)),
           ])),
-          bottomNavigationBar: Container(
-              decoration: BoxDecoration(color: ZapWhite, boxShadow: [
-                BoxShadow(
-                    color: Colors.grey.withOpacity(0.5),
-                    spreadRadius: 3,
-                    blurRadius: 5,
-                    offset: Offset(-3, 0))
-              ]),
-              child: TabBar(
-                  controller: _tabController,
-                  tabs: _buildTabs(),
-                  labelPadding: EdgeInsets.symmetric(horizontal: 4))),
+          bottomNavigationBar: SizedBox(
+              height: navHeight,
+              child: Container(
+                  decoration: BoxDecoration(color: ZapWhite, boxShadow: [
+                    BoxShadow(
+                        color: Colors.grey.withOpacity(0.5),
+                        spreadRadius: 3,
+                        blurRadius: 5,
+                        offset: Offset(-3, 0))
+                  ]),
+                  child: TabBar(
+                      controller: _tabController,
+                      tabs: _buildTabs(),
+                      labelPadding: EdgeInsets.symmetric(horizontal: 4)))),
           body: Column(children: [
             Visibility(
                 visible: _showAlerts && _ws.alerts.length > 0,
