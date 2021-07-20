@@ -296,7 +296,7 @@ class WalletState {
 
   AccountRegistration accountRegistration() {
     return AccountRegistration(
-        '', '', _account.email, '', _account.photo, _account.photoType);
+        '', '', _account.email, '', '', _account.photo, _account.photoType);
   }
 
   String walletOrAccount() {
@@ -733,8 +733,10 @@ class WalletState {
               case PayDbError.None:
                 if (await _directLoginAccountDialog(context))
                   // save account if login successful
-                  accountEmail = await _paydbLogin(context,
-                      AccountLogin(registration.email, registration.password));
+                  accountEmail = await _paydbLogin(
+                      context,
+                      AccountLogin(
+                          registration.email, registration.newPassword));
                 break;
             }
           }

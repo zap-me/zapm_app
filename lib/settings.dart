@@ -155,7 +155,8 @@ class _SettingsState extends State<SettingsScreen> {
             builder: (context) => AccountRegisterForm(reg,
                 instructions: 'Enter your details to update',
                 showName: false,
-                showPassword: false)));
+                showCurrentPassword: true,
+                showNewPassword: true)));
     if (newReg != null) {
       if (newReg.email != reg.email) {
         showAlertDialog(context, 'sending update email request..');
@@ -164,7 +165,8 @@ class _SettingsState extends State<SettingsScreen> {
         if (result == PayDbError.None)
           flushbarMsg(context, 'update email request created');
         else {
-          flushbarMsg(context, 'failed to create update email request');
+          flushbarMsg(context, 'failed to create update email request',
+              category: MessageCategory.Warning);
           return;
         }
       }
@@ -175,14 +177,38 @@ class _SettingsState extends State<SettingsScreen> {
         if (result == PayDbError.None) {
           flushbarMsg(context, 'update photo completed');
         } else
-          flushbarMsg(context, 'failed to update photo');
+          flushbarMsg(context, 'failed to update photo',
+              category: MessageCategory.Warning);
+      }
+      if (newReg.currentPassword.isNotEmpty && newReg.newPassword.isNotEmpty) {
+        showAlertDialog(context, 'updating password..');
+        var result = await paydbUserUpdatePassword(
+            newReg.currentPassword, newReg.newPassword);
+        Navigator.of(context).pop();
+        if (result == PayDbError.None) {
+          flushbarMsg(context, 'update password completed');
+        } else
+          flushbarMsg(context, 'failed to update password',
+              category: MessageCategory.Warning);
       }
       widget._ws.accountInfoUpdate();
     }
   }
 
+  Future<void> _resetPassword() async {
+    showAlertDialog(context, 'requesting password reset..');
+    var result = await paydbUserResetPassword();
+    Navigator.of(context).pop();
+    if (result == PayDbError.None) {
+      flushbarMsg(context, 'password reset request sent (check email)');
+    } else
+      flushbarMsg(context, 'failed to reset password',
+          category: MessageCategory.Warning);
+  }
+
   Future<void> _deleteTxs() async {
     widget._ws.txDownloader.delTxs();
+    flushbarMsg(context, 'transaction history deleted');
   }
 
   void _addPin() async {
@@ -399,6 +425,14 @@ class _SettingsState extends State<SettingsScreen> {
                       icon: Icon(Icons.portrait),
                       onPressed: _updateProfile)),
             ),
+          ),
+          Visibility(
+            visible: AppTokenType == TokenType.PayDB,
+            child: ListTile(
+                title: raisedButtonIcon(
+                    label: Text("Reset Password"),
+                    icon: Icon(FlutterIcons.lock_reset_mco),
+                    onPressed: _resetPassword)),
           ),
           Container(
             child: ListTile(

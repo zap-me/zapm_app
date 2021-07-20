@@ -85,12 +85,13 @@ class AccountRegistration {
   final String firstName;
   final String lastName;
   final String email;
-  final String password;
+  final String currentPassword;
+  final String newPassword;
   final String? photo;
   final String? photoType;
 
-  AccountRegistration(this.firstName, this.lastName, this.email, this.password,
-      this.photo, this.photoType);
+  AccountRegistration(this.firstName, this.lastName, this.email,
+      this.currentPassword, this.newPassword, this.photo, this.photoType);
 }
 
 class AccountRequestApiKey {
@@ -248,7 +249,7 @@ Future<PayDbError> paydbUserRegister(AccountRegistration reg) async {
     "first_name": reg.firstName,
     "last_name": reg.lastName,
     "email": reg.email,
-    "password": reg.password,
+    "password": reg.newPassword,
     "photo": reg.photo,
     "photo_type": reg.photoType
   });
@@ -349,6 +350,26 @@ Future<UserInfoResult> paydbUserInfo({String? email}) async {
   return UserInfoResult(null, PayDbError.Network);
 }
 
+Future<PayDbError> paydbUserResetPassword() async {
+  var baseUrl = await _server();
+  if (baseUrl == null) return PayDbError.Network;
+  var url = baseUrl + "user_reset_password";
+  var apikey = await Prefs.paydbApiKeyGet();
+  var apisecret = await Prefs.paydbApiSecretGet();
+  checkApiKey(apikey, apisecret);
+  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
+  var body = jsonEncode({"api_key": apikey, "nonce": nonce});
+  var sig = createHmacSig(apisecret!, body);
+  var response =
+      await postAndCatch(url, body, extraHeaders: {"X-Signature": sig});
+  if (response == null) return PayDbError.Network;
+  if (response.statusCode == 200) {
+    return PayDbError.None;
+  } else if (response.statusCode == 400) return PayDbError.Auth;
+  print(response.statusCode);
+  return PayDbError.Network;
+}
+
 Future<PayDbError> paydbUserUpdateEmail(String email) async {
   var baseUrl = await _server();
   if (baseUrl == null) return PayDbError.Network;
@@ -358,6 +379,32 @@ Future<PayDbError> paydbUserUpdateEmail(String email) async {
   checkApiKey(apikey, apisecret);
   var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce, "email": email});
+  var sig = createHmacSig(apisecret!, body);
+  var response =
+      await postAndCatch(url, body, extraHeaders: {"X-Signature": sig});
+  if (response == null) return PayDbError.Network;
+  if (response.statusCode == 200) {
+    return PayDbError.None;
+  } else if (response.statusCode == 400) return PayDbError.Auth;
+  print(response.statusCode);
+  return PayDbError.Network;
+}
+
+Future<PayDbError> paydbUserUpdatePassword(
+    String currentPassword, String newPassword) async {
+  var baseUrl = await _server();
+  if (baseUrl == null) return PayDbError.Network;
+  var url = baseUrl + "user_update_password";
+  var apikey = await Prefs.paydbApiKeyGet();
+  var apisecret = await Prefs.paydbApiSecretGet();
+  checkApiKey(apikey, apisecret);
+  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
+  var body = jsonEncode({
+    "api_key": apikey,
+    "nonce": nonce,
+    "current_password": currentPassword,
+    "new_password": newPassword
+  });
   var sig = createHmacSig(apisecret!, body);
   var response =
       await postAndCatch(url, body, extraHeaders: {"X-Signature": sig});

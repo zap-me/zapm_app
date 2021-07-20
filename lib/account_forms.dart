@@ -164,10 +164,14 @@ class AccountRegisterForm extends StatefulWidget {
   final AccountRegistration? registration;
   final String? instructions;
   final bool showName;
-  final bool showPassword;
+  final bool showCurrentPassword;
+  final bool showNewPassword;
 
   AccountRegisterForm(this.registration,
-      {this.instructions, this.showName: true, this.showPassword: true})
+      {this.instructions,
+      this.showName: true,
+      this.showCurrentPassword: false,
+      this.showNewPassword: true})
       : super();
 
   @override
@@ -180,7 +184,9 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _currentPasswordController =
+      TextEditingController();
+  final TextEditingController _newPasswordController = TextEditingController();
   final TextEditingController _passwordConfirmController =
       TextEditingController();
   final _formKey = GlobalKey<FormState>();
@@ -197,8 +203,9 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
       _firstNameController.text = widget.registration!.firstName;
       _lastNameController.text = widget.registration!.lastName;
       _emailController.text = widget.registration!.email;
-      _passwordController.text = widget.registration!.password;
-      _passwordConfirmController.text = widget.registration!.password;
+      _currentPasswordController.text = widget.registration!.currentPassword;
+      _newPasswordController.text = widget.registration!.newPassword;
+      _passwordConfirmController.text = widget.registration!.newPassword;
       _imgType = widget.registration!.photoType;
       _imgString = widget.registration!.photo;
     }
@@ -263,18 +270,31 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
                           return null;
                         }),
                     Visibility(
-                        visible: widget.showPassword,
+                        visible: widget.showCurrentPassword,
                         child: TextFormField(
-                            controller: _passwordController,
+                            controller: _currentPasswordController,
                             obscureText: true,
-                            decoration: InputDecoration(labelText: 'Password'),
+                            decoration:
+                                InputDecoration(labelText: 'Current Password'),
                             validator: (value) {
                               if (value == null || value.isEmpty)
-                                return 'Please enter a password';
+                                return 'Please enter your current password';
                               return null;
                             })),
                     Visibility(
-                        visible: widget.showPassword,
+                        visible: widget.showNewPassword,
+                        child: TextFormField(
+                            controller: _newPasswordController,
+                            obscureText: true,
+                            decoration:
+                                InputDecoration(labelText: 'New Password'),
+                            validator: (value) {
+                              if (value == null || value.isEmpty)
+                                return 'Please enter a new password';
+                              return null;
+                            })),
+                    Visibility(
+                        visible: widget.showNewPassword,
                         child: TextFormField(
                             controller: _passwordConfirmController,
                             obscureText: true,
@@ -283,7 +303,7 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
                             validator: (value) {
                               if (value == null || value.isEmpty)
                                 return 'Please confirm your password';
-                              if (value != _passwordController.text)
+                              if (value != _newPasswordController.text)
                                 return 'Password does not match';
                               return null;
                             })),
@@ -296,7 +316,8 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
                               _firstNameController.text,
                               _lastNameController.text,
                               _emailController.text,
-                              _passwordController.text,
+                              _currentPasswordController.text,
+                              _newPasswordController.text,
                               _imgString,
                               _imgType);
                           Navigator.of(context).pop(accountReg);
