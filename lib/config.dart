@@ -82,6 +82,8 @@ void initConfig() {
     zapWarningLight: Colors.yellow[100],
     zapBlue: Colors.pink[200],
     zapGreen: Colors.blueGrey[300],
+    zapOutgoingFunds: Colors.red,
+    zapIncomingFunds: Colors.green,
     zapTextThemer: GoogleFonts.sansitaTextTheme);
     */
 }

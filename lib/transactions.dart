@@ -138,7 +138,7 @@ class _TransactionsState extends State<TransactionsScreen> {
     amountText = outgoing ? '- $amountText' : '+ $amountText';
     var fee = Decimal.fromInt(tx.fee) / Decimal.fromInt(100);
     var feeText = fee.toStringAsFixed(2);
-    var color = outgoing ? ZapYellow : ZapGreen;
+    var color = outgoing ? ZapOutgoingFunds : ZapIncomingFunds;
     var date = new DateTime.fromMillisecondsSinceEpoch(tx.timestamp);
     var dateStrLong = DateFormat('yyyy-MM-dd HH:mm').format(date);
     String? link;

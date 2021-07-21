@@ -463,7 +463,7 @@ class ListTx extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var color = outgoing ? ZapYellow : ZapGreen;
+    var color = outgoing ? ZapOutgoingFunds : ZapIncomingFunds;
     var tsLeft = TextStyle(fontSize: 12, color: ZapBlackLight);
     var tsRight = TextStyle(fontSize: 12, color: color);
     var amountText = '${amount.toStringAsFixed(2)} $AssetShortNameUpper';
