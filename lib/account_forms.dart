@@ -461,7 +461,7 @@ class AccountRequestApiKeyFormState extends State<AccountRequestApiKeyForm> {
                     child: Column(
                   children: <Widget>[
                     Text(widget.instructions == null
-                        ? "Enter your email and device name to request your api key"
+                        ? "Enter your email and device name to login via email link"
                         : widget.instructions!),
                     TextFormField(
                         controller: _emailController,

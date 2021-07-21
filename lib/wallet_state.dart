@@ -464,7 +464,7 @@ class WalletState {
         barrierDismissible: false,
         builder: (BuildContext context) {
           return SimpleDialog(
-            title: const Text("API KEY request in process"),
+            title: const Text("Email login request in process"),
             children: <Widget>[
               Center(
                   child: const Text("Complete by confirming your email",
@@ -473,8 +473,7 @@ class WalletState {
                 onPressed: () {
                   Navigator.pop(context, true);
                 },
-                child:
-                    const Text("I have confirmed my email (claim API KEY now)"),
+                child: const Text("I have confirmed my email (login now)"),
               ),
               SimpleDialogOption(
                 onPressed: () {
@@ -517,7 +516,7 @@ class WalletState {
                 onPressed: () {
                   Navigator.pop(context, NoAccountAction.RequestApiKey);
                 },
-                child: const Text("Request API KEY from your account"),
+                child: const Text("Login using email link"),
               ),
             ],
           );
