@@ -149,6 +149,16 @@ class PrefHelper {
       return config.get(_section, key) ?? defaultValue;
     }
   }
+
+  Future<bool> nukeAll() async {
+    if (Platform.isAndroid || Platform.isIOS) {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.clear();
+    } else {
+      var config = await fromFile();
+      return config.removeSection(_section);
+    }
+  }
 }
 
 class Prefs {
@@ -392,5 +402,9 @@ class Prefs {
       if (order.token == updatedOrder.token) order.status = updatedOrder.status;
     await bronzeOrdersSet(orders);
     return orders;
+  }
+
+  static Future<bool> nukeAll() async {
+    return await PrefHelper().nukeAll();
   }
 }

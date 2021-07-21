@@ -59,6 +59,7 @@ dependencies:
   location: ^4.1.1
   flutter_html: ^2.0.0
   share_plus: ^2.1.4
+  restart_app: ^1.0.3
 
   zapdart:
     git:

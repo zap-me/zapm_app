@@ -4,6 +4,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:package_info/package_info.dart';
 import 'package:yaml/yaml.dart';
+import 'package:restart_app/restart_app.dart';
 
 import 'package:zapdart/libzap.dart';
 import 'package:zapdart/utils.dart';
@@ -145,6 +146,13 @@ class _SettingsState extends State<SettingsScreen> {
     setState(() {
       _testnet = !_testnet;
     });
+  }
+
+  void _logout() async {
+    if (await askYesNo(context, 'Are you sure you want to logout?')) {
+      await Prefs.nukeAll();
+      Restart.restartApp();
+    }
   }
 
   void _updateProfile() async {
@@ -421,10 +429,18 @@ class _SettingsState extends State<SettingsScreen> {
               padding: const EdgeInsets.only(top: 18.0),
               child: ListTile(
                   title: raisedButtonIcon(
-                      label: Text("Update Profile"),
-                      icon: Icon(Icons.portrait),
-                      onPressed: _updateProfile)),
+                      label: Text("Logout"),
+                      icon: Icon(Icons.logout),
+                      onPressed: _logout)),
             ),
+          ),
+          Visibility(
+            visible: AppTokenType == TokenType.PayDB,
+            child: ListTile(
+                title: raisedButtonIcon(
+                    label: Text("Update Profile"),
+                    icon: Icon(Icons.portrait),
+                    onPressed: _updateProfile)),
           ),
           Visibility(
             visible: AppTokenType == TokenType.PayDB,
