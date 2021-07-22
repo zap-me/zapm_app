@@ -32,6 +32,10 @@ const String? WebviewURL = 'https://zap-me.github.io/zap-spa/index.html';
 // enable/disable the centered ZAP button
 const ZapButton = true;
 const ZapButtonIcon = FlutterIcons.bolt_faw5s;
+// capitalize UI strings
+const UseCapitalizeAllWords = false;
+const UseCapitalizeFirstWord = false;
+const UseCapitalizeAsset = false;
 
 // are we using the waves network or a paydb server
 const TokenType AppTokenType = TokenType.Waves;

@@ -8,6 +8,7 @@ import 'send_form.dart';
 import 'receive_form.dart';
 import 'wallet_state.dart';
 import 'merchant.dart';
+import 'UiStrings.dart';
 
 class SendScreen extends StatelessWidget {
   SendScreen(this._ws, this._recipientOrUri) : super();
@@ -20,7 +21,7 @@ class SendScreen extends StatelessWidget {
     return Scaffold(
         appBar: AppBar(
           leading: backButton(context),
-          title: Text('send $AssetShortNameLower',
+          title: Text(capFirst('send $AssetShortNameLower'),
               style: TextStyle(color: ZapWhite)),
           backgroundColor: ZapYellow,
         ),
@@ -47,7 +48,7 @@ class ReceiveScreen extends StatelessWidget {
     return Scaffold(
         appBar: AppBar(
           leading: backButton(context),
-          title: Text("receive $AssetShortNameLower",
+          title: Text(capFirst('receive $AssetShortNameLower'),
               style: TextStyle(color: ZapWhite)),
           backgroundColor: ZapGreen,
         ),

@@ -12,6 +12,7 @@ import 'prefs.dart';
 import 'hmac.dart';
 import 'merchant.dart';
 import 'paydb.dart';
+import 'UiStrings.dart';
 
 class ReceiveForm extends StatefulWidget {
   final bool _testnet;
@@ -153,7 +154,7 @@ class ReceiveFormState extends State<ReceiveForm> {
           children: <Widget>[
             Center(
                 heightFactor: 5,
-                child: Text('scan QR code',
+                child: Text(capFirst('scan QR code'),
                     style:
                         TextStyle(color: ZapWhite, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center)),
@@ -170,7 +171,7 @@ class ReceiveFormState extends State<ReceiveForm> {
             TextFormField(
               controller: _uriController,
               enabled: false,
-              decoration: InputDecoration(labelText: 'receive URI'),
+              decoration: InputDecoration(labelText: capFirst('receive URI')),
               maxLines: 4,
               style: TextStyle(fontSize: 12),
             ),
@@ -178,13 +179,13 @@ class ReceiveFormState extends State<ReceiveForm> {
               controller: _amountController,
               keyboardType: TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(
-                  labelText: 'amount',
+                  labelText: capFirst('amount'),
                   suffixIcon: flatButton(
                       onPressed: () {
                         if (!UseMerchantApi) return;
                         setState(() {
                           if (_amountType == AssetShortNameLower)
-                            _amountType = 'nzd';
+                            _amountType = capAsset('nzd');
                           else
                             _amountType = AssetShortNameLower;
                         });
@@ -218,8 +219,8 @@ class ReceiveFormState extends State<ReceiveForm> {
             ),
             Padding(
               padding: const EdgeInsets.only(top: 24.0),
-              child: RoundedButton(
-                  () => Navigator.pop(context), ZapBlue, ZapWhite, 'cancel',
+              child: RoundedButton(() => Navigator.pop(context), ZapBlue,
+                  ZapWhite, capFirst('cancel'),
                   borderColor: ZapBlue,
                   minWidth: MediaQuery.of(context).size.width / 2),
             ),

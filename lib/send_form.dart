@@ -14,6 +14,7 @@ import 'prefs.dart';
 import 'paydb.dart';
 import 'qrscan.dart';
 import 'wallet_state.dart';
+import 'UiStrings.dart';
 
 class SendForm extends StatefulWidget {
   final WalletState _ws;
@@ -113,7 +114,7 @@ class SendFormState extends State<SendForm> {
           context: context,
           builder: (BuildContext context) {
             return SimpleDialog(
-              title: const Text('confirm send'),
+              title: Text(capFirst('confirm send')),
               children: <Widget>[
                 SimpleDialogOption(
                   padding: EdgeInsets.symmetric(horizontal: 16),
@@ -121,12 +122,13 @@ class SendFormState extends State<SendForm> {
                       () => Navigator.pop(context, true),
                       ZapWhite,
                       ZapYellow,
-                      'yes send ${amountDec.toStringAsFixed(2)} $AssetShortNameLower'),
+                      capFirst(
+                          'yes send ${amountDec.toStringAsFixed(2)} $AssetShortNameLower')),
                 ),
                 SimpleDialogOption(
                   padding: EdgeInsets.symmetric(horizontal: 16),
                   child: RoundedButton(() => Navigator.pop(context, false),
-                      ZapBlue, ZapWhite, 'cancel',
+                      ZapBlue, ZapWhite, capFirst('cancel'),
                       borderColor: ZapBlue),
                 ),
               ],
@@ -190,7 +192,7 @@ class SendFormState extends State<SendForm> {
         children: <Widget>[
           Center(
               heightFactor: 3,
-              child: Text('send $AssetShortNameLower\n  ',
+              child: Text(capFirst('send $AssetShortNameLower\n  '),
                   style:
                       TextStyle(color: ZapWhite, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center)),
@@ -203,7 +205,7 @@ class SendFormState extends State<SendForm> {
                 ? TextInputType.emailAddress
                 : TextInputType.text,
             decoration: InputDecoration(
-                labelText: 'recipient',
+                labelText: capFirst('recipient'),
                 suffixIcon: flatButtonIcon(
                     onPressed: () {
                       var qrCode = QrScan.scan(context);
@@ -215,7 +217,8 @@ class SendFormState extends State<SendForm> {
                     },
                     icon: Icon(MaterialCommunityIcons.qrcode_scan,
                         size: 14, color: ZapYellow),
-                    label: Text('scan', style: TextStyle(color: ZapYellow)))),
+                    label: Text(capFirst('scan'),
+                        style: TextStyle(color: ZapYellow)))),
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Please enter a value';
@@ -244,7 +247,7 @@ class SendFormState extends State<SendForm> {
                 suffixIcon: flatButton(
                     onPressed: () => _amountController.text =
                         '${widget._ws.balance - widget._ws.fee}',
-                    child: Text('max', style: TextStyle(color: ZapYellow)))),
+                    child: Text(capFirst('max'), style: TextStyle(color: ZapYellow)))),
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Please enter a value';
@@ -262,20 +265,20 @@ class SendFormState extends State<SendForm> {
           TextFormField(
             controller: _msgController,
             keyboardType: TextInputType.text,
-            decoration: InputDecoration(labelText: 'message'),
+            decoration: InputDecoration(labelText: capFirst('message')),
             onChanged: updateAttachment,
           ),
           Text(_attachment != null ? _attachment! : '',
               style: TextStyle(color: ZapBlackLight)),
           Padding(
             padding: const EdgeInsets.only(top: 24.0),
-            child: RoundedButton(
-                send, ZapWhite, ZapYellow, 'send $AssetShortNameLower',
+            child: RoundedButton(send, ZapWhite, ZapYellow,
+                capFirst('send $AssetShortNameLower'),
                 minWidth: MediaQuery.of(context).size.width / 2,
                 holePunch: true),
           ),
-          RoundedButton(
-              () => Navigator.pop(context, null), ZapBlue, ZapWhite, 'cancel',
+          RoundedButton(() => Navigator.pop(context, null), ZapBlue, ZapWhite,
+              capFirst('cancel'),
               borderColor: ZapBlue,
               minWidth: MediaQuery.of(context).size.width / 2),
         ],

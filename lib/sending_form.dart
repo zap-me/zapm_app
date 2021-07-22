@@ -6,6 +6,7 @@ import 'package:zapdart/colors.dart';
 
 import 'merchant.dart';
 import 'paydb.dart';
+import 'UiStrings.dart';
 
 class WavesSendingForm extends StatefulWidget {
   final SpendTx _spendTx;
@@ -59,16 +60,16 @@ class WavesSendingFormState extends State<WavesSendingForm> {
                 child: Container(padding: const EdgeInsets.only(top: 20.0))),
             Visibility(
               visible: _sending,
-              child: Text("broadcasting transaction..."),
+              child: Text(capFirst('broadcasting transaction...')),
             ),
             Visibility(
               visible: !_sending && _tx != null,
-              child: Text("broadcast complete (${_tx?.id})",
+              child: Text(capFirst('broadcast complete (${_tx?.id})'),
                   style: TextStyle(color: ZapBlue)),
             ),
             Visibility(
               visible: !_sending && _tx == null,
-              child: Text("broadcast failed :("),
+              child: Text(capFirst('broadcast failed :(')),
             ),
             Visibility(
                 visible: !_sending,
@@ -76,7 +77,7 @@ class WavesSendingFormState extends State<WavesSendingForm> {
             Visibility(
                 visible: !_sending,
                 child: RoundedButton(() => Navigator.pop(context, _tx), ZapBlue,
-                    ZapWhite, 'close',
+                    ZapWhite, capFirst('close'),
                     borderColor: ZapBlue)),
           ],
         ),
@@ -135,16 +136,16 @@ class PayDbSendingFormState extends State<PayDbSendingForm> {
                 child: Container(padding: const EdgeInsets.only(top: 20.0))),
             Visibility(
               visible: _sending,
-              child: Text("creating transaction..."),
+              child: Text(capFirst('creating transaction...')),
             ),
             Visibility(
               visible: !_sending && _tx != null,
-              child: Text("transaction complete (${_tx?.token})",
+              child: Text(capFirst('transaction complete (${_tx?.token})'),
                   style: TextStyle(color: ZapBlue)),
             ),
             Visibility(
               visible: !_sending && _tx == null,
-              child: Text("transaction failed :("),
+              child: Text(capFirst('transaction failed :(')),
             ),
             Visibility(
                 visible: !_sending,
@@ -152,7 +153,7 @@ class PayDbSendingFormState extends State<PayDbSendingForm> {
             Visibility(
                 visible: !_sending,
                 child: RoundedButton(() => Navigator.pop(context, _tx), ZapBlue,
-                    ZapWhite, 'close',
+                    ZapWhite, capFirst('close'),
                     borderColor: ZapBlue)),
           ],
         ),

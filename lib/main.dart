@@ -33,6 +33,7 @@ import 'fab_with_icons.dart';
 import 'redrat.dart';
 import 'bronze.dart';
 import 'webview.dart';
+import 'UiStrings.dart';
 
 void main() {
   // See https://github.com/flutter/flutter/wiki/Desktop-shells#target-platform-override
@@ -843,7 +844,7 @@ class _ZapHomePageState extends State<ZapHomePage>
                     Container(
                       padding: const EdgeInsets.only(top: 28.0),
                       child: Text(
-                        'my balance:',
+                        capFirst('my balance:'),
                         style: TextStyle(
                             color: ZapBlackMed, fontWeight: FontWeight.w700),
                         textAlign: TextAlign.center,
@@ -868,7 +869,7 @@ class _ZapHomePageState extends State<ZapHomePage>
                 child: Column(children: [
                   Container(
                     padding: const EdgeInsets.only(top: 28.0),
-                    child: Text('${_ws.addrOrAccount()}:',
+                    child: Text(capFirst('${_ws.addrOrAccount()}:'),
                         style: TextStyle(
                             color: ZapBlackMed, fontWeight: FontWeight.w700),
                         textAlign: TextAlign.center),
@@ -892,7 +893,7 @@ class _ZapHomePageState extends State<ZapHomePage>
                             _copyAddrOrAccount,
                             ZapWhite,
                             ZapBlue,
-                            'copy ${_ws.addrOrAccount()}',
+                            capFirst('copy ${_ws.addrOrAccount()}'),
                             icon: Icons.copy,
                           ),
                         ]))

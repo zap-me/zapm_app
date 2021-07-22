@@ -13,6 +13,7 @@ import 'package:zapdart/colors.dart';
 import 'send_receive.dart';
 import 'config.dart';
 import 'wallet_state.dart';
+import 'UiStrings.dart';
 
 const CENTRAPAY_QR_BASE_URI = 'https://app.centrapay.com/pay';
 const CENTRAPAY_DEV_QR_BASE_URI = 'https://app.cp42.click/pay';
@@ -342,7 +343,8 @@ class CentrapayScreenState extends State<CentrapayScreen> {
     return Scaffold(
         appBar: AppBar(
           leading: backButton(context),
-          title: Text('centrapay request', style: TextStyle(color: ZapWhite)),
+          title: Text(capFirst('centrapay request'),
+              style: TextStyle(color: ZapWhite)),
           backgroundColor: ZapYellow,
         ),
         body: CustomPaint(
@@ -370,7 +372,8 @@ class CentrapayScreenState extends State<CentrapayScreen> {
                       Visibility(
                         visible: _payment != null,
                         child: Text(
-                            "${paymentAmount(_payment)} ${paymentUnit(_payment)}",
+                            capFirst(
+                                '${paymentAmount(_payment)} ${paymentUnit(_payment)}'),
                             style: TextStyle(color: ZapBlue)),
                       ),
                       Visibility(
@@ -378,14 +381,15 @@ class CentrapayScreenState extends State<CentrapayScreen> {
                             !_confirmed &&
                             _payment != null &&
                             _zapTx == null,
-                        child: RoundedButton(pay, ZapWhite, ZapYellow, 'pay',
+                        child: RoundedButton(
+                            pay, ZapWhite, ZapYellow, capFirst('pay'),
                             minWidth: MediaQuery.of(context).size.width / 2,
                             holePunch: true),
                       ),
                       Visibility(
                         visible: !_loading && !_confirmed && _zapTx != null,
                         child: RoundedButton(payConfirm, ZapWhite, ZapYellow,
-                            'reconfirm payment',
+                            capFirst('reconfirm payment'),
                             minWidth: MediaQuery.of(context).size.width / 2,
                             holePunch: true),
                       ),
@@ -395,7 +399,7 @@ class CentrapayScreenState extends State<CentrapayScreen> {
                               () => Navigator.pop(context, _zapTx),
                               ZapBlue,
                               ZapWhite,
-                              'close',
+                              capFirst('close'),
                               borderColor: ZapBlue,
                               minWidth: MediaQuery.of(context).size.width / 2)),
                     ]))));

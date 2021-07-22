@@ -15,6 +15,7 @@ import 'package:zapdart/colors.dart';
 import 'config.dart';
 import 'merchant.dart';
 import 'wallet_state.dart';
+import 'UiStrings.dart';
 
 class TransactionsScreen extends StatefulWidget {
   final WalletState _ws;
@@ -155,8 +156,8 @@ class _TransactionsState extends State<TransactionsScreen> {
                 return new Scaffold(
                     appBar: AppBar(
                       leading: backButton(context, color: ZapBlue),
-                      title:
-                          Text('transaction', style: TextStyle(color: ZapBlue)),
+                      title: Text(capFirst('transaction'),
+                          style: TextStyle(color: ZapBlue)),
                     ),
                     body: Container(
                       color: ZapWhite,
@@ -165,7 +166,7 @@ class _TransactionsState extends State<TransactionsScreen> {
                           Container(
                             padding: const EdgeInsets.only(top: 5.0),
                             child: ListTile(
-                              title: Text('transaction ID'),
+                              title: Text(capFirst('transaction ID')),
                               subtitle: InkWell(
                                   child: Text(tx.id,
                                       style: new TextStyle(
@@ -178,25 +179,27 @@ class _TransactionsState extends State<TransactionsScreen> {
                             ),
                           ),
                           ListTile(
-                              title: Text('action'), subtitle: Text(tx.action)),
+                              title: Text(capFirst('action')),
+                              subtitle: Text(tx.action)),
                           ListTile(
-                              title: Text('date'), subtitle: Text(dateStrLong)),
+                              title: Text(capFirst('date')),
+                              subtitle: Text(dateStrLong)),
                           ListTile(
-                              title: Text('sender'),
+                              title: Text(capFirst('sender')),
                               subtitle: Text(tx.sender),
                               onTap: () => _copyText(tx.sender)),
                           ListTile(
-                              title: Text('recipient'),
+                              title: Text(capFirst('recipient')),
                               subtitle: Text(tx.recipient),
                               onTap: () => _copyText(tx.recipient)),
                           ListTile(
-                              title: Text('amount'),
+                              title: Text(capFirst('amount')),
                               subtitle: Text(
                                 amountText,
                                 style: TextStyle(color: color),
                               )),
                           ListTile(
-                              title: Text('fee'),
+                              title: Text(capFirst('fee')),
                               subtitle: Text(
                                 '$feeText $AssetShortNameUpper',
                               )),
@@ -204,13 +207,13 @@ class _TransactionsState extends State<TransactionsScreen> {
                             visible: tx.attachment != null &&
                                 tx.attachment!.isNotEmpty,
                             child: ListTile(
-                                title: Text("attachment"),
+                                title: Text(capFirst('attachment')),
                                 subtitle: Text('${tx.attachment}')),
                           ),
                           Container(
                               padding: const EdgeInsets.only(top: 5.0),
                               child: RoundedButton(() => Navigator.pop(context),
-                                  ZapBlue, ZapWhite, 'close',
+                                  ZapBlue, ZapWhite, capFirst('close'),
                                   borderColor: ZapBlue)),
                         ],
                       ),
@@ -234,10 +237,10 @@ class _TransactionsState extends State<TransactionsScreen> {
         return;
       } else if (widget._ws.txDownloader.foundEnd) {
         var json = jsonEncode(widget._ws.txDownloader.txs);
-        var filename = "transaction_history.json";
+        var filename = 'transaction_history.json';
         if (Platform.isAndroid || Platform.isIOS) {
           var dir = await getApplicationSupportDirectory();
-          filename = dir.path + "/" + filename;
+          filename = dir.path + '/' + filename;
         }
         await File(filename).writeAsString(json);
         await Share.shareFiles([filename],
@@ -263,7 +266,7 @@ class _TransactionsState extends State<TransactionsScreen> {
         children: <Widget>[
           Visibility(
               visible: !_loading && widget._ws.txDownloader.txs.length == 0,
-              child: Text("No history yet..")),
+              child: Text('No history yet..')),
           Visibility(
               visible: !_loading,
               child: Expanded(
@@ -286,7 +289,7 @@ class _TransactionsState extends State<TransactionsScreen> {
                           () => _loadTxs(LoadDirection.Previous),
                           ZapBlue,
                           ZapWhite,
-                          'prev',
+                          capFirst('prev'),
                           icon: Icons.navigate_before,
                           borderColor: ZapBlue))),
               _loadingNewTxs
@@ -306,7 +309,7 @@ class _TransactionsState extends State<TransactionsScreen> {
                   child: Container(
                       padding: const EdgeInsets.all(5),
                       child: RoundedButton(() => _loadTxs(LoadDirection.Next),
-                          ZapBlue, ZapWhite, 'next',
+                          ZapBlue, ZapWhite, capFirst('next'),
                           icon: Icons.navigate_next, borderColor: ZapBlue))),
             ],
           ),
