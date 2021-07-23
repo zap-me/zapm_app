@@ -6,10 +6,14 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:image/image.dart';
+import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 
 import 'package:zapdart/widgets.dart';
 
 import 'paydb.dart';
+import 'config.dart';
+import 'addr_search.dart';
+import 'autocomplete_service.dart';
 
 class AccountLogin {
   final String email;
@@ -164,12 +168,16 @@ class AccountRegisterForm extends StatefulWidget {
   final AccountRegistration? registration;
   final String? instructions;
   final bool showName;
+  final bool showMobileNumber;
+  final bool showAddress;
   final bool showCurrentPassword;
   final bool showNewPassword;
 
   AccountRegisterForm(this.registration,
       {this.instructions,
       this.showName: true,
+      this.showMobileNumber: false,
+      this.showAddress: false,
       this.showCurrentPassword: false,
       this.showNewPassword: true})
       : super();
@@ -184,6 +192,8 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _mobileNumberController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
   final TextEditingController _currentPasswordController =
       TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
@@ -191,6 +201,8 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
       TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
+  String? _dialCode;
+  String? _countryCode;
   String? _imgString;
   String? _imgType;
 
@@ -203,12 +215,43 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
       _firstNameController.text = widget.registration!.firstName;
       _lastNameController.text = widget.registration!.lastName;
       _emailController.text = widget.registration!.email;
+      PhoneNumber.getRegionInfoFromPhoneNumber(
+              widget.registration!.mobileNumber)
+          .then((value) {
+        setState(() {
+          _dialCode = '+${value.dialCode}';
+          _countryCode = value.isoCode;
+        });
+        if (value.phoneNumber != null)
+          _mobileNumberController.text =
+              value.phoneNumber!.replaceFirst('+${value.dialCode}', '');
+      });
+      _addressController.text = widget.registration!.address;
       _currentPasswordController.text = widget.registration!.currentPassword;
       _newPasswordController.text = widget.registration!.newPassword;
       _passwordConfirmController.text = widget.registration!.newPassword;
       _imgType = widget.registration!.photoType;
       _imgString = widget.registration!.photo;
     }
+  }
+
+  void searchAddr() async {
+    final apiClient = createPlaceApi();
+    if (apiClient != null) {
+      final Suggestion? result = await showSearch<Suggestion?>(
+        context: context,
+        delegate: AddressSearch(apiClient),
+      );
+      if (result != null) _addressController.text = result.description;
+    }
+  }
+
+  void manualAddr() async {
+    var place = await Navigator.push<Place?>(
+      context,
+      MaterialPageRoute(builder: (context) => AddressForm()),
+    );
+    if (place != null) _addressController.text = place.toString();
   }
 
   @override
@@ -223,10 +266,10 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
             child: Container(
                 padding: EdgeInsets.all(20),
                 child: Center(
-                    child: Column(
+                    child: ListView(
                   children: <Widget>[
                     Text(widget.instructions == null
-                        ? "Enter your details to register"
+                        ? 'Enter your details to register'
                         : widget.instructions!),
                     Visibility(
                         visible: widget.showName,
@@ -269,6 +312,63 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
                             return 'Invalid email';
                           return null;
                         }),
+                    Visibility(
+                        visible: widget.showMobileNumber,
+                        child: InternationalPhoneNumberInput(
+                            textFieldController: _mobileNumberController,
+                            initialValue: _countryCode != null
+                                ? PhoneNumber(isoCode: _countryCode)
+                                : InitialMobileCountry != null
+                                    ? PhoneNumber(isoCode: InitialMobileCountry)
+                                    : null,
+                            onInputChanged: (number) =>
+                                _dialCode = number.dialCode,
+                            selectorConfig: SelectorConfig(
+                                selectorType: PhoneInputSelectorType.DIALOG,
+                                countryComparator: PreferredMobileCountries !=
+                                        null
+                                    ? (a, b) {
+                                        if (PreferredMobileCountries == null)
+                                          return 0;
+                                        if (PreferredMobileCountries!
+                                            .contains(a.name)) {
+                                          var aSlot = PreferredMobileCountries!
+                                              .indexOf(a.name!);
+                                          if (PreferredMobileCountries!
+                                              .contains(b.name)) {
+                                            var bSlot =
+                                                PreferredMobileCountries!
+                                                    .indexOf(b.name!);
+                                            if (aSlot < bSlot)
+                                              return -1;
+                                            else
+                                              return 1;
+                                          } else
+                                            return -1;
+                                        }
+                                        return 0;
+                                      }
+                                    : null))),
+                    Visibility(
+                        visible: widget.showAddress,
+                        child: TextFormField(
+                          controller: _addressController,
+                          readOnly: true,
+                          decoration: InputDecoration(
+                              labelText: 'Address',
+                              suffix: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    availablePlaceApi()
+                                        ? IconButton(
+                                            icon: Icon(Icons.search),
+                                            onPressed: searchAddr)
+                                        : SizedBox(),
+                                    IconButton(
+                                        icon: Icon(Icons.edit),
+                                        onPressed: manualAddr),
+                                  ])),
+                        )),
                     Visibility(
                         visible: widget.showCurrentPassword,
                         child: TextFormField(
@@ -316,6 +416,8 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
                               _firstNameController.text,
                               _lastNameController.text,
                               _emailController.text,
+                              '$_dialCode ${_mobileNumberController.text}',
+                              _addressController.text,
                               _currentPasswordController.text,
                               _newPasswordController.text,
                               _imgString,

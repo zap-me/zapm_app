@@ -57,6 +57,15 @@ const String? NodeUrlTestnet = null;
 // PayDB settings
 const String? PayDBServerMainnet = null;
 const String? PayDBServerTestnet = null;
+// registration
+const bool RequireMobileNumber = false;
+const String? InitialMobileCountry = null;
+const List<String>? PreferredMobileCountries = null;
+const bool RequireAddress = false;
+const String? GooglePlaceApiKeyIOS = null;
+const String? GooglePlaceApiKeyAndroid = null;
+const String? LocationIqApiKeyIOS = null;
+const String? LocationIqApiKeyAndroid = null;
 
 // If set the app will try to register with the premio stage server for push notifications
 const String? PremioStageIndexUrl = null;

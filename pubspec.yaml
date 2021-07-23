@@ -60,6 +60,8 @@ dependencies:
   flutter_html: ^2.0.0
   share_plus: ^2.1.4
   restart_app: ^1.0.3
+  intl_phone_number_input: ^0.7.0+2
+  debounce_throttle: ^2.0.0
 
   zapdart:
     git:

@@ -85,13 +85,23 @@ class AccountRegistration {
   final String firstName;
   final String lastName;
   final String email;
+  final String mobileNumber;
+  final String address;
   final String currentPassword;
   final String newPassword;
   final String? photo;
   final String? photoType;
 
-  AccountRegistration(this.firstName, this.lastName, this.email,
-      this.currentPassword, this.newPassword, this.photo, this.photoType);
+  AccountRegistration(
+      this.firstName,
+      this.lastName,
+      this.email,
+      this.mobileNumber,
+      this.address,
+      this.currentPassword,
+      this.newPassword,
+      this.photo,
+      this.photoType);
 }
 
 class AccountRequestApiKey {
@@ -249,6 +259,8 @@ Future<PayDbError> paydbUserRegister(AccountRegistration reg) async {
     "first_name": reg.firstName,
     "last_name": reg.lastName,
     "email": reg.email,
+    "mobile_number": reg.mobileNumber,
+    "address": reg.address,
     "password": reg.newPassword,
     "photo": reg.photo,
     "photo_type": reg.photoType

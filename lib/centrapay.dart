@@ -13,7 +13,7 @@ import 'package:zapdart/colors.dart';
 import 'send_receive.dart';
 import 'config.dart';
 import 'wallet_state.dart';
-import 'UiStrings.dart';
+import 'ui_strings.dart';
 
 const CENTRAPAY_QR_BASE_URI = 'https://app.centrapay.com/pay';
 const CENTRAPAY_DEV_QR_BASE_URI = 'https://app.cp42.click/pay';

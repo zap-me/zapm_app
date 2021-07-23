@@ -12,7 +12,7 @@ import 'prefs.dart';
 import 'hmac.dart';
 import 'merchant.dart';
 import 'paydb.dart';
-import 'UiStrings.dart';
+import 'ui_strings.dart';
 
 class ReceiveForm extends StatefulWidget {
   final bool _testnet;

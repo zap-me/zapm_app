@@ -14,7 +14,7 @@ import 'prefs.dart';
 import 'paydb.dart';
 import 'qrscan.dart';
 import 'wallet_state.dart';
-import 'UiStrings.dart';
+import 'ui_strings.dart';
 
 class SendForm extends StatefulWidget {
   final WalletState _ws;
@@ -247,7 +247,8 @@ class SendFormState extends State<SendForm> {
                 suffixIcon: flatButton(
                     onPressed: () => _amountController.text =
                         '${widget._ws.balance - widget._ws.fee}',
-                    child: Text(capFirst('max'), style: TextStyle(color: ZapYellow)))),
+                    child: Text(capFirst('max'),
+                        style: TextStyle(color: ZapYellow)))),
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Please enter a value';

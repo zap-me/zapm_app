@@ -8,7 +8,7 @@ import 'send_form.dart';
 import 'receive_form.dart';
 import 'wallet_state.dart';
 import 'merchant.dart';
-import 'UiStrings.dart';
+import 'ui_strings.dart';
 
 class SendScreen extends StatelessWidget {
   SendScreen(this._ws, this._recipientOrUri) : super();

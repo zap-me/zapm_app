@@ -6,7 +6,7 @@ import 'package:zapdart/colors.dart';
 
 import 'merchant.dart';
 import 'paydb.dart';
-import 'UiStrings.dart';
+import 'ui_strings.dart';
 
 class WavesSendingForm extends StatefulWidget {
   final SpendTx _spendTx;

@@ -163,6 +163,8 @@ class _SettingsState extends State<SettingsScreen> {
             builder: (context) => AccountRegisterForm(reg,
                 instructions: 'Enter your details to update',
                 showName: false,
+                showMobileNumber: false,
+                showAddress: false,
                 showCurrentPassword: true,
                 showNewPassword: true)));
     if (newReg != null) {

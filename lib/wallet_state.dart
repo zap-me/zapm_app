@@ -295,8 +295,8 @@ class WalletState {
   }
 
   AccountRegistration accountRegistration() {
-    return AccountRegistration(
-        '', '', _account.email, '', '', _account.photo, _account.photoType);
+    return AccountRegistration('', '', _account.email, '', '', '', '',
+        _account.photo, _account.photoType);
   }
 
   String walletOrAccount() {
@@ -716,7 +716,9 @@ class WalletState {
             registration = await Navigator.push<AccountRegistration>(
               context,
               MaterialPageRoute(
-                  builder: (context) => AccountRegisterForm(registration)),
+                  builder: (context) => AccountRegisterForm(registration,
+                      showMobileNumber: RequireMobileNumber,
+                      showAddress: RequireAddress)),
             );
             if (registration == null) break;
             var result = await paydbUserRegister(registration);

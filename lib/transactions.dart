@@ -15,7 +15,7 @@ import 'package:zapdart/colors.dart';
 import 'config.dart';
 import 'merchant.dart';
 import 'wallet_state.dart';
-import 'UiStrings.dart';
+import 'ui_strings.dart';
 
 class TransactionsScreen extends StatefulWidget {
   final WalletState _ws;

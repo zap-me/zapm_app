@@ -33,7 +33,7 @@ import 'fab_with_icons.dart';
 import 'redrat.dart';
 import 'bronze.dart';
 import 'webview.dart';
-import 'UiStrings.dart';
+import 'ui_strings.dart';
 
 void main() {
   // See https://github.com/flutter/flutter/wiki/Desktop-shells#target-platform-override
