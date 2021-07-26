@@ -63,14 +63,19 @@ const String? NodeUrlTestnet = null;
 const String? PayDBServerMainnet = null;
 const String? PayDBServerTestnet = 'https://mtoken-test.zap.me/paydb/';
 // registration
-const bool RequireMobileNumber = false;
-const String? InitialMobileCountry = null;
-const List<String>? PreferredMobileCountries = null;
-const bool RequireAddress = false;
+const bool RequireMobileNumber = true;
+const String? InitialMobileCountry = 'WS';
+const List<String>? PreferredMobileCountries = [
+  'Samoa',
+  'New Zealand',
+  'Australia',
+  'United States of America'
+];
+const bool RequireAddress = true;
 const String? GooglePlaceApiKeyIOS = null;
 const String? GooglePlaceApiKeyAndroid = null;
-const String? LocationIqApiKeyIOS = null;
-const String? LocationIqApiKeyAndroid = null;
+const String? LocationIqApiKeyIOS = 'pk.e53109b5fdcb2dfd00bbc57c8b713d79';
+const String? LocationIqApiKeyAndroid = 'pk.e53109b5fdcb2dfd00bbc57c8b713d79';
 
 // If set the app will try to register with the premio stage server for push notifications
 const String? PremioStageIndexUrl = null;
