@@ -4,12 +4,14 @@ import 'package:flutter_icons/flutter_icons.dart';
 
 import 'package:zapdart/utils.dart';
 import 'package:zapdart/widgets.dart';
+import 'package:zapdart/colors.dart';
 
 import 'config.dart';
 import 'claiming_form.dart';
 import 'prefs.dart';
 import 'paydb.dart';
 import 'qrscan.dart';
+import 'ui_strings.dart';
 
 class RewardForm extends StatefulWidget {
   final String _seed;
@@ -29,6 +31,29 @@ class RewardFormState extends State<RewardForm> {
   final _paydbRecipientController = TextEditingController();
   final _amountController = TextEditingController();
   final _msgController = TextEditingController();
+  List<String> _categories = [];
+  String? _category;
+
+  @protected
+  @mustCallSuper
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance?.addPostFrameCallback((_) => initCategories());
+  }
+
+  void initCategories() async {
+    if (AppTokenType != TokenType.PayDB) return;
+    showAlertDialog(context, 'getting reward categories...');
+    var result = await paydbRewardCategories();
+    Navigator.pop(context);
+    if (result.error == PayDbError.None)
+      setState(() {
+        _categories = result.categories;
+        _category = result.categories.first;
+      });
+    else
+      return;
+  }
 
   void scanRecipient() async {
     var data = await QrScan.scan(context);
@@ -83,11 +108,14 @@ class RewardFormState extends State<RewardForm> {
             if (sentFunds != null && sentFunds) Navigator.pop(context, true);
             break;
           case TokenType.PayDB:
+            if (_category == null) {
+              flushbarMsg(context, 'invalid category',
+                  category: MessageCategory.Warning);
+              return;
+            }
             showAlertDialog(context, 'sending reward..');
-            //TODO: get reason and category values to choose from from the server
             var reason = 'Customer reward';
-            var category = 'marketing';
-            var result = await paydbRewardCreate(reason, category,
+            var result = await paydbRewardCreate(reason, _category!,
                 _paydbRecipientController.text, amount, _msgController.text);
             Navigator.pop(context);
             if (result != PayDbError.None)
@@ -102,19 +130,13 @@ class RewardFormState extends State<RewardForm> {
           category: MessageCategory.Warning);
   }
 
-  @protected
-  @mustCallSuper
-  void initState() {
-    super.initState();
-    _msgController.text = "Thank you for shopping at Qwik-e-mart!";
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Form(
+    return SingleChildScrollView(
+        child: Form(
       key: _formKey,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
           AppTokenType == TokenType.PayDB
               ? TextFormField(
@@ -152,24 +174,32 @@ class RewardFormState extends State<RewardForm> {
               return null;
             },
           ),
+          Visibility(
+            visible: AppTokenType == TokenType.PayDB,
+            child: DropdownButton<String>(
+                value: _category,
+                items: _categories
+                    .map<DropdownMenuItem<String>>(
+                        (e) => DropdownMenuItem(child: Text(e), value: e))
+                    .toList(),
+                onChanged: (v) => setState(() => _category = v)),
+          ),
           TextFormField(
             controller: _msgController,
             keyboardType: TextInputType.text,
             decoration: new InputDecoration(labelText: 'Message'),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16.0),
-            child: raisedButtonIcon(
-                onPressed: send, icon: Icon(Icons.send), label: Text('Submit')),
-          ),
-          raisedButtonIcon(
-              onPressed: () {
-                Navigator.pop(context, false);
-              },
-              icon: Icon(Icons.cancel),
-              label: Text('Cancel')),
+              padding: const EdgeInsets.symmetric(vertical: 16.0),
+              child: RoundedButton(send, ZapWhite, ZapBlue, capFirst('submit'),
+                  holePunch: true,
+                  minWidth: MediaQuery.of(context).size.width / 2)),
+          RoundedButton(() => Navigator.pop(context, false), ZapBlue, ZapWhite,
+              capFirst('cancel'),
+              borderColor: ZapBlue,
+              minWidth: MediaQuery.of(context).size.width / 2)
         ],
       ),
-    );
+    ));
   }
 }

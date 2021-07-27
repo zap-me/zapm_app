@@ -178,6 +178,13 @@ class PayDbTxResult {
   PayDbTxResult(this.tx, this.error);
 }
 
+class PayDbRewardCategoriesResult {
+  final List<String> categories;
+  final PayDbError error;
+
+  PayDbRewardCategoriesResult(this.categories, this.error);
+}
+
 Future<http.Response?> postAndCatch(String url, String body,
     {Map<String, String>? extraHeaders}) async {
   try {
@@ -524,12 +531,42 @@ Future<PayDbTxResult> paydbTransactionCreate(
   return PayDbTxResult(null, PayDbError.Network);
 }
 
+Future<PayDbRewardCategoriesResult> paydbRewardCategories() async {
+  var categories = <String>[];
+  var baseUrl = await _server();
+  if (baseUrl == null)
+    return PayDbRewardCategoriesResult(categories, PayDbError.Network);
+  var url = baseUrl.replaceFirst('/paydb/', '/reward/') +
+      'reward_categories'; //TODO: hacky url fiddling
+  var apikey = await Prefs.paydbApiKeyGet();
+  var apisecret = await Prefs.paydbApiSecretGet();
+  checkApiKey(apikey, apisecret);
+  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
+  var body = jsonEncode({
+    "api_key": apikey,
+    "nonce": nonce,
+  });
+  var sig = createHmacSig(apisecret!, body);
+  var response =
+      await postAndCatch(url, body, extraHeaders: {"X-Signature": sig});
+  if (response == null)
+    return PayDbRewardCategoriesResult(categories, PayDbError.Network);
+  if (response.statusCode == 200) {
+    var jsnObj = json.decode(response.body);
+    categories = jsnObj["categories"].map<String>((e) => e as String).toList();
+    return PayDbRewardCategoriesResult(categories, PayDbError.None);
+  } else if (response.statusCode == 400)
+    return PayDbRewardCategoriesResult(categories, PayDbError.Auth);
+  print(response.statusCode);
+  return PayDbRewardCategoriesResult(categories, PayDbError.Network);
+}
+
 Future<PayDbError> paydbRewardCreate(String reason, String category,
     String recipient, int amount, String? message) async {
   var baseUrl = await _server();
   if (baseUrl == null) return PayDbError.Network;
-  var url = baseUrl.replaceAll('/paydb', '') +
-      "payment_create"; //TODO: hacky url fiddling
+  var url = baseUrl.replaceFirst('/paydb/', '/reward/') +
+      'reward_create'; //TODO: hacky url fiddling
   var apikey = await Prefs.paydbApiKeyGet();
   var apisecret = await Prefs.paydbApiSecretGet();
   checkApiKey(apikey, apisecret);
