@@ -109,91 +109,91 @@ class AddressFormState extends State<AddressForm> {
           child: Container(),
           preferredSize: Size(0, 0),
         ),
-        body: Form(
-            key: _formKey,
-            child: Container(
-                padding: EdgeInsets.all(20),
-                child: Center(
-                    child: ListView(
-                  children: <Widget>[
-                    Text('Enter your address'),
-                    TextFormField(
-                        controller: _streetNumberController,
-                        decoration: InputDecoration(labelText: 'Street Number'),
-                        keyboardType: TextInputType.streetAddress,
-                        validator: (value) {
-                          if (value != null && value.isEmpty)
-                            return 'Please enter a street number';
-                          return null;
-                        }),
-                    TextFormField(
-                        controller: _streetController,
-                        decoration: InputDecoration(labelText: 'Street'),
-                        keyboardType: TextInputType.streetAddress,
-                        validator: (value) {
-                          if (value == null || value.isEmpty)
-                            return 'Please enter a street';
-                          return null;
-                        }),
-                    TextFormField(
-                        controller: _cityController,
-                        decoration: InputDecoration(labelText: 'City'),
-                        keyboardType: TextInputType.streetAddress,
-                        validator: (value) {
-                          if (value == null || value.isEmpty)
-                            return 'Please enter a city';
-                          return null;
-                        }),
-                    TextFormField(
-                        controller: _stateController,
-                        decoration: InputDecoration(labelText: 'State'),
-                        keyboardType: TextInputType.streetAddress,
-                        validator: (value) {
-                          if (value == null || value.isEmpty)
-                            return 'Please enter a state';
-                          return null;
-                        }),
-                    TextFormField(
-                        controller: _zipCodeController,
-                        decoration: InputDecoration(labelText: 'Zip Code'),
-                        keyboardType: TextInputType.number,
-                        validator: (value) {
-                          if (value == null || value.isEmpty)
-                            return 'Please enter a zip code';
-                          return null;
-                        }),
-                    TextFormField(
-                        controller: _countryController,
-                        decoration: InputDecoration(labelText: 'Country'),
-                        validator: (value) {
-                          if (value == null || value.isEmpty)
-                            return 'Please enter a country';
-                          return null;
-                        }),
-                    raisedButton(
-                      child: Text("Ok"),
-                      onPressed: () async {
-                        if (_formKey.currentState == null) return;
-                        if (_formKey.currentState!.validate()) {
-                          var place = Place(
-                            _streetNumberController.text,
-                            _streetController.text,
-                            _cityController.text,
-                            _stateController.text,
-                            _zipCodeController.text,
-                            _countryController.text,
-                          );
-                          Navigator.of(context).pop(place);
-                        }
-                      },
-                    ),
-                    raisedButton(
-                      child: Text("Cancel"),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                  ],
-                )))));
+        body: SingleChildScrollView(
+            child: Form(
+                key: _formKey,
+                child: Container(
+                    padding: EdgeInsets.all(20),
+                    child: Center(
+                        child: Column(children: [
+                      Text('Enter your address'),
+                      TextFormField(
+                          controller: _streetNumberController,
+                          decoration:
+                              InputDecoration(labelText: 'Street Number'),
+                          keyboardType: TextInputType.streetAddress,
+                          validator: (value) {
+                            if (value != null && value.isEmpty)
+                              return 'Please enter a street number';
+                            return null;
+                          }),
+                      TextFormField(
+                          controller: _streetController,
+                          decoration: InputDecoration(labelText: 'Street'),
+                          keyboardType: TextInputType.streetAddress,
+                          validator: (value) {
+                            if (value == null || value.isEmpty)
+                              return 'Please enter a street';
+                            return null;
+                          }),
+                      TextFormField(
+                          controller: _cityController,
+                          decoration: InputDecoration(labelText: 'City'),
+                          keyboardType: TextInputType.streetAddress,
+                          validator: (value) {
+                            if (value == null || value.isEmpty)
+                              return 'Please enter a city';
+                            return null;
+                          }),
+                      TextFormField(
+                          controller: _stateController,
+                          decoration: InputDecoration(labelText: 'State'),
+                          keyboardType: TextInputType.streetAddress,
+                          validator: (value) {
+                            if (value == null || value.isEmpty)
+                              return 'Please enter a state';
+                            return null;
+                          }),
+                      TextFormField(
+                          controller: _zipCodeController,
+                          decoration: InputDecoration(labelText: 'Zip Code'),
+                          keyboardType: TextInputType.number,
+                          validator: (value) {
+                            if (value == null || value.isEmpty)
+                              return 'Please enter a zip code';
+                            return null;
+                          }),
+                      TextFormField(
+                          controller: _countryController,
+                          decoration: InputDecoration(labelText: 'Country'),
+                          validator: (value) {
+                            if (value == null || value.isEmpty)
+                              return 'Please enter a country';
+                            return null;
+                          }),
+                      raisedButton(
+                        child: Text("Ok"),
+                        onPressed: () async {
+                          if (_formKey.currentState == null) return;
+                          if (_formKey.currentState!.validate()) {
+                            var place = Place(
+                              _streetNumberController.text,
+                              _streetController.text,
+                              _cityController.text,
+                              _stateController.text,
+                              _zipCodeController.text,
+                              _countryController.text,
+                            );
+                            Navigator.of(context).pop(place);
+                          }
+                        },
+                      ),
+                      raisedButton(
+                        child: Text("Cancel"),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ]))))));
   }
 }

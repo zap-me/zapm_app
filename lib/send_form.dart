@@ -185,105 +185,105 @@ class SendFormState extends State<SendForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Form(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: <Widget>[
-          Center(
-              heightFactor: 3,
-              child: Text(capFirst('send $AssetShortNameLower\n  '),
-                  style:
-                      TextStyle(color: ZapWhite, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center)),
-          Visibility(
-              visible: _recipientImage != null,
-              child: Container(child: _recipientImage)),
-          TextFormField(
-            controller: _recipientController,
-            keyboardType: AppTokenType == TokenType.PayDB
-                ? TextInputType.emailAddress
-                : TextInputType.text,
-            decoration: InputDecoration(
-                labelText: capFirst('recipient'),
-                suffixIcon: flatButtonIcon(
-                    onPressed: () {
-                      var qrCode = QrScan.scan(context);
-                      qrCode.then((value) {
-                        if (value == null || !setRecipientOrUri(value))
-                          flushbarMsg(context, 'invalid QR code',
-                              category: MessageCategory.Warning);
-                      });
-                    },
-                    icon: Icon(MaterialCommunityIcons.qrcode_scan,
-                        size: 14, color: ZapYellow),
-                    label: Text(capFirst('scan'),
-                        style: TextStyle(color: ZapYellow)))),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter a value';
-              }
-              switch (AppTokenType) {
-                case TokenType.Waves:
-                  if (!LibZap().addressCheck(value)) {
-                    return 'invalid recipient';
-                  }
-                  break;
-                case TokenType.PayDB:
-                  if (!paydbRecipientCheck(value)) {
-                    return 'invalid recipient';
-                  }
-                  break;
-              }
-              return null;
-            },
-            onChanged: updateRecipient,
-          ),
-          TextFormField(
-            controller: _amountController,
-            keyboardType: TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(
-                labelText: '$AssetShortNameUpper amount',
-                suffixIcon: flatButton(
-                    onPressed: () => _amountController.text =
-                        '${widget._ws.balance - widget._ws.fee}',
-                    child: Text(capFirst('max'),
-                        style: TextStyle(color: ZapYellow)))),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter a value';
-              }
-              final dv = Decimal.parse(value);
-              if (dv > widget._ws.balance - widget._ws.fee) {
-                return 'Max available to send is ${widget._ws.balance - widget._ws.fee}';
-              }
-              if (dv <= Decimal.fromInt(0)) {
-                return 'Please enter a value greater then zero';
-              }
-              return null;
-            },
-          ),
-          TextFormField(
-            controller: _msgController,
-            keyboardType: TextInputType.text,
-            decoration: InputDecoration(labelText: capFirst('message')),
-            onChanged: updateAttachment,
-          ),
-          Text(_attachment != null ? _attachment! : '',
-              style: TextStyle(color: ZapBlackLight)),
-          Padding(
-            padding: const EdgeInsets.only(top: 24.0),
-            child: RoundedButton(send, ZapWhite, ZapYellow,
-                capFirst('send $AssetShortNameLower'),
-                minWidth: MediaQuery.of(context).size.width / 2,
-                holePunch: true),
-          ),
-          RoundedButton(() => Navigator.pop(context, null), ZapBlue, ZapWhite,
-              capFirst('cancel'),
-              borderColor: ZapBlue,
-              minWidth: MediaQuery.of(context).size.width / 2),
-        ],
-      ),
-    );
+    return SingleChildScrollView(
+        child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Center(
+                    heightFactor: 3,
+                    child: Text(capFirst('send $AssetShortNameLower\n  '),
+                        style: TextStyle(
+                            color: ZapWhite, fontWeight: FontWeight.bold),
+                        textAlign: TextAlign.center)),
+                Visibility(
+                    visible: _recipientImage != null,
+                    child: Container(child: _recipientImage)),
+                TextFormField(
+                  controller: _recipientController,
+                  keyboardType: AppTokenType == TokenType.PayDB
+                      ? TextInputType.emailAddress
+                      : TextInputType.text,
+                  decoration: InputDecoration(
+                      labelText: capFirst('recipient'),
+                      suffixIcon: flatButtonIcon(
+                          onPressed: () {
+                            var qrCode = QrScan.scan(context);
+                            qrCode.then((value) {
+                              if (value == null || !setRecipientOrUri(value))
+                                flushbarMsg(context, 'invalid QR code',
+                                    category: MessageCategory.Warning);
+                            });
+                          },
+                          icon: Icon(MaterialCommunityIcons.qrcode_scan,
+                              size: 14, color: ZapYellow),
+                          label: Text(capFirst('scan'),
+                              style: TextStyle(color: ZapYellow)))),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a value';
+                    }
+                    switch (AppTokenType) {
+                      case TokenType.Waves:
+                        if (!LibZap().addressCheck(value)) {
+                          return 'invalid recipient';
+                        }
+                        break;
+                      case TokenType.PayDB:
+                        if (!paydbRecipientCheck(value)) {
+                          return 'invalid recipient';
+                        }
+                        break;
+                    }
+                    return null;
+                  },
+                  onChanged: updateRecipient,
+                ),
+                TextFormField(
+                  controller: _amountController,
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  decoration: InputDecoration(
+                      labelText: '$AssetShortNameUpper amount',
+                      suffixIcon: flatButton(
+                          onPressed: () => _amountController.text =
+                              '${widget._ws.balance - widget._ws.fee}',
+                          child: Text(capFirst('max'),
+                              style: TextStyle(color: ZapYellow)))),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a value';
+                    }
+                    final dv = Decimal.parse(value);
+                    if (dv > widget._ws.balance - widget._ws.fee) {
+                      return 'Max available to send is ${widget._ws.balance - widget._ws.fee}';
+                    }
+                    if (dv <= Decimal.fromInt(0)) {
+                      return 'Please enter a value greater then zero';
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: _msgController,
+                  keyboardType: TextInputType.text,
+                  decoration: InputDecoration(labelText: capFirst('message')),
+                  onChanged: updateAttachment,
+                ),
+                Text(_attachment != null ? _attachment! : '',
+                    style: TextStyle(color: ZapBlackLight)),
+                Padding(
+                  padding: const EdgeInsets.only(top: 24.0),
+                  child: RoundedButton(send, ZapWhite, ZapYellow,
+                      capFirst('send $AssetShortNameLower'),
+                      minWidth: MediaQuery.of(context).size.width / 2,
+                      holePunch: true),
+                ),
+                RoundedButton(() => Navigator.pop(context, null), ZapBlue,
+                    ZapWhite, capFirst('cancel'),
+                    borderColor: ZapBlue,
+                    minWidth: MediaQuery.of(context).size.width / 2),
+              ],
+            )));
   }
 }

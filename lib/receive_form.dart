@@ -148,85 +148,86 @@ class ReceiveFormState extends State<ReceiveForm> {
     return WillPopScope(
       child: SingleChildScrollView(
           child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: <Widget>[
-            Center(
-                heightFactor: 5,
-                child: Text(capFirst('scan QR code'),
-                    style:
-                        TextStyle(color: ZapWhite, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center)),
-            Center(
-                child: Card(
-                    margin: EdgeInsets.all(20),
-                    child: validQrData() && _validAmount && _uri != null
-                        ? QrWidget(_uri!, size: 240, version: 10)
-                        : Container(
-                            width: 240,
-                            height: 240,
-                            padding: EdgeInsets.all(100),
-                            child: CircularProgressIndicator()))),
-            TextFormField(
-              controller: _uriController,
-              enabled: false,
-              decoration: InputDecoration(labelText: capFirst('receive URI')),
-              maxLines: 4,
-              style: TextStyle(fontSize: 12),
-            ),
-            TextFormField(
-              controller: _amountController,
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                  labelText: capFirst('amount'),
-                  suffixIcon: flatButton(
-                      onPressed: () {
-                        if (!UseMerchantApi) return;
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  Center(
+                      heightFactor: 5,
+                      child: Text(capFirst('scan QR code'),
+                          style: TextStyle(
+                              color: ZapWhite, fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.center)),
+                  Center(
+                      child: Card(
+                          margin: EdgeInsets.all(20),
+                          child: validQrData() && _validAmount && _uri != null
+                              ? QrWidget(_uri!, size: 240, version: 10)
+                              : Container(
+                                  width: 240,
+                                  height: 240,
+                                  padding: EdgeInsets.all(100),
+                                  child: CircularProgressIndicator()))),
+                  TextFormField(
+                    controller: _uriController,
+                    enabled: false,
+                    decoration:
+                        InputDecoration(labelText: capFirst('receive URI')),
+                    maxLines: 4,
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  TextFormField(
+                    controller: _amountController,
+                    keyboardType:
+                        TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                        labelText: capFirst('amount'),
+                        suffixIcon: flatButton(
+                            onPressed: () {
+                              if (!UseMerchantApi) return;
+                              setState(() {
+                                if (_amountType == AssetShortNameLower)
+                                  _amountType = capAsset('nzd');
+                                else
+                                  _amountType = AssetShortNameLower;
+                              });
+                              updateUriUi();
+                            },
+                            child: Text(_amountType,
+                                style: TextStyle(color: ZapGreen)))),
+                    style: _validAmount ? null : TextStyle(color: ZapRed),
+                    validator: (value) {
+                      if (value != null && value.isEmpty) {
+                        return 'Please enter a value';
+                      }
+                      final dv = Decimal.parse(value!);
+                      if (dv <= Decimal.zero) {
+                        return 'Please enter a value greater then zero';
+                      }
+                      return null;
+                    },
+                    onChanged: (value) {
+                      if (value.isEmpty) {
                         setState(() {
-                          if (_amountType == AssetShortNameLower)
-                            _amountType = capAsset('nzd');
-                          else
-                            _amountType = AssetShortNameLower;
+                          _validAmount = true;
                         });
-                        updateUriUi();
-                      },
-                      child: Text(_amountType,
-                          style: TextStyle(color: ZapGreen)))),
-              style: _validAmount ? null : TextStyle(color: ZapRed),
-              validator: (value) {
-                if (value != null && value.isEmpty) {
-                  return 'Please enter a value';
-                }
-                final dv = Decimal.parse(value!);
-                if (dv <= Decimal.zero) {
-                  return 'Please enter a value greater then zero';
-                }
-                return null;
-              },
-              onChanged: (value) {
-                if (value.isEmpty) {
-                  setState(() {
-                    _validAmount = true;
-                  });
-                } else {
-                  var valid = Decimal.tryParse(value) != null;
-                  setState(() {
-                    _validAmount = valid;
-                  });
-                }
-              },
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 24.0),
-              child: RoundedButton(() => Navigator.pop(context), ZapBlue,
-                  ZapWhite, capFirst('cancel'),
-                  borderColor: ZapBlue,
-                  minWidth: MediaQuery.of(context).size.width / 2),
-            ),
-          ],
-        ),
-      )),
+                      } else {
+                        var valid = Decimal.tryParse(value) != null;
+                        setState(() {
+                          _validAmount = valid;
+                        });
+                      }
+                    },
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 24.0),
+                    child: RoundedButton(() => Navigator.pop(context), ZapBlue,
+                        ZapWhite, capFirst('cancel'),
+                        borderColor: ZapBlue,
+                        minWidth: MediaQuery.of(context).size.width / 2),
+                  ),
+                ],
+              ))),
       onWillPop: canLeave,
     );
   }

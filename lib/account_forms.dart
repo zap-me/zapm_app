@@ -261,179 +261,181 @@ class AccountRegisterFormState extends State<AccountRegisterForm> {
           child: Container(),
           preferredSize: Size(0, 0),
         ),
-        body: Form(
-            key: _formKey,
-            child: Container(
-                padding: EdgeInsets.all(20),
-                child: Center(
-                    child: ListView(
-                  children: <Widget>[
-                    Text(widget.instructions == null
-                        ? 'Enter your details to register'
-                        : widget.instructions!),
-                    Visibility(
-                        visible: widget.showName,
-                        child: TextFormField(
-                            controller: _firstNameController,
-                            decoration:
-                                InputDecoration(labelText: 'First Name'),
-                            keyboardType: TextInputType.name,
-                            validator: (value) {
-                              if (value != null && value.isEmpty)
-                                return 'Please enter a first name';
-                              return null;
-                            })),
-                    Visibility(
-                        visible: widget.showName,
-                        child: TextFormField(
-                            controller: _lastNameController,
-                            decoration: InputDecoration(labelText: 'Last Name'),
-                            keyboardType: TextInputType.name,
-                            validator: (value) {
-                              if (value == null || value.isEmpty)
-                                return 'Please enter a last name';
-                              return null;
-                            })),
-                    AccountImageUpdate(
-                        _imgString,
-                        _imgType,
-                        (img, imgType) => setState(() {
-                              _imgString = img;
-                              _imgType = imgType;
-                            })),
-                    TextFormField(
-                        controller: _emailController,
-                        decoration: InputDecoration(labelText: 'Email'),
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (value) {
-                          if (value == null || value.isEmpty)
-                            return 'Please enter an email';
-                          if (!EmailValidator.validate(value))
-                            return 'Invalid email';
-                          return null;
-                        }),
-                    Visibility(
-                        visible: widget.showMobileNumber,
-                        child: InternationalPhoneNumberInput(
-                            textFieldController: _mobileNumberController,
-                            initialValue: _countryCode != null
-                                ? PhoneNumber(isoCode: _countryCode)
-                                : InitialMobileCountry != null
-                                    ? PhoneNumber(isoCode: InitialMobileCountry)
-                                    : null,
-                            onInputChanged: (number) =>
-                                _dialCode = number.dialCode,
-                            selectorConfig: SelectorConfig(
-                                selectorType: PhoneInputSelectorType.DIALOG,
-                                countryComparator: PreferredMobileCountries !=
-                                        null
-                                    ? (a, b) {
-                                        if (PreferredMobileCountries == null)
-                                          return 0;
-                                        if (PreferredMobileCountries!
-                                            .contains(a.name)) {
-                                          var aSlot = PreferredMobileCountries!
-                                              .indexOf(a.name!);
+        body: SingleChildScrollView(
+            child: Form(
+                key: _formKey,
+                child: Container(
+                    padding: EdgeInsets.all(20),
+                    child: Center(
+                        child: Column(children: [
+                      Text(widget.instructions == null
+                          ? 'Enter your details to register'
+                          : widget.instructions!),
+                      Visibility(
+                          visible: widget.showName,
+                          child: TextFormField(
+                              controller: _firstNameController,
+                              decoration:
+                                  InputDecoration(labelText: 'First Name'),
+                              keyboardType: TextInputType.name,
+                              validator: (value) {
+                                if (value != null && value.isEmpty)
+                                  return 'Please enter a first name';
+                                return null;
+                              })),
+                      Visibility(
+                          visible: widget.showName,
+                          child: TextFormField(
+                              controller: _lastNameController,
+                              decoration:
+                                  InputDecoration(labelText: 'Last Name'),
+                              keyboardType: TextInputType.name,
+                              validator: (value) {
+                                if (value == null || value.isEmpty)
+                                  return 'Please enter a last name';
+                                return null;
+                              })),
+                      AccountImageUpdate(
+                          _imgString,
+                          _imgType,
+                          (img, imgType) => setState(() {
+                                _imgString = img;
+                                _imgType = imgType;
+                              })),
+                      TextFormField(
+                          controller: _emailController,
+                          decoration: InputDecoration(labelText: 'Email'),
+                          keyboardType: TextInputType.emailAddress,
+                          validator: (value) {
+                            if (value == null || value.isEmpty)
+                              return 'Please enter an email';
+                            if (!EmailValidator.validate(value))
+                              return 'Invalid email';
+                            return null;
+                          }),
+                      Visibility(
+                          visible: widget.showMobileNumber,
+                          child: InternationalPhoneNumberInput(
+                              textFieldController: _mobileNumberController,
+                              initialValue: _countryCode != null
+                                  ? PhoneNumber(isoCode: _countryCode)
+                                  : InitialMobileCountry != null
+                                      ? PhoneNumber(
+                                          isoCode: InitialMobileCountry)
+                                      : null,
+                              onInputChanged: (number) =>
+                                  _dialCode = number.dialCode,
+                              selectorConfig: SelectorConfig(
+                                  selectorType: PhoneInputSelectorType.DIALOG,
+                                  countryComparator: PreferredMobileCountries !=
+                                          null
+                                      ? (a, b) {
+                                          if (PreferredMobileCountries == null)
+                                            return 0;
                                           if (PreferredMobileCountries!
-                                              .contains(b.name)) {
-                                            var bSlot =
+                                              .contains(a.name)) {
+                                            var aSlot =
                                                 PreferredMobileCountries!
-                                                    .indexOf(b.name!);
-                                            if (aSlot < bSlot)
+                                                    .indexOf(a.name!);
+                                            if (PreferredMobileCountries!
+                                                .contains(b.name)) {
+                                              var bSlot =
+                                                  PreferredMobileCountries!
+                                                      .indexOf(b.name!);
+                                              if (aSlot < bSlot)
+                                                return -1;
+                                              else
+                                                return 1;
+                                            } else
                                               return -1;
-                                            else
-                                              return 1;
-                                          } else
-                                            return -1;
+                                          }
+                                          return 0;
                                         }
-                                        return 0;
-                                      }
-                                    : null))),
-                    Visibility(
-                        visible: widget.showAddress,
-                        child: TextFormField(
-                          controller: _addressController,
-                          readOnly: true,
-                          decoration: InputDecoration(
-                              labelText: 'Address',
-                              suffix: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    availablePlaceApi()
-                                        ? IconButton(
-                                            icon: Icon(Icons.search),
-                                            onPressed: searchAddr)
-                                        : SizedBox(),
-                                    IconButton(
-                                        icon: Icon(Icons.edit),
-                                        onPressed: manualAddr),
-                                  ])),
-                        )),
-                    Visibility(
-                        visible: widget.showCurrentPassword,
-                        child: TextFormField(
-                            controller: _currentPasswordController,
-                            obscureText: true,
-                            decoration:
-                                InputDecoration(labelText: 'Current Password'),
-                            validator: (value) {
-                              if (value == null || value.isEmpty)
-                                return 'Please enter your current password';
-                              return null;
-                            })),
-                    Visibility(
-                        visible: widget.showNewPassword,
-                        child: TextFormField(
-                            controller: _newPasswordController,
-                            obscureText: true,
-                            decoration:
-                                InputDecoration(labelText: 'New Password'),
-                            validator: (value) {
-                              if (value == null || value.isEmpty)
-                                return 'Please enter a new password';
-                              return null;
-                            })),
-                    Visibility(
-                        visible: widget.showNewPassword,
-                        child: TextFormField(
-                            controller: _passwordConfirmController,
-                            obscureText: true,
+                                      : null))),
+                      Visibility(
+                          visible: widget.showAddress,
+                          child: TextFormField(
+                            controller: _addressController,
+                            readOnly: true,
                             decoration: InputDecoration(
-                                labelText: 'Password Confirmation'),
-                            validator: (value) {
-                              if (value == null || value.isEmpty)
-                                return 'Please confirm your password';
-                              if (value != _newPasswordController.text)
-                                return 'Password does not match';
-                              return null;
-                            })),
-                    raisedButton(
-                      child: Text("Ok"),
-                      onPressed: () async {
-                        if (_formKey.currentState == null) return;
-                        if (_formKey.currentState!.validate()) {
-                          var accountReg = AccountRegistration(
-                              _firstNameController.text,
-                              _lastNameController.text,
-                              _emailController.text,
-                              '$_dialCode ${_mobileNumberController.text}',
-                              _addressController.text,
-                              _currentPasswordController.text,
-                              _newPasswordController.text,
-                              _imgString,
-                              _imgType);
-                          Navigator.of(context).pop(accountReg);
-                        }
-                      },
-                    ),
-                    raisedButton(
-                      child: Text("Cancel"),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                  ],
-                )))));
+                                labelText: 'Address',
+                                suffix: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      availablePlaceApi()
+                                          ? IconButton(
+                                              icon: Icon(Icons.search),
+                                              onPressed: searchAddr)
+                                          : SizedBox(),
+                                      IconButton(
+                                          icon: Icon(Icons.edit),
+                                          onPressed: manualAddr),
+                                    ])),
+                          )),
+                      Visibility(
+                          visible: widget.showCurrentPassword,
+                          child: TextFormField(
+                              controller: _currentPasswordController,
+                              obscureText: true,
+                              decoration: InputDecoration(
+                                  labelText: 'Current Password'),
+                              validator: (value) {
+                                if (value == null || value.isEmpty)
+                                  return 'Please enter your current password';
+                                return null;
+                              })),
+                      Visibility(
+                          visible: widget.showNewPassword,
+                          child: TextFormField(
+                              controller: _newPasswordController,
+                              obscureText: true,
+                              decoration:
+                                  InputDecoration(labelText: 'New Password'),
+                              validator: (value) {
+                                if (value == null || value.isEmpty)
+                                  return 'Please enter a new password';
+                                return null;
+                              })),
+                      Visibility(
+                          visible: widget.showNewPassword,
+                          child: TextFormField(
+                              controller: _passwordConfirmController,
+                              obscureText: true,
+                              decoration: InputDecoration(
+                                  labelText: 'Password Confirmation'),
+                              validator: (value) {
+                                if (value == null || value.isEmpty)
+                                  return 'Please confirm your password';
+                                if (value != _newPasswordController.text)
+                                  return 'Password does not match';
+                                return null;
+                              })),
+                      raisedButton(
+                        child: Text("Ok"),
+                        onPressed: () async {
+                          if (_formKey.currentState == null) return;
+                          if (_formKey.currentState!.validate()) {
+                            var accountReg = AccountRegistration(
+                                _firstNameController.text,
+                                _lastNameController.text,
+                                _emailController.text,
+                                '$_dialCode ${_mobileNumberController.text}',
+                                _addressController.text,
+                                _currentPasswordController.text,
+                                _newPasswordController.text,
+                                _imgString,
+                                _imgType);
+                            Navigator.of(context).pop(accountReg);
+                          }
+                        },
+                      ),
+                      raisedButton(
+                        child: Text("Cancel"),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ]))))));
   }
 }
 

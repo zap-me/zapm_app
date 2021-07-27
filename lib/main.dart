@@ -74,7 +74,7 @@ class MyApp extends StatelessWidget {
     return GestureDetector(
         onTap: () => dismissKeyboard(context),
         child: MaterialApp(
-          //debugShowCheckedModeBanner: false,
+          debugShowCheckedModeBanner: false,
           title: AppTitle,
           theme: ThemeData(
             brightness: ZapBrightness,
