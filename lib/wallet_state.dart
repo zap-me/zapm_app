@@ -427,66 +427,6 @@ class WalletState {
     return NoWalletAction.RecoverMnemonic;
   }
 
-  Future<bool> _directLoginAccountDialog(BuildContext context) async {
-    assert(AppTokenType == TokenType.PayDB);
-    var res = await showDialog<bool>(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return SimpleDialog(
-            title: const Text("User registration in process"),
-            children: <Widget>[
-              Center(
-                  child: const Text("Complete by confirming your email",
-                      style: TextStyle(fontSize: 10))),
-              SimpleDialogOption(
-                onPressed: () {
-                  Navigator.pop(context, true);
-                },
-                child: const Text("I have confirmed my email (login now)"),
-              ),
-              SimpleDialogOption(
-                onPressed: () {
-                  Navigator.pop(context, false);
-                },
-                child: const Text("I will confirm my email later"),
-              ),
-            ],
-          );
-        });
-    return res != null && res;
-  }
-
-  Future<bool> _waitApiKeyAccountDialog(BuildContext context) async {
-    assert(AppTokenType == TokenType.PayDB);
-    var res = await showDialog<bool>(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return SimpleDialog(
-            title: const Text("Email login request in process"),
-            children: <Widget>[
-              Center(
-                  child: const Text("Complete by confirming your email",
-                      style: TextStyle(fontSize: 10))),
-              SimpleDialogOption(
-                onPressed: () {
-                  Navigator.pop(context, true);
-                },
-                child: const Text("I have confirmed my email (login now)"),
-              ),
-              SimpleDialogOption(
-                onPressed: () {
-                  Navigator.pop(context, false);
-                },
-                child: const Text("Cancel"),
-              ),
-            ],
-          );
-        });
-    return res != null && res;
-  }
-
   Future<NoAccountAction> _noAccountDialog(BuildContext context) async {
     assert(AppTokenType == TokenType.PayDB);
     var server = await paydbServer();
@@ -650,17 +590,20 @@ class WalletState {
     return '$device - $date';
   }
 
-  Future<String?> _paydbLogin(BuildContext context, AccountLogin login) async {
+  Future<String?> _paydbLogin(BuildContext context, AccountLogin login,
+      {bool silent: false}) async {
     var devName = await deviceName();
     var result = await paydbApiKeyCreate(login.email, login.password, devName);
     switch (result.error) {
       case PayDbError.Auth:
-        await alert(context, "Authentication not valid",
-            "The login details you entered are not valid");
+        if (!silent)
+          await alert(context, "Authentication not valid",
+              "The login details you entered are not valid");
         break;
       case PayDbError.Network:
-        await alert(context, "Network error",
-            "A network error occured when trying to login");
+        if (!silent)
+          await alert(context, "Network error",
+              "A network error occured when trying to login");
         break;
       case PayDbError.None:
         // write api key
@@ -674,16 +617,19 @@ class WalletState {
   }
 
   Future<String?> _paydbApiKeyClaim(
-      BuildContext context, AccountRequestApiKey req, String token) async {
+      BuildContext context, AccountRequestApiKey req, String token,
+      {silent: false}) async {
     var result = await paydbApiKeyClaim(token);
     switch (result.error) {
       case PayDbError.Auth:
-        await alert(context, "Authentication not valid",
-            "The login details you entered are not valid");
+        if (!silent)
+          await alert(context, "Authentication not valid",
+              "The login details you entered are not valid");
         break;
       case PayDbError.Network:
-        await alert(context, "Network error",
-            "A network error occured when trying to login");
+        if (!silent)
+          await alert(context, "Network error",
+              "A network error occured when trying to login");
         break;
       case PayDbError.None:
         // write api key
@@ -732,12 +678,20 @@ class WalletState {
                     "A network error occured when trying to register");
                 break;
               case PayDbError.None:
-                if (await _directLoginAccountDialog(context))
+                var cancelled = false;
+                showAlertDialog(
+                    context, 'waiting for you to confirm the email...',
+                    showCancel: true, onCancel: () => cancelled = true);
+                while (accountEmail == null && !cancelled) {
+                  await Future.delayed(Duration(seconds: 5));
                   // save account if login successful
                   accountEmail = await _paydbLogin(
                       context,
                       AccountLogin(
-                          registration.email, registration.newPassword));
+                          registration.email, registration.newPassword),
+                      silent: true);
+                }
+                Navigator.pop(context);
                 break;
             }
           }
@@ -773,12 +727,18 @@ class WalletState {
               break;
             case PayDbError.None:
               assert(result.token != null);
-              while (await _waitApiKeyAccountDialog(context)) {
+              var cancelled = false;
+              showAlertDialog(
+                  context, 'waiting for you to confirm the email...',
+                  showCancel: true, onCancel: () => cancelled = true);
+              while (accountEmail == null && !cancelled) {
+                await Future.delayed(Duration(seconds: 5));
                 // claim api key
-                accountEmail =
-                    await _paydbApiKeyClaim(context, req, result.token!);
-                if (accountEmail != null) break;
+                accountEmail = await _paydbApiKeyClaim(
+                    context, req, result.token!,
+                    silent: true);
               }
+              Navigator.pop(context);
               break;
           }
           break;
