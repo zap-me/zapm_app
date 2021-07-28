@@ -69,11 +69,12 @@ class _SettingsState extends State<SettingsScreen> {
   String? _merchantApisecret;
   String? _merchantApiserver;
   int _versionTaps = 0;
+  bool _showTestnet = false;
   String? _paydbServer;
 
   _SettingsState() {
     _initSettings();
-    _libzapVersion = _getLibZapVersion();
+    if (AppTokenType == TokenType.PayDB) _libzapVersion = _getLibZapVersion();
   }
 
   void _initSettings() async {
@@ -372,6 +373,7 @@ class _SettingsState extends State<SettingsScreen> {
 
   void _versionTap() {
     _versionTaps += 1;
+    if (_versionTaps > 5 && !_showTestnet) setState(() => _showTestnet = true);
     if (_versionTaps > 10) {
       Navigator.push(
         context,
@@ -413,16 +415,20 @@ class _SettingsState extends State<SettingsScreen> {
           ),
           Visibility(
             visible: AppTokenType == TokenType.PayDB,
-            child: ListTile(title: Text("Server: $_paydbServer")),
+            child: ListTile(
+                title: Text("Server"), subtitle: Text("$_paydbServer")),
           ),
-          Container(
-            padding: const EdgeInsets.only(top: 18.0),
-            child: SwitchListTile(
-              value: _testnet,
-              title: Text("Testnet"),
-              onChanged: (value) async {
-                _toggleTestnet();
-              },
+          Visibility(
+            visible: _showTestnet,
+            child: Container(
+              padding: const EdgeInsets.only(top: 18.0),
+              child: SwitchListTile(
+                value: _testnet,
+                title: Text("Testnet"),
+                onChanged: (value) async {
+                  _toggleTestnet();
+                },
+              ),
             ),
           ),
           Visibility(
