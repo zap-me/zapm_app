@@ -9,6 +9,7 @@
 
 build/
 android/.idea
+android/keystore.properties
 native-libraries/
 
 .flutter-plugins
