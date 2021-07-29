@@ -4,7 +4,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:package_info/package_info.dart';
 import 'package:yaml/yaml.dart';
-import 'package:restart_app/restart_app.dart';
+import 'package:flutter_phoenix/flutter_phoenix.dart';
 
 import 'package:zapdart/libzap.dart';
 import 'package:zapdart/utils.dart';
@@ -152,7 +152,7 @@ class _SettingsState extends State<SettingsScreen> {
   void _logout() async {
     if (await askYesNo(context, 'Are you sure you want to logout?')) {
       await Prefs.nukeAll();
-      Restart.restartApp();
+      Phoenix.rebirth(context);
     }
   }
 

@@ -10,6 +10,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:uni_links/uni_links.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:audioplayers/audio_cache.dart';
+import 'package:flutter_phoenix/flutter_phoenix.dart';
 
 import 'package:zapdart/colors.dart';
 import 'package:zapdart/qrwidget.dart';
@@ -50,7 +51,7 @@ void main() {
   // initialize any config functions
   initConfig();
 
-  runApp(MyApp());
+  runApp(Phoenix(child: MyApp()));
 }
 
 /// If the current platform is desktop, override the default platform to
