@@ -373,12 +373,15 @@ class BronzeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          leading: backButton(context),
-          title: Text('${_zapVerb()} Zap', style: TextStyle(color: ZapWhite)),
-          backgroundColor: ZapBlue,
-        ),
+            leading: backButton(context),
+            title: Text('${_zapVerb()} Zap', style: TextStyle(color: ZapWhite)),
+            backgroundColor: ZapBlue,
+            flexibleSpace: ZapBlueGradient != null
+                ? Container(
+                    decoration: BoxDecoration(gradient: ZapBlueGradient))
+                : null),
         body: CustomPaint(
-            painter: CustomCurve(ZapBlue, 120, 200),
+            painter: CustomCurve(ZapBlue, ZapBlueGradient, 120, 200),
             child: Container(
                 width: MediaQuery.of(context).size.width,
                 height: MediaQuery.of(context).size.height,

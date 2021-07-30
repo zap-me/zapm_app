@@ -342,13 +342,16 @@ class CentrapayScreenState extends State<CentrapayScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          leading: backButton(context),
-          title: Text(capFirst('centrapay request'),
-              style: TextStyle(color: ZapWhite)),
-          backgroundColor: ZapYellow,
-        ),
+            leading: backButton(context),
+            title: Text(capFirst('centrapay request'),
+                style: TextStyle(color: ZapWhite)),
+            backgroundColor: ZapYellow,
+            flexibleSpace: ZapYellowGradient != null
+                ? Container(
+                    decoration: BoxDecoration(gradient: ZapYellowGradient))
+                : null),
         body: CustomPaint(
-            painter: CustomCurve(ZapYellow, 110, 170),
+            painter: CustomCurve(ZapYellow, ZapYellowGradient, 110, 170),
             child: Container(
                 width: MediaQuery.of(context).size.width,
                 height: MediaQuery.of(context).size.height,

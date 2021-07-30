@@ -20,13 +20,16 @@ class SendScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          leading: backButton(context),
-          title: Text(capFirst('send $AssetShortNameLower'),
-              style: TextStyle(color: ZapWhite)),
-          backgroundColor: ZapYellow,
-        ),
+            leading: backButton(context),
+            title: Text(capFirst('send $AssetShortNameLower'),
+                style: TextStyle(color: ZapWhite)),
+            backgroundColor: ZapYellow,
+            flexibleSpace: ZapYellowGradient != null
+                ? Container(
+                    decoration: BoxDecoration(gradient: ZapYellowGradient))
+                : null),
         body: CustomPaint(
-            painter: CustomCurve(ZapYellow, 110, 170),
+            painter: CustomCurve(ZapYellow, ZapYellowGradient, 110, 170),
             child: Container(
                 width: MediaQuery.of(context).size.width,
                 height: MediaQuery.of(context).size.height,
@@ -47,13 +50,16 @@ class ReceiveScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          leading: backButton(context),
-          title: Text(capFirst('receive $AssetShortNameLower'),
-              style: TextStyle(color: ZapWhite)),
-          backgroundColor: ZapGreen,
-        ),
+            leading: backButton(context),
+            title: Text(capFirst('receive $AssetShortNameLower'),
+                style: TextStyle(color: ZapWhite)),
+            backgroundColor: ZapGreen,
+            flexibleSpace: ZapGreenGradient != null
+                ? Container(
+                    decoration: BoxDecoration(gradient: ZapGreenGradient))
+                : null),
         body: CustomPaint(
-            painter: CustomCurve(ZapGreen, 150, 250),
+            painter: CustomCurve(ZapGreen, ZapGreenGradient, 150, 250),
             child: Container(
                 width: MediaQuery.of(context).size.width,
                 height: MediaQuery.of(context).size.height,

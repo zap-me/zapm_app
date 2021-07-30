@@ -94,7 +94,9 @@ void initConfig() {
     zapWarning: Colors.yellow,
     zapWarningLight: Colors.yellow[100],
     zapBlue: Colors.pink[200],
+    zapBlueGradient: LinearGradient(colors: [Colors.pink[200]!, Colors.pink[400]!]),
     zapGreen: Colors.blueGrey[300],
+    zapGreenGradient: LinearGradient(colors: [Colors.blueGrey[300]!, Colors.blueGrey[500]!]),
     zapOutgoingFunds: Colors.red,
     zapIncomingFunds: Colors.green,
     zapTextThemer: GoogleFonts.sansitaTextTheme);
