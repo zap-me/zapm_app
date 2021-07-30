@@ -122,14 +122,17 @@ class SendFormState extends State<SendForm> {
                       () => Navigator.pop(context, true),
                       ZapWhite,
                       ZapYellow,
+                      ZapYellowGradient,
                       capFirst(
-                          'yes send ${amountDec.toStringAsFixed(2)} $AssetShortNameLower')),
+                          'yes send ${amountDec.toStringAsFixed(2)} $AssetShortNameLower'),
+                      width: MediaQuery.of(context).size.width / 2,)
                 ),
                 SimpleDialogOption(
                   padding: EdgeInsets.symmetric(horizontal: 16),
                   child: RoundedButton(() => Navigator.pop(context, false),
-                      ZapBlue, ZapWhite, capFirst('cancel'),
-                      borderColor: ZapBlue),
+                      ZapBlue, ZapWhite, null, capFirst('cancel'),
+                      borderColor: ZapBlue,
+                      width: MediaQuery.of(context).size.width / 2,)
                 ),
               ],
             );
@@ -275,14 +278,14 @@ class SendFormState extends State<SendForm> {
                 Padding(
                   padding: const EdgeInsets.only(top: 24.0),
                   child: RoundedButton(send, ZapWhite, ZapYellow,
-                      capFirst('send $AssetShortNameLower'),
-                      minWidth: MediaQuery.of(context).size.width / 2,
+                      ZapYellowGradient, capFirst('send $AssetShortNameLower'),
+                      width: MediaQuery.of(context).size.width / 2,
                       holePunch: true),
                 ),
                 RoundedButton(() => Navigator.pop(context, null), ZapBlue,
-                    ZapWhite, capFirst('cancel'),
+                    ZapWhite, null, capFirst('cancel'),
                     borderColor: ZapBlue,
-                    minWidth: MediaQuery.of(context).size.width / 2),
+                    width: MediaQuery.of(context).size.width / 2),
               ],
             )));
   }

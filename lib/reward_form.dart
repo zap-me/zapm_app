@@ -191,13 +191,14 @@ class RewardFormState extends State<RewardForm> {
           ),
           Padding(
               padding: const EdgeInsets.symmetric(vertical: 16.0),
-              child: RoundedButton(send, ZapWhite, ZapBlue, capFirst('submit'),
+              child: RoundedButton(
+                  send, ZapWhite, ZapBlue, ZapBlueGradient, capFirst('submit'),
                   holePunch: true,
-                  minWidth: MediaQuery.of(context).size.width / 2)),
+                  width: MediaQuery.of(context).size.width / 2)),
           RoundedButton(() => Navigator.pop(context, false), ZapBlue, ZapWhite,
-              capFirst('cancel'),
+              null, capFirst('cancel'),
               borderColor: ZapBlue,
-              minWidth: MediaQuery.of(context).size.width / 2)
+              width: MediaQuery.of(context).size.width / 2)
         ],
       ),
     ));

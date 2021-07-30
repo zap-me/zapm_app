@@ -77,13 +77,16 @@ class SettlementFormState extends State<SettlementForm> {
                       () => Navigator.pop(context, true),
                       ZapWhite,
                       ZapBlue,
-                      'yes send ${amountDec.toStringAsFixed(2)} $AssetShortNameLower'),
+                      ZapBlueGradient,
+                      'yes send ${amountDec.toStringAsFixed(2)} $AssetShortNameLower',
+                      width: MediaQuery.of(context).size.width / 2),
                 ),
                 SimpleDialogOption(
                   padding: EdgeInsets.symmetric(horizontal: 16),
                   child: RoundedButton(() => Navigator.pop(context, false),
-                      ZapBlue, ZapWhite, 'cancel',
-                      borderColor: ZapBlue),
+                      ZapBlue, ZapWhite, null, 'cancel',
+                      borderColor: ZapBlue,
+                      width: MediaQuery.of(context).size.width / 2),
                 )
               ],
             );
@@ -254,13 +257,13 @@ class SettlementFormState extends State<SettlementForm> {
                   Navigator.pop(context, true);
                   flushbarMsg(context, 'settlement created');
                 }
-              }, ZapWhite, ZapBlue, 'submit',
-                  minWidth: MediaQuery.of(context).size.width / 2,
+              }, ZapWhite, ZapBlue, ZapBlueGradient, 'submit',
+                  width: MediaQuery.of(context).size.width / 2,
                   holePunch: true)),
-          RoundedButton(
-              () => Navigator.pop(context, false), ZapBlue, ZapWhite, 'cancel',
+          RoundedButton(() => Navigator.pop(context, false), ZapBlue, ZapWhite,
+              null, 'cancel',
               borderColor: ZapBlue,
-              minWidth: MediaQuery.of(context).size.width / 2),
+              width: MediaQuery.of(context).size.width / 2),
         ],
       ),
     );

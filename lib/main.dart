@@ -385,7 +385,7 @@ class _ZapHomePageState extends State<ZapHomePage>
             ),
             actions: [
               RoundedButton(
-                  () => Navigator.pop(context), ZapBlue, ZapWhite, 'ok',
+                  () => Navigator.pop(context), ZapBlue, ZapWhite, null, 'ok',
                   borderColor: ZapBlue),
             ],
           );
@@ -671,14 +671,14 @@ class _ZapHomePageState extends State<ZapHomePage>
   FabWithIcons _buildFab() {
     var menuItems = [
       MenuItem(MaterialCommunityIcons.chevron_double_down,
-          'RECEIVE $AssetShortNameUpper', ZapWhite, ZapGreen, _receive),
+          'RECEIVE $AssetShortNameUpper', ZapWhite, ZapGreen, ZapGreenGradient, _receive),
     ];
     if (_ws.haveCapabililty(Capability.Spend)) {
       menuItems = [
             MenuItem(MaterialCommunityIcons.chevron_double_up,
-                'SEND $AssetShortNameUpper', ZapWhite, ZapYellow, _send),
+                'SEND $AssetShortNameUpper', ZapWhite, ZapYellow, ZapYellowGradient, _send),
             MenuItem(MaterialCommunityIcons.qrcode_scan, 'SCAN QR CODE',
-                ZapWhite, ZapBlue, _scanQrCode)
+                ZapWhite, ZapBlue, ZapBlueGradient, _scanQrCode)
           ] +
           menuItems;
     }
@@ -686,15 +686,15 @@ class _ZapHomePageState extends State<ZapHomePage>
       menuItems.insert(
           0,
           MenuItem(MaterialCommunityIcons.gift, '$AssetShortNameUpper REWARDS',
-              ZapWhite, ZapBlue, _reward));
+              ZapWhite, ZapBlue, ZapBlueGradient, _reward));
     if (UseBronze && AppTokenType == TokenType.Waves) {
       if (_ws.haveCapabililty(Capability.Spend))
         menuItems.insert(
             0,
             MenuItem(
-                Icons.trending_down, 'SELL ZAP', ZapWhite, ZapBlue, _sellZap));
+                Icons.trending_down, 'SELL ZAP', ZapWhite, ZapBlue, ZapBlueGradient, _sellZap));
       menuItems.insert(0,
-          MenuItem(Icons.trending_up, 'BUY ZAP', ZapWhite, ZapBlue, _buyZap));
+          MenuItem(Icons.trending_up, 'BUY ZAP', ZapWhite, ZapBlue, ZapBlueGradient, _buyZap));
     }
     var fabSize = 56.0;
     var ssc = ScreenSizeClass.calc(context);
@@ -894,25 +894,29 @@ class _ZapHomePageState extends State<ZapHomePage>
                             _copyAddrOrAccount,
                             ZapWhite,
                             ZapBlue,
+                            ZapBlueGradient,
                             capFirst('copy ${_ws.addrOrAccount()}'),
                             icon: Icons.copy,
-                          ),
+                            width: MediaQuery.of(context).size.width / 2,
+                          )
                         ]))
                       : Container(
                           child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
                               RoundedButton(_showQrCode, ZapBlue, ZapWhite,
-                                  'view QR code',
+                                  null, 'view QR code',
                                   icon: MaterialCommunityIcons.qrcode,
-                                  minWidth:
-                                      MediaQuery.of(context).size.width / 2 -
-                                          20),
-                              RoundedButton(_copyAddrOrAccount, ZapWhite,
-                                  ZapBlue, 'copy ${_ws.addrOrAccount()}',
-                                  minWidth:
-                                      MediaQuery.of(context).size.width / 2 -
-                                          20),
+                                  width: MediaQuery.of(context).size.width / 2 -
+                                      20),
+                              RoundedButton(
+                                  _copyAddrOrAccount,
+                                  ZapWhite,
+                                  ZapBlue,
+                                  ZapBlueGradient,
+                                  'copy ${_ws.addrOrAccount()}',
+                                  width: MediaQuery.of(context).size.width / 2 -
+                                      20),
                             ]))
                 ])),
             ZapButton

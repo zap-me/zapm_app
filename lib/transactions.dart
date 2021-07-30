@@ -213,7 +213,7 @@ class _TransactionsState extends State<TransactionsScreen> {
                           Container(
                               padding: const EdgeInsets.only(top: 5.0),
                               child: RoundedButton(() => Navigator.pop(context),
-                                  ZapBlue, ZapWhite, capFirst('close'),
+                                  ZapBlue, ZapWhite, null, capFirst('close'),
                                   borderColor: ZapBlue)),
                         ],
                       ),
@@ -289,6 +289,7 @@ class _TransactionsState extends State<TransactionsScreen> {
                           () => _loadTxs(LoadDirection.Previous),
                           ZapBlue,
                           ZapWhite,
+                          null,
                           capFirst('prev'),
                           icon: Icons.navigate_before,
                           borderColor: ZapBlue))),
@@ -309,7 +310,7 @@ class _TransactionsState extends State<TransactionsScreen> {
                   child: Container(
                       padding: const EdgeInsets.all(5),
                       child: RoundedButton(() => _loadTxs(LoadDirection.Next),
-                          ZapBlue, ZapWhite, capFirst('next'),
+                          ZapBlue, ZapWhite, null, capFirst('next'),
                           icon: Icons.navigate_next, borderColor: ZapBlue))),
             ],
           ),

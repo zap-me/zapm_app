@@ -77,7 +77,7 @@ class WavesSendingFormState extends State<WavesSendingForm> {
             Visibility(
                 visible: !_sending,
                 child: RoundedButton(() => Navigator.pop(context, _tx), ZapBlue,
-                    ZapWhite, capFirst('close'),
+                    ZapWhite, null, capFirst('close'),
                     borderColor: ZapBlue)),
           ],
         ),
@@ -153,7 +153,7 @@ class PayDbSendingFormState extends State<PayDbSendingForm> {
             Visibility(
                 visible: !_sending,
                 child: RoundedButton(() => Navigator.pop(context, _tx), ZapBlue,
-                    ZapWhite, capFirst('close'),
+                    ZapWhite, null, capFirst('close'),
                     borderColor: ZapBlue)),
           ],
         ),

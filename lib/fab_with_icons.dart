@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:zapdart/colors.dart';
 
 class MenuItem {
-  MenuItem(this.icon, this.label, this.color, this.background, this.action);
+  MenuItem(this.icon, this.label, this.color, this.background, this.gradient, this.action);
   final IconData icon;
   final String label;
   final Color? color;
   final Color? background;
+  final Gradient? gradient;
   final Function() action;
 }
 
@@ -72,9 +74,11 @@ class FabWithIconsState extends State<FabWithIcons>
   Widget _buildChild(int index) {
     Color backgroundColor = Theme.of(context).cardColor;
     Color foregroundColor = Theme.of(context).accentColor;
+    Gradient? gradient;
     var mi = widget.menuItems[index];
     if (mi.color != null) foregroundColor = mi.color!;
     if (mi.background != null) backgroundColor = mi.background!;
+    if (mi.gradient != null) gradient = mi.gradient;
     return Container(
       height: 65,
       width: MediaQuery.of(context).size.width,
@@ -90,7 +94,16 @@ class FabWithIconsState extends State<FabWithIcons>
             FloatingActionButton(
               backgroundColor: backgroundColor,
               mini: true,
-              child: Icon(mi.icon, color: foregroundColor),
+              child: Container(
+                width: 40,
+                height: 40,
+                child: Icon(mi.icon, color: foregroundColor),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: backgroundColor,
+                  gradient: gradient
+                ),
+              ),
               onPressed: () => _onTapped(index),
             ),
             Expanded(
@@ -123,7 +136,16 @@ class FabWithIconsState extends State<FabWithIcons>
               _controller.reverse();
             }
           },
-          child: Icon(!widget.expanded ? widget.icon : Icons.remove),
+          child: Container(
+            width: widget.size,
+            height: widget.size,
+            child: Icon(!widget.expanded ? widget.icon : Icons.remove),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: ZapBlue,
+              gradient: ZapBlueGradient
+            ),
+          ),
           elevation: 2.0,
         )));
   }

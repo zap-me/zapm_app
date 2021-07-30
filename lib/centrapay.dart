@@ -384,16 +384,16 @@ class CentrapayScreenState extends State<CentrapayScreen> {
                             !_confirmed &&
                             _payment != null &&
                             _zapTx == null,
-                        child: RoundedButton(
-                            pay, ZapWhite, ZapYellow, capFirst('pay'),
-                            minWidth: MediaQuery.of(context).size.width / 2,
+                        child: RoundedButton(pay, ZapWhite, ZapYellow,
+                            ZapYellowGradient, capFirst('pay'),
+                            width: MediaQuery.of(context).size.width / 2,
                             holePunch: true),
                       ),
                       Visibility(
                         visible: !_loading && !_confirmed && _zapTx != null,
                         child: RoundedButton(payConfirm, ZapWhite, ZapYellow,
-                            capFirst('reconfirm payment'),
-                            minWidth: MediaQuery.of(context).size.width / 2,
+                            ZapYellowGradient, capFirst('reconfirm payment'),
+                            width: MediaQuery.of(context).size.width / 2,
                             holePunch: true),
                       ),
                       Visibility(
@@ -402,9 +402,10 @@ class CentrapayScreenState extends State<CentrapayScreen> {
                               () => Navigator.pop(context, _zapTx),
                               ZapBlue,
                               ZapWhite,
+                              null,
                               capFirst('close'),
                               borderColor: ZapBlue,
-                              minWidth: MediaQuery.of(context).size.width / 2)),
+                              width: MediaQuery.of(context).size.width / 2)),
                     ]))));
   }
 }
