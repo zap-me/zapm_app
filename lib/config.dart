@@ -5,8 +5,6 @@ import 'package:flutter_icons/flutter_icons.dart';
 
 import 'package:zapdart/colors.dart';
 
-import 'custom_icons.dart';
-
 enum TokenType { Waves, PayDB }
 
 // the default testnet value
@@ -22,7 +20,7 @@ const AssetShortNameUpper = 'FRT';
 // the 'zap' icon on the header of the home page
 const AssetHeaderIconPng = 'assets/icon.png';
 // the lightning icon on the home page balance widget
-const AssetBalanceIcon = 'assets/fp_round_invert_green.svg';
+const AssetBalanceIcon = 'assets/frt.svg';
 // whether to disable some repeated/redundant titles
 const DontRepeatTitles = true;
 // enable/disable reward UI/feature
@@ -32,10 +30,10 @@ const UseSettlement = false;
 // enable/disable merchant api (including all references/conversions to NZD)
 const UseMerchantApi = false;
 // enable/disable a webview homepage (null = disabled)
-const String? WebviewURL = 'https://frankieonlinews.wixsite.com/frankietoken';
+const String? WebviewURL = 'https://www.frankietoken.com';
 // enable/disable the centered ZAP button
 const ZapButton = true;
-const ZapButtonIcon = CustomIcons.fp_round_invert;
+const ZapButtonIcon = FlutterIcons.plus_faw5s;
 const TabLabels = false;
 // capitalize UI strings
 const UseCapitalizeAllWords = true;
@@ -60,7 +58,7 @@ const String? NodeUrlMainnet = null;
 const String? NodeUrlTestnet = null;
 
 // PayDB settings
-const String? PayDBServerMainnet = null;
+const String? PayDBServerMainnet = 'https://frankie.zap.me/paydb/';
 const String? PayDBServerTestnet = 'https://mtoken-test.zap.me/paydb/';
 // registration
 const bool RequireMobileNumber = true;
@@ -96,17 +94,18 @@ const String PremioPayPrefix = '$PremioPayScheme://';
 const String PremioStageLinkScheme = 'premiostagefrankie';
 
 void initConfig() {
+  const color = Color.fromARGB(255, 53, 150, 192);
+  const grad = LinearGradient(colors: [Color.fromARGB(255, 65, 234, 193), Color.fromARGB(255, 65, 190, 192), Color.fromARGB(255, 53, 150, 192)]);
   overrideTheme(
       zapWhite: Colors.white,
-      zapYellow: Color.fromARGB(255, 218, 62, 82), //DA3E52 ~Amaranth
-      zapYellowGradient: LinearGradient(colors: [Color.fromARGB(255, 218, 62, 82), Color.fromARGB(255, 230, 70, 90)]),
+      zapYellow: color,
+      zapYellowGradient: grad,
       zapWarning: Colors.yellow,
       zapWarningLight: Colors.yellow[100],
-      zapBlue: Color.fromARGB(255, 20, 89, 29), //14591D ~Lincoln Green
-      //zapBlue: Color.fromARGB(255, 237, 28, 26), //ED1C24 Frankie logo reg
-      zapBlueGradient: LinearGradient(colors: [Color.fromARGB(255, 20, 89, 29), Color.fromARGB(255, 40, 100, 40)]),
-      zapGreen: Color.fromARGB(255, 240, 162, 2), //F0A202 ~Marigold
-      zapGreenGradient: LinearGradient(colors: [Color.fromARGB(255, 240, 162, 2), Color.fromARGB(255, 255, 180, 20)]),
+      zapBlue: color,
+      zapBlueGradient: grad,
+      zapGreen: color,
+      zapGreenGradient: grad,
       zapOutgoingFunds: Colors.red,
       zapIncomingFunds: Colors.green,
       zapTextThemer: GoogleFonts.robotoTextTheme);
