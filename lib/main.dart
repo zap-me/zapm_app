@@ -89,26 +89,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-enum DimensionClass { Small, Med, Large }
-
-class ScreenSizeClass {
-  final DimensionClass width;
-  final DimensionClass height;
-
-  ScreenSizeClass(this.width, this.height);
-
-  static ScreenSizeClass calc(BuildContext context) {
-    var w = DimensionClass.Small;
-    var h = DimensionClass.Small;
-    var size = MediaQuery.of(context).size;
-    if (size.width > 400) w = DimensionClass.Med;
-    if (size.width > 500) w = DimensionClass.Large;
-    if (size.height > 800) h = DimensionClass.Med;
-    if (size.height > 1000) h = DimensionClass.Large;
-    return ScreenSizeClass(w, h);
-  }
-}
-
 class ZapHomePage extends StatefulWidget {
   ZapHomePage(this.title, {Key? key}) : super(key: key);
 
@@ -637,18 +617,17 @@ class _ZapHomePageState extends State<ZapHomePage>
       fontSize = 12;
       iconSize = 32;
     }
-    return Tab(
-        child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(icon, size: iconSize, color: ZapBlue),
-        Text(
+    var ico = Icon(icon, size: iconSize, color: ZapBlue);
+    var txt = Text(
           label,
           style: TextStyle(color: ZapBlue, fontSize: fontSize),
           overflow: TextOverflow.visible,
           maxLines: 1,
-        ),
-      ],
+        );
+    return Tab(
+        child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: TabLabels ? [ico, txt] : [ico],
     ));
   }
 

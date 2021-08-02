@@ -32,6 +32,7 @@ const String? WebviewURL = 'https://zap-me.github.io/zap-spa/index.html';
 // enable/disable the centered ZAP button
 const ZapButton = true;
 const ZapButtonIcon = FlutterIcons.bolt_faw5s;
+const TabLabels = false;
 // capitalize UI strings
 const UseCapitalizeAllWords = false;
 const UseCapitalizeFirstWord = false;

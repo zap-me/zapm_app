@@ -11,6 +11,7 @@ import 'prefs.dart';
 import 'paydb.dart';
 import 'config.dart';
 import 'firebase.dart';
+import 'ui_strings.dart';
 
 class HiddenScreen extends StatefulWidget {
   final bool testnet;
@@ -25,6 +26,11 @@ class HiddenScreen extends StatefulWidget {
 
 class _HiddenState extends State<HiddenScreen> {
   _HiddenState();
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   void _copyFCMToken() {
     Clipboard.setData(ClipboardData(text: widget.fcm?.getToken()))
@@ -85,6 +91,7 @@ class _HiddenState extends State<HiddenScreen> {
 
   @override
   Widget build(BuildContext context) {
+    var ssc = ScreenSizeClass.calc(context);
     return Scaffold(
         appBar: AppBar(
           leading: backButton(context, color: ZapBlack),
@@ -92,7 +99,10 @@ class _HiddenState extends State<HiddenScreen> {
         ),
         body: Center(
           child: Column(
-            children: <Widget>[
+            children: [
+              ListTile(
+                  title: Text("Screen Size"),
+                  subtitle: Text("width: ${ssc.width}, height: ${ssc.height}, pixWidth: ${ssc.pixWidth}, pixHeight: ${ssc.pixHeight}")),
               raisedButton(
                   onPressed: () => Navigator.push(context,
                       MaterialPageRoute(builder: (context) => TestsScreen())),
