@@ -21,6 +21,8 @@ const AssetShortNameUpper = 'ZAP';
 const AssetHeaderIconPng = 'assets/icon.png';
 // the lightning icon on the home page balance widget
 const AssetBalanceIcon = 'assets/icon-bolt.svg';
+// whether to disable some repeated/redundant titles
+const DontRepeatTitles = true;
 // enable/disable reward UI/feature
 const UseReward = true;
 // enable/disable settlement UI/feature

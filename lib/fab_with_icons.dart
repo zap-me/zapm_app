@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:zapdart/colors.dart';
 
 class MenuItem {
-  MenuItem(this.icon, this.label, this.color, this.background, this.gradient, this.action);
+  MenuItem(this.icon, this.label, this.color, this.background, this.gradient,
+      this.action);
   final IconData icon;
   final String label;
   final Color? color;
@@ -99,10 +100,9 @@ class FabWithIconsState extends State<FabWithIcons>
                 height: 40,
                 child: Icon(mi.icon, color: foregroundColor),
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: backgroundColor,
-                  gradient: gradient
-                ),
+                    shape: BoxShape.circle,
+                    color: backgroundColor,
+                    gradient: gradient),
               ),
               onPressed: () => _onTapped(index),
             ),
@@ -141,10 +141,9 @@ class FabWithIconsState extends State<FabWithIcons>
             height: widget.size,
             child: Icon(!widget.expanded ? widget.icon : Icons.remove),
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: ZapBlue,
-              gradient: ZapBlueGradient
-            ),
+                shape: BoxShape.circle,
+                color: ZapBlue,
+                gradient: ZapBlueGradient),
           ),
           elevation: 2.0,
         )));

@@ -102,7 +102,8 @@ class _HiddenState extends State<HiddenScreen> {
             children: [
               ListTile(
                   title: Text("Screen Size"),
-                  subtitle: Text("width: ${ssc.width}, height: ${ssc.height}, pixWidth: ${ssc.pixWidth}, pixHeight: ${ssc.pixHeight}")),
+                  subtitle: Text(
+                      "width: ${ssc.width}, height: ${ssc.height}, pixWidth: ${ssc.pixWidth}, pixHeight: ${ssc.pixHeight}")),
               raisedButton(
                   onPressed: () => Navigator.push(context,
                       MaterialPageRoute(builder: (context) => TestsScreen())),

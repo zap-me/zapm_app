@@ -19,6 +19,7 @@ import 'prefs.dart';
 import 'wallet_state.dart';
 import 'send_receive.dart';
 import 'bronze_order.dart';
+import 'config.dart';
 
 class BronzeRegister {
   final String? accountToken;
@@ -729,7 +730,10 @@ class BronzeFormState extends State<BronzeForm> {
           children: <Widget>[
             Center(
                 heightFactor: 5,
-                child: Text('${widget._zapVerb().toLowerCase()} zap',
+                child: Text(
+                    DontRepeatTitles
+                        ? ''
+                        : '${widget._zapVerb().toLowerCase()} zap',
                     style:
                         TextStyle(color: ZapWhite, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center)),
@@ -836,12 +840,17 @@ class BronzeFormState extends State<BronzeForm> {
                     _accountKycIncomplete
                         ? Padding(
                             padding: const EdgeInsets.only(top: 24.0),
-                            child: raisedButton(
-                                onPressed: _upgradeKyc,
-                                child: _accountKycUpgrade == null
-                                    ? Text('Increase withdrawal limit')
-                                    : Text(
-                                        'Complete KYC (${_accountKycUpgrade?.status})')))
+                            child: RoundedButton(
+                                _upgradeKyc,
+                                ZapBlue,
+                                ZapWhite,
+                                null,
+                                _accountKycUpgrade == null
+                                    ? 'Increase withdrawal limit'
+                                    : 'Complete KYC (${_accountKycUpgrade?.status})',
+                                borderColor: ZapBlue,
+                                width:
+                                    MediaQuery.of(context).size.width * 2 / 3))
                         : SizedBox(),
                   ])
                 : SizedBox(),

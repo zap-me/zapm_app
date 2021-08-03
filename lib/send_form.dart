@@ -117,23 +117,27 @@ class SendFormState extends State<SendForm> {
               title: Text(capFirst('confirm send')),
               children: <Widget>[
                 SimpleDialogOption(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: RoundedButton(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: RoundedButton(
                       () => Navigator.pop(context, true),
                       ZapWhite,
                       ZapYellow,
                       ZapYellowGradient,
                       capFirst(
                           'yes send ${amountDec.toStringAsFixed(2)} $AssetShortNameLower'),
-                      width: MediaQuery.of(context).size.width / 2,)
-                ),
+                      width: MediaQuery.of(context).size.width / 2,
+                    )),
                 SimpleDialogOption(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: RoundedButton(() => Navigator.pop(context, false),
-                      ZapBlue, ZapWhite, null, capFirst('cancel'),
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: RoundedButton(
+                      () => Navigator.pop(context, false),
+                      ZapBlue,
+                      ZapWhite,
+                      null,
+                      capFirst('cancel'),
                       borderColor: ZapBlue,
-                      width: MediaQuery.of(context).size.width / 2,)
-                ),
+                      width: MediaQuery.of(context).size.width / 2,
+                    )),
               ],
             );
           });
@@ -196,7 +200,10 @@ class SendFormState extends State<SendForm> {
               children: [
                 Center(
                     heightFactor: 3,
-                    child: Text(capFirst('send $AssetShortNameLower\n  '),
+                    child: Text(
+                        DontRepeatTitles
+                            ? '\n'
+                            : capFirst('send $AssetShortNameLower\n  '),
                         style: TextStyle(
                             color: ZapWhite, fontWeight: FontWeight.bold),
                         textAlign: TextAlign.center)),

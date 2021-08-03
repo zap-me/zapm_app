@@ -619,11 +619,11 @@ class _ZapHomePageState extends State<ZapHomePage>
     }
     var ico = Icon(icon, size: iconSize, color: ZapBlue);
     var txt = Text(
-          label,
-          style: TextStyle(color: ZapBlue, fontSize: fontSize),
-          overflow: TextOverflow.visible,
-          maxLines: 1,
-        );
+      label,
+      style: TextStyle(color: ZapBlue, fontSize: fontSize),
+      overflow: TextOverflow.visible,
+      maxLines: 1,
+    );
     return Tab(
         child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -649,13 +649,23 @@ class _ZapHomePageState extends State<ZapHomePage>
 
   FabWithIcons _buildFab() {
     var menuItems = [
-      MenuItem(MaterialCommunityIcons.chevron_double_down,
-          'RECEIVE $AssetShortNameUpper', ZapWhite, ZapGreen, ZapGreenGradient, _receive),
+      MenuItem(
+          MaterialCommunityIcons.chevron_double_down,
+          'RECEIVE $AssetShortNameUpper',
+          ZapWhite,
+          ZapGreen,
+          ZapGreenGradient,
+          _receive),
     ];
     if (_ws.haveCapabililty(Capability.Spend)) {
       menuItems = [
-            MenuItem(MaterialCommunityIcons.chevron_double_up,
-                'SEND $AssetShortNameUpper', ZapWhite, ZapYellow, ZapYellowGradient, _send),
+            MenuItem(
+                MaterialCommunityIcons.chevron_double_up,
+                'SEND $AssetShortNameUpper',
+                ZapWhite,
+                ZapYellow,
+                ZapYellowGradient,
+                _send),
             MenuItem(MaterialCommunityIcons.qrcode_scan, 'SCAN QR CODE',
                 ZapWhite, ZapBlue, ZapBlueGradient, _scanQrCode)
           ] +
@@ -670,10 +680,12 @@ class _ZapHomePageState extends State<ZapHomePage>
       if (_ws.haveCapabililty(Capability.Spend))
         menuItems.insert(
             0,
-            MenuItem(
-                Icons.trending_down, 'SELL ZAP', ZapWhite, ZapBlue, ZapBlueGradient, _sellZap));
-      menuItems.insert(0,
-          MenuItem(Icons.trending_up, 'BUY ZAP', ZapWhite, ZapBlue, ZapBlueGradient, _buyZap));
+            MenuItem(Icons.trending_down, 'SELL ZAP', ZapWhite, ZapBlue,
+                ZapBlueGradient, _sellZap));
+      menuItems.insert(
+          0,
+          MenuItem(Icons.trending_up, 'BUY ZAP', ZapWhite, ZapBlue,
+              ZapBlueGradient, _buyZap));
     }
     var fabSize = 56.0;
     var ssc = ScreenSizeClass.calc(context);
