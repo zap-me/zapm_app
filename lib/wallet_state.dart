@@ -237,7 +237,9 @@ class WalletState {
   bool _testnet = true;
   WavesWallet _wallet = WavesWallet.empty();
   PayDbAccount _account = PayDbAccount.empty();
-  Decimal _fee = Decimal.parse("0.01");
+  Decimal _fee = AppTokenType == TokenType.PayDB
+      ? Decimal.fromInt(0)
+      : Decimal.parse("0.01");
   Decimal _balance = Decimal.fromInt(-1);
   String _balanceText = "...";
   List<String> _alerts = <String>[];
