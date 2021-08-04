@@ -74,7 +74,7 @@ class _SettingsState extends State<SettingsScreen> {
 
   _SettingsState() {
     _initSettings();
-    if (AppTokenType == TokenType.PayDB) _libzapVersion = _getLibZapVersion();
+    if (AppTokenType == TokenType.Waves) _libzapVersion = _getLibZapVersion();
   }
 
   void _initSettings() async {
