@@ -344,7 +344,7 @@ Future<UserInfoResult> paydbUserInfo({String? email}) async {
   var apikey = await Prefs.paydbApiKeyGet();
   var apisecret = await Prefs.paydbApiSecretGet();
   checkApiKey(apikey, apisecret);
-  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
+  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce, "email": email});
   var sig = createHmacSig(apisecret!, body);
   var response =
@@ -376,7 +376,7 @@ Future<PayDbError> paydbUserResetPassword() async {
   var apikey = await Prefs.paydbApiKeyGet();
   var apisecret = await Prefs.paydbApiSecretGet();
   checkApiKey(apikey, apisecret);
-  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
+  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce});
   var sig = createHmacSig(apisecret!, body);
   var response =
@@ -396,7 +396,7 @@ Future<PayDbError> paydbUserUpdateEmail(String email) async {
   var apikey = await Prefs.paydbApiKeyGet();
   var apisecret = await Prefs.paydbApiSecretGet();
   checkApiKey(apikey, apisecret);
-  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
+  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch;
   var body = jsonEncode({"api_key": apikey, "nonce": nonce, "email": email});
   var sig = createHmacSig(apisecret!, body);
   var response =
@@ -417,7 +417,7 @@ Future<PayDbError> paydbUserUpdatePassword(
   var apikey = await Prefs.paydbApiKeyGet();
   var apisecret = await Prefs.paydbApiSecretGet();
   checkApiKey(apikey, apisecret);
-  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
+  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch;
   var body = jsonEncode({
     "api_key": apikey,
     "nonce": nonce,
@@ -443,7 +443,7 @@ Future<PayDbError> paydbUserUpdatePhoto(
   var apikey = await Prefs.paydbApiKeyGet();
   var apisecret = await Prefs.paydbApiSecretGet();
   checkApiKey(apikey, apisecret);
-  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
+  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch;
   var body = jsonEncode({
     "api_key": apikey,
     "nonce": nonce,
@@ -473,7 +473,7 @@ Future<PayDbUserTxsResult> paydbUserTransactions(int offset, int limit) async {
   var apikey = await Prefs.paydbApiKeyGet();
   var apisecret = await Prefs.paydbApiSecretGet();
   checkApiKey(apikey, apisecret);
-  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
+  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch;
   var body = jsonEncode(
       {"api_key": apikey, "nonce": nonce, "offset": offset, "limit": limit});
   var sig = createHmacSig(apisecret!, body);
@@ -508,7 +508,7 @@ Future<PayDbTxResult> paydbTransactionCreate(
   var apikey = await Prefs.paydbApiKeyGet();
   var apisecret = await Prefs.paydbApiSecretGet();
   checkApiKey(apikey, apisecret);
-  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
+  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch;
   var body = jsonEncode({
     "api_key": apikey,
     "nonce": nonce,
@@ -541,7 +541,7 @@ Future<PayDbRewardCategoriesResult> paydbRewardCategories() async {
   var apikey = await Prefs.paydbApiKeyGet();
   var apisecret = await Prefs.paydbApiSecretGet();
   checkApiKey(apikey, apisecret);
-  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
+  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch;
   var body = jsonEncode({
     "api_key": apikey,
     "nonce": nonce,
@@ -570,7 +570,7 @@ Future<PayDbError> paydbRewardCreate(String reason, String category,
   var apikey = await Prefs.paydbApiKeyGet();
   var apisecret = await Prefs.paydbApiSecretGet();
   checkApiKey(apikey, apisecret);
-  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch / 1000;
+  var nonce = DateTime.now().toUtc().millisecondsSinceEpoch;
   var body = jsonEncode({
     "api_key": apikey,
     "nonce": nonce,
