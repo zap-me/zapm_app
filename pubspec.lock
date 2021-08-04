@@ -7,7 +7,7 @@ packages:
       name: another_flushbar
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.10.17"
+    version: "1.10.24"
   archive:
     dependency: transitive
     description:
@@ -1063,8 +1063,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "3a74b0107ca4cdd4d4aea921de740dce13c14b2c"
-      resolved-ref: "3a74b0107ca4cdd4d4aea921de740dce13c14b2c"
+      ref: f70aa40d848f580555e7e9ae38cc2850981f2b0f
+      resolved-ref: f70aa40d848f580555e7e9ae38cc2850981f2b0f
       url: "https://github.com/zap-me/zapdart.git"
     source: git
     version: "0.0.1"
