@@ -114,7 +114,7 @@ class LocationIqApiProvider implements PlaceApi {
   final client = Client();
   final apiKey =
       Platform.isAndroid ? LocationIqApiKeyAndroid : LocationIqApiKeyIOS;
-  dynamic? lastResult;
+  dynamic lastResult;
 
   Future<List<Suggestion>> fetchSuggestions(String input, String lang) async {
     final request = Uri.parse(

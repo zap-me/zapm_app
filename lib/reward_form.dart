@@ -165,7 +165,8 @@ class RewardFormState extends State<RewardForm> {
                 return 'Please enter a value';
               }
               final dv = Decimal.parse(value);
-              if (dv > widget._max - widget._fee) {
+              if (AppTokenType == TokenType.Waves &&
+                  dv > widget._max - widget._fee) {
                 return 'Max available to send is ${widget._max - widget._fee}';
               }
               if (dv <= Decimal.fromInt(0)) {
