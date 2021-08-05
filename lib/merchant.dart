@@ -1,17 +1,12 @@
 import 'dart:math';
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import "package:hex/hex.dart";
 import 'package:decimal/decimal.dart';
 import 'package:socket_io_client/socket_io_client.dart';
-import 'package:flutter_icons/flutter_icons.dart';
-import 'package:intl/intl.dart';
 
 import 'package:zapdart/utils.dart';
-import 'package:zapdart/colors.dart';
 
 import 'hmac.dart';
-import 'config.dart';
 import 'prefs.dart';
 
 class ClaimCode {
@@ -445,59 +440,4 @@ String toNZDAmount(Decimal amount, Rates rates) {
       (Decimal.fromInt(1) + rates.salesTax);
   var amountNZD = amount - fee;
   return "${amountNZD.toStringAsFixed(2)} NZD";
-}
-
-class ListTx extends StatelessWidget {
-  ListTx(this.onPressed, this.date, this.txid, this.amount, this.merchantRates,
-      this.outgoing,
-      {this.last = false})
-      : super();
-
-  final VoidCallback onPressed;
-  final DateTime date;
-  final String txid;
-  final Decimal amount;
-  final Rates? merchantRates;
-  final bool outgoing;
-  final bool last;
-
-  @override
-  Widget build(BuildContext context) {
-    var color = outgoing ? ZapOutgoingFunds : ZapIncomingFunds;
-    var tsLeft = TextStyle(fontSize: 12, color: ZapBlackLight);
-    var tsRight = TextStyle(fontSize: 12, color: color);
-    var amountText = '${amount.toStringAsFixed(2)} $AssetShortNameUpper';
-    Widget amountWidget = Text(amountText, style: tsRight);
-    if (merchantRates != null) {
-      var amountNZD = Text(toNZDAmount(amount, merchantRates!), style: tsRight);
-      amountWidget = Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[amountWidget, amountNZD]);
-    }
-    var icon = outgoing
-        ? MaterialCommunityIcons.chevron_double_up
-        : MaterialCommunityIcons.chevron_double_down;
-    return Column(children: <Widget>[
-      Divider(),
-      ListTile(
-          onTap: onPressed,
-          dense: true,
-          contentPadding: EdgeInsets.symmetric(horizontal: 8),
-          leading: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Text(DateFormat('d MMM').format(date).toUpperCase(),
-                    style: tsLeft),
-                Text(DateFormat('yyyy').format(date), style: tsLeft),
-              ]),
-          title: Text(txid),
-          trailing: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
-            Text(outgoing ? '- ' : '+ ', style: tsRight),
-            amountWidget,
-            Icon(icon, color: color, size: 14)
-          ])),
-      Visibility(visible: last, child: Divider())
-    ]);
-  }
 }

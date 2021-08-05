@@ -462,8 +462,12 @@ Future<PayDbError> paydbUserUpdatePhoto(
 }
 
 PayDbTx parseTx(dynamic jsn) {
-  return PayDbTx(jsn["token"], jsn["action"], jsn["timestamp"], jsn["sender"],
-      jsn["recipient"], jsn["amount"], jsn["attachment"]);
+  var timestamp = 0;
+  if (jsn["timestamp"] != null) timestamp = jsn["timestamp"];
+  var amount = 0;
+  if (jsn["amount"] != null) amount = jsn["amount"];
+  return PayDbTx(jsn["token"], jsn["action"], timestamp, jsn["sender"],
+      jsn["recipient"], amount, jsn["attachment"]);
 }
 
 Future<PayDbUserTxsResult> paydbUserTransactions(int offset, int limit) async {

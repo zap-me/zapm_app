@@ -871,6 +871,7 @@ class WalletState {
             if (yes) {
               await Prefs.paydbApiKeySet(null);
               await Prefs.paydbApiKeySet(null);
+              await txDownloader.delTxs();
             }
             return InitTokenDetailsResult.Auth;
           case PayDbError.Network:

@@ -121,8 +121,10 @@ class RewardFormState extends State<RewardForm> {
             if (result != PayDbError.None)
               flushbarMsg(context, 'reward failed',
                   category: MessageCategory.Warning);
-            else
-              alert(context, 'Success', 'Reward successfully sent');
+            else {
+              await alert(context, 'Success', 'Reward successfully sent');
+              Navigator.pop(context);
+            }
         }
       }
     } else
