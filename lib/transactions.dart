@@ -132,7 +132,7 @@ class _TransactionsState extends State<TransactionsScreen> {
     super.initState();
   }
 
-  void _loadTxs(LoadDirection dir) async {
+  Future<void> _loadTxs(LoadDirection dir) async {
     var newOffset = _offset;
     if (dir == LoadDirection.Next) {
       newOffset += _displayCount;
@@ -215,6 +215,10 @@ class _TransactionsState extends State<TransactionsScreen> {
   void _copyText(String text) {
     Clipboard.setData(ClipboardData(text: text));
     flushbarMsg(context, 'copied "$text" to clipboard');
+  }
+
+  Future<void> _refresh() async {
+    await _loadTxs(LoadDirection.Initial);
   }
 
   Widget _buildTxList(BuildContext context, int index) {
@@ -364,11 +368,13 @@ class _TransactionsState extends State<TransactionsScreen> {
           Visibility(
               visible: !_loading,
               child: Expanded(
-                  child: ListView.builder(
-                itemCount: _buildTxListMax(),
-                itemBuilder: (BuildContext context, int index) =>
-                    _buildTxList(context, index),
-              ))),
+                  child: RefreshIndicator(
+                      onRefresh: _refresh,
+                      child: ListView.builder(
+                        itemCount: _buildTxListMax(),
+                        itemBuilder: (BuildContext context, int index) =>
+                            _buildTxList(context, index),
+                      )))),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[

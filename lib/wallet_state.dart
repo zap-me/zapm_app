@@ -458,7 +458,7 @@ class WalletState {
                 onPressed: () {
                   Navigator.pop(context, NoAccountAction.RequestApiKey);
                 },
-                child: const Text("Login using email link"),
+                child: const Text("Login using email link (forgot password)"),
               ),
             ],
           );
