@@ -136,7 +136,7 @@ class TxDownloader {
       switch (AppTokenType) {
         case TokenType.Waves:
           var deviceName = await Prefs.deviceNameGet();
-          var result = await LibZap.addressTransactions(
+          var result = await LibZap().addressTransactions(
               _ws.addrOrAccountValue(), count, _lastTxId);
           success = result.success;
           txs = _wavesTxsConvert(deviceName, result);
@@ -169,7 +169,7 @@ class TxDownloader {
       switch (AppTokenType) {
         case TokenType.Waves:
           var deviceName = await Prefs.deviceNameGet();
-          var result = await LibZap.addressTransactions(
+          var result = await LibZap().addressTransactions(
               _ws.addrOrAccountValue(), count, lastTxid);
           success = result.success;
           txs = _wavesTxsConvert(deviceName, result);
@@ -769,11 +769,11 @@ class WalletState {
     switch (AppTokenType) {
       case TokenType.Waves:
         // get fee
-        //var feeResult = await LibZap.transactionFee();
+        //var feeResult = await LibZap().transactionFee();
         //if (feeResult.success)
         //  _fee = Decimal.fromInt(feeResult.value) / Decimal.fromInt(100);
         // get balance
-        var balanceResult = await LibZap.addressBalance(_wallet.address);
+        var balanceResult = await LibZap().addressBalance(_wallet.address);
         if (balanceResult.success) {
           _balance =
               Decimal.fromInt(balanceResult.value) / Decimal.fromInt(100);

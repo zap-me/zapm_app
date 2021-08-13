@@ -919,6 +919,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.1.0"
+  universal_platform:
+    dependency: transitive
+    description:
+      name: universal_platform
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.0.0+1"
   url_launcher:
     dependency: "direct main"
     description:
@@ -1063,8 +1070,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "15705cdf8cc25af65e1abcf54092ab019aeddefc"
-      resolved-ref: "15705cdf8cc25af65e1abcf54092ab019aeddefc"
+      ref: c6a82befd4e54ca725d2e1b565b3f07745493505
+      resolved-ref: c6a82befd4e54ca725d2e1b565b3f07745493505
       url: "https://github.com/zap-me/zapdart.git"
     source: git
     version: "0.0.1"
