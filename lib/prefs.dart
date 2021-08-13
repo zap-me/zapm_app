@@ -1,9 +1,7 @@
-import 'dart:io';
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:ini/ini.dart';
 
 import 'package:zapdart/libzap.dart';
+import 'package:zapdart/prefhelper.dart';
 
 import 'config.dart';
 import 'paydb.dart';
@@ -78,86 +76,6 @@ class GenTx {
         json['amount'] as int,
         json['fee'] as int,
         json['validForWallet'] as bool);
-  }
-}
-
-class PrefHelper {
-  static final _section = "main";
-
-  PrefHelper();
-
-  static Future<Config> fromFile() async {
-    var config = Config();
-    var f = File("zap.ini");
-    if (await f.exists()) {
-      var data = await File("zap.ini").readAsLines();
-      config = Config.fromStrings(data);
-    }
-    if (!config.hasSection(_section)) config.addSection(_section);
-    return config;
-  }
-
-  Future<void> toFile(Config config) async {
-    await File("zap.ini").writeAsString(config.toString());
-  }
-
-  Future<void> setBool(String key, bool value) async {
-    if (Platform.isAndroid || Platform.isIOS) {
-      final prefs = await SharedPreferences.getInstance();
-      prefs.setBool(key, value);
-    } else {
-      var config = await fromFile();
-      config.set(_section, key, value.toString());
-      await toFile(config);
-    }
-  }
-
-  Future<bool> getBool(String key, bool defaultValue) async {
-    if (Platform.isAndroid || Platform.isIOS) {
-      final prefs = await SharedPreferences.getInstance();
-      return prefs.getBool(key) ?? defaultValue;
-    } else {
-      var config = await fromFile();
-      var value = config.get(_section, key) ?? defaultValue.toString();
-      return value.toLowerCase() == 'true';
-    }
-  }
-
-  Future<void> setString(String key, String? value) async {
-    if (Platform.isAndroid || Platform.isIOS) {
-      final prefs = await SharedPreferences.getInstance();
-      if (value == null)
-        prefs.remove(key);
-      else
-        prefs.setString(key, value);
-    } else {
-      var config = await fromFile();
-      if (value == null)
-        config.removeOption(_section, key);
-      else
-        config.set(_section, key, value);
-      await toFile(config);
-    }
-  }
-
-  Future<String?> getString(String key, String? defaultValue) async {
-    if (Platform.isAndroid || Platform.isIOS) {
-      final prefs = await SharedPreferences.getInstance();
-      return prefs.getString(key) ?? defaultValue;
-    } else {
-      var config = await fromFile();
-      return config.get(_section, key) ?? defaultValue;
-    }
-  }
-
-  Future<bool> nukeAll() async {
-    if (Platform.isAndroid || Platform.isIOS) {
-      final prefs = await SharedPreferences.getInstance();
-      return prefs.clear();
-    } else {
-      var config = await fromFile();
-      return config.removeSection(_section);
-    }
   }
 }
 

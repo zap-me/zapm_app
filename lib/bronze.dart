@@ -13,8 +13,8 @@ import 'package:zapdart/widgets.dart';
 import 'package:zapdart/colors.dart';
 import 'package:zapdart/utils.dart';
 import 'package:zapdart/libzap.dart';
+import 'package:zapdart/hmac.dart';
 
-import 'hmac.dart';
 import 'prefs.dart';
 import 'wallet_state.dart';
 import 'send_receive.dart';

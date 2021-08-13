@@ -5,8 +5,8 @@ import 'package:decimal/decimal.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 
 import 'package:zapdart/utils.dart';
+import 'package:zapdart/hmac.dart';
 
-import 'hmac.dart';
 import 'prefs.dart';
 
 class ClaimCode {

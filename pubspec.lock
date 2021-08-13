@@ -231,42 +231,42 @@ packages:
       name: firebase_core
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.0.3"
+    version: "1.4.0"
   firebase_core_platform_interface:
     dependency: transitive
     description:
       name: firebase_core_platform_interface
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "4.0.0"
+    version: "4.0.1"
   firebase_core_web:
     dependency: transitive
     description:
       name: firebase_core_web
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.0.2"
+    version: "1.1.0"
   firebase_messaging:
     dependency: "direct main"
     description:
       name: firebase_messaging
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "9.1.1"
+    version: "10.0.4"
   firebase_messaging_platform_interface:
     dependency: transitive
     description:
       name: firebase_messaging_platform_interface
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.1.1"
+    version: "3.0.3"
   firebase_messaging_web:
     dependency: transitive
     description:
       name: firebase_messaging_web
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.0.4"
+    version: "2.0.3"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -431,13 +431,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.1"
-  ini:
-    dependency: "direct main"
-    description:
-      name: ini
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "2.1.0-beta"
   intl:
     dependency: "direct main"
     description:
@@ -754,26 +747,26 @@ packages:
     source: hosted
     version: "2.0.3"
   shared_preferences:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: shared_preferences
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.0.5"
+    version: "2.0.6"
   shared_preferences_linux:
     dependency: transitive
     description:
       name: shared_preferences_linux
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.0.0"
+    version: "2.0.2"
   shared_preferences_macos:
     dependency: transitive
     description:
       name: shared_preferences_macos
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.0.0"
+    version: "2.0.2"
   shared_preferences_platform_interface:
     dependency: transitive
     description:
@@ -787,14 +780,14 @@ packages:
       name: shared_preferences_web
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.0.0"
+    version: "2.0.1"
   shared_preferences_windows:
     dependency: transitive
     description:
       name: shared_preferences_windows
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.0.0"
+    version: "2.0.2"
   simple_observable:
     dependency: transitive
     description:
@@ -1070,8 +1063,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: c6a82befd4e54ca725d2e1b565b3f07745493505
-      resolved-ref: c6a82befd4e54ca725d2e1b565b3f07745493505
+      ref: "18a0b0a45a7fc96ae9fea094dd202009ffe7edfb"
+      resolved-ref: "18a0b0a45a7fc96ae9fea094dd202009ffe7edfb"
       url: "https://github.com/zap-me/zapdart.git"
     source: git
     version: "0.0.1"

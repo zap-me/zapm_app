@@ -36,10 +36,7 @@ import 'bronze.dart';
 import 'webview.dart';
 import 'ui_strings.dart';
 
-void main() {
-  // See https://github.com/flutter/flutter/wiki/Desktop-shells#target-platform-override
-  _setTargetPlatformForDesktop();
-
+void main() async {
   // print flutter errors to console
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.dumpErrorToConsole(details);
@@ -52,21 +49,6 @@ void main() {
   initConfig();
 
   runApp(Phoenix(child: MyApp()));
-}
-
-/// If the current platform is desktop, override the default platform to
-/// a supported platform (iOS for macOS, Android for Linux and Windows).
-/// Otherwise, do nothing.
-void _setTargetPlatformForDesktop() {
-  TargetPlatform? targetPlatform;
-  if (Platform.isMacOS) {
-    targetPlatform = TargetPlatform.iOS;
-  } else if (Platform.isLinux || Platform.isWindows) {
-    targetPlatform = TargetPlatform.android;
-  }
-  if (targetPlatform != null) {
-    debugDefaultTargetPlatformOverride = targetPlatform;
-  }
 }
 
 class MyApp extends StatelessWidget {

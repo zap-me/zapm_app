@@ -8,10 +8,11 @@ import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import 'hmac.dart';
+import 'package:zapdart/utils.dart';
+import 'package:zapdart/hmac.dart';
+
 import 'config.dart';
 import 'prefs.dart';
-import 'package:zapdart/utils.dart';
 
 Future<String?> _server() async {
   var testnet = await Prefs.testnetGet();
