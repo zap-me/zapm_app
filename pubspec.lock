@@ -99,6 +99,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.15.0"
+  cross_file:
+    dependency: transitive
+    description:
+      name: cross_file
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.3.1+4"
   crypto:
     dependency: "direct main"
     description:
@@ -121,7 +128,7 @@ packages:
     source: hosted
     version: "1.0.2"
   debounce_throttle:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: debounce_throttle
       url: "https://pub.dartlang.org"
@@ -177,19 +184,19 @@ packages:
     source: hosted
     version: "2.0.3"
   extended_image:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: extended_image
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "4.0.1"
+    version: "4.1.0"
   extended_image_library:
     dependency: transitive
     description:
       name: extended_image_library
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "3.0.0"
+    version: "3.1.0"
   extended_masked_text:
     dependency: "direct main"
     description:
@@ -404,33 +411,33 @@ packages:
     source: hosted
     version: "4.0.0"
   image:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: image
       url: "https://pub.dartlang.org"
     source: hosted
     version: "3.0.2"
   image_picker:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: image_picker
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.7.4"
+    version: "0.8.3+2"
   image_picker_for_web:
     dependency: transitive
     description:
       name: image_picker_for_web
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.0.0"
+    version: "2.1.2"
   image_picker_platform_interface:
     dependency: transitive
     description:
       name: image_picker_platform_interface
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.0.1"
+    version: "2.2.0"
   intl:
     dependency: "direct main"
     description:
@@ -439,7 +446,7 @@ packages:
     source: hosted
     version: "0.17.0"
   intl_phone_number_input:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: intl_phone_number_input
       url: "https://pub.dartlang.org"
@@ -1063,8 +1070,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "18a0b0a45a7fc96ae9fea094dd202009ffe7edfb"
-      resolved-ref: "18a0b0a45a7fc96ae9fea094dd202009ffe7edfb"
+      ref: "1e9830c3bfaa47cad2b61787bc41333480000f64"
+      resolved-ref: "1e9830c3bfaa47cad2b61787bc41333480000f64"
       url: "https://github.com/zap-me/zapdart.git"
     source: git
     version: "0.0.1"

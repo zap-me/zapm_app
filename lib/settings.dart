@@ -11,6 +11,7 @@ import 'package:zapdart/utils.dart';
 import 'package:zapdart/pinentry.dart';
 import 'package:zapdart/widgets.dart';
 import 'package:zapdart/bip39widget.dart';
+import 'package:zapdart/account_forms.dart';
 
 import 'config.dart';
 import 'merchant.dart';
@@ -21,7 +22,6 @@ import 'paydb.dart';
 import 'qrscan.dart';
 import 'bronze.dart';
 import 'wallet_state.dart';
-import 'account_forms.dart';
 
 class AppVersion {
   final String version;

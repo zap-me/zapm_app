@@ -8,10 +8,10 @@ import 'package:socket_io_client/socket_io_client.dart';
 import 'package:zapdart/libzap.dart';
 import 'package:zapdart/widgets.dart';
 import 'package:zapdart/utils.dart';
+import 'package:zapdart/account_forms.dart';
 
 import 'recovery_form.dart';
 import 'new_mnemonic_form.dart';
-import 'account_forms.dart';
 import 'config.dart';
 import 'paydb.dart';
 import 'prefs.dart';
@@ -136,8 +136,8 @@ class TxDownloader {
       switch (AppTokenType) {
         case TokenType.Waves:
           var deviceName = await Prefs.deviceNameGet();
-          var result = await LibZap().addressTransactions(
-              _ws.addrOrAccountValue(), count, _lastTxId);
+          var result = await LibZap()
+              .addressTransactions(_ws.addrOrAccountValue(), count, _lastTxId);
           success = result.success;
           txs = _wavesTxsConvert(deviceName, result);
           break;
@@ -169,8 +169,8 @@ class TxDownloader {
       switch (AppTokenType) {
         case TokenType.Waves:
           var deviceName = await Prefs.deviceNameGet();
-          var result = await LibZap().addressTransactions(
-              _ws.addrOrAccountValue(), count, lastTxid);
+          var result = await LibZap()
+              .addressTransactions(_ws.addrOrAccountValue(), count, lastTxid);
           success = result.success;
           txs = _wavesTxsConvert(deviceName, result);
           break;
@@ -666,7 +666,11 @@ class WalletState {
               MaterialPageRoute(
                   builder: (context) => AccountRegisterForm(registration,
                       showMobileNumber: RequireMobileNumber,
-                      showAddress: RequireAddress)),
+                      initialMobileCountry: InitialMobileCountry,
+                      preferredMobileCountries: PreferredMobileCountries,
+                      showAddress: RequireAddress,
+                      googlePlaceApiKey: googlePlaceApiKey(),
+                      locationIqApiKey: locationIqApiKey())),
             );
             if (registration == null) break;
             var result = await paydbUserRegister(registration);

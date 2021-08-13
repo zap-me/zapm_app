@@ -1,3 +1,4 @@
+import 'package:universal_platform/universal_platform.dart';
 // uncomment if you need to override the app theme
 //import 'package:flutter/material.dart';
 //import 'package:google_fonts/google_fonts.dart';
@@ -67,8 +68,22 @@ const List<String>? PreferredMobileCountries = null;
 const bool RequireAddress = false;
 const String? GooglePlaceApiKeyIOS = null;
 const String? GooglePlaceApiKeyAndroid = null;
+const String? GooglePlaceApiKeyWeb = null;
 const String? LocationIqApiKeyIOS = null;
 const String? LocationIqApiKeyAndroid = null;
+const String? LocationIqApiKeyWeb = null;
+
+String? googlePlaceApiKey() {
+  if (UniversalPlatform.isAndroid) return GooglePlaceApiKeyAndroid;
+  if (UniversalPlatform.isIOS) return GooglePlaceApiKeyIOS;
+  return GooglePlaceApiKeyWeb;
+}
+
+String? locationIqApiKey() {
+  if (UniversalPlatform.isAndroid) return LocationIqApiKeyIOS;
+  if (UniversalPlatform.isIOS) return LocationIqApiKeyAndroid;
+  return LocationIqApiKeyWeb;
+}
 
 // If set the app will try to register with the premio stage server for push notifications
 const String? PremioStageIndexUrl = null;
