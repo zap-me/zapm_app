@@ -445,8 +445,7 @@ class BronzeFormState extends State<BronzeForm> {
   Future<bool> _createApiKey(String email) async {
     var bronze = Bronze(widget._ws.testnet);
     showAlertDialog(context, 'registering...');
-    var registration =
-        await bronze.register(email, await deviceName());
+    var registration = await bronze.register(email, await deviceName());
     Navigator.pop(context);
     if (registration.empty()) {
       return false;

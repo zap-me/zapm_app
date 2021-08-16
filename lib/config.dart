@@ -21,7 +21,7 @@ const AssetShortNameUpper = 'ZAP';
 // the 'zap' icon on the header of the home page
 const AssetHeaderIconPng = 'assets/icon.png';
 // the lightning icon on the home page balance widget
-const AssetBalanceIcon = 'assets/icon-bolt.svg';
+const String? AssetBalanceIcon = 'assets/icon-bolt.svg';
 // whether to disable some repeated/redundant titles
 const DontRepeatTitles = true;
 // enable/disable reward UI/feature
