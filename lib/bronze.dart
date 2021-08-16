@@ -446,7 +446,7 @@ class BronzeFormState extends State<BronzeForm> {
     var bronze = Bronze(widget._ws.testnet);
     showAlertDialog(context, 'registering...');
     var registration =
-        await bronze.register(email, await widget._ws.deviceName());
+        await bronze.register(email, await deviceName());
     Navigator.pop(context);
     if (registration.empty()) {
       return false;

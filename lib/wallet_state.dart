@@ -1,7 +1,5 @@
-import 'dart:io';
 import 'package:mutex/mutex.dart';
 import 'package:flutter/material.dart';
-import 'package:device_info/device_info.dart';
 import 'package:decimal/decimal.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 
@@ -580,16 +578,6 @@ class WalletState {
         break;
       }
     }
-  }
-
-  Future<String> deviceName() async {
-    var device = 'app';
-    if (Platform.isAndroid)
-      device = (await DeviceInfoPlugin().androidInfo).model;
-    if (Platform.isIOS)
-      device = (await DeviceInfoPlugin().iosInfo).utsname.machine;
-    var date = DateTime.now().toIso8601String().split('T').first;
-    return '$device - $date';
   }
 
   Future<String?> _paydbLogin(BuildContext context, AccountLogin login,
