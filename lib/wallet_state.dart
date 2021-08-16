@@ -1,17 +1,15 @@
-import 'dart:io';
 import 'package:mutex/mutex.dart';
 import 'package:flutter/material.dart';
-import 'package:device_info/device_info.dart';
 import 'package:decimal/decimal.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 
 import 'package:zapdart/libzap.dart';
 import 'package:zapdart/widgets.dart';
 import 'package:zapdart/utils.dart';
+import 'package:zapdart/account_forms.dart';
 
 import 'recovery_form.dart';
 import 'new_mnemonic_form.dart';
-import 'account_forms.dart';
 import 'config.dart';
 import 'paydb.dart';
 import 'prefs.dart';
@@ -136,8 +134,8 @@ class TxDownloader {
       switch (AppTokenType) {
         case TokenType.Waves:
           var deviceName = await Prefs.deviceNameGet();
-          var result = await LibZap.addressTransactions(
-              _ws.addrOrAccountValue(), count, _lastTxId);
+          var result = await LibZap()
+              .addressTransactions(_ws.addrOrAccountValue(), count, _lastTxId);
           success = result.success;
           txs = _wavesTxsConvert(deviceName, result);
           break;
@@ -169,8 +167,8 @@ class TxDownloader {
       switch (AppTokenType) {
         case TokenType.Waves:
           var deviceName = await Prefs.deviceNameGet();
-          var result = await LibZap.addressTransactions(
-              _ws.addrOrAccountValue(), count, lastTxid);
+          var result = await LibZap()
+              .addressTransactions(_ws.addrOrAccountValue(), count, lastTxid);
           success = result.success;
           txs = _wavesTxsConvert(deviceName, result);
           break;
@@ -582,16 +580,6 @@ class WalletState {
     }
   }
 
-  Future<String> deviceName() async {
-    var device = 'app';
-    if (Platform.isAndroid)
-      device = (await DeviceInfoPlugin().androidInfo).model;
-    if (Platform.isIOS)
-      device = (await DeviceInfoPlugin().iosInfo).utsname.machine;
-    var date = DateTime.now().toIso8601String().split('T').first;
-    return '$device - $date';
-  }
-
   Future<String?> _paydbLogin(BuildContext context, AccountLogin login,
       {bool silent: false}) async {
     var devName = await deviceName();
@@ -666,7 +654,11 @@ class WalletState {
               MaterialPageRoute(
                   builder: (context) => AccountRegisterForm(registration,
                       showMobileNumber: RequireMobileNumber,
-                      showAddress: RequireAddress)),
+                      initialMobileCountry: InitialMobileCountry,
+                      preferredMobileCountries: PreferredMobileCountries,
+                      showAddress: RequireAddress,
+                      googlePlaceApiKey: googlePlaceApiKey(),
+                      locationIqApiKey: locationIqApiKey())),
             );
             if (registration == null) break;
             var result = await paydbUserRegister(registration);
@@ -769,11 +761,11 @@ class WalletState {
     switch (AppTokenType) {
       case TokenType.Waves:
         // get fee
-        //var feeResult = await LibZap.transactionFee();
+        //var feeResult = await LibZap().transactionFee();
         //if (feeResult.success)
         //  _fee = Decimal.fromInt(feeResult.value) / Decimal.fromInt(100);
         // get balance
-        var balanceResult = await LibZap.addressBalance(_wallet.address);
+        var balanceResult = await LibZap().addressBalance(_wallet.address);
         if (balanceResult.success) {
           _balance =
               Decimal.fromInt(balanceResult.value) / Decimal.fromInt(100);

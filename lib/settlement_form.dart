@@ -124,7 +124,7 @@ class SettlementFormState extends State<SettlementForm> {
           return false;
         }
         showAlertDialog(context, 'sending settlement transaction...');
-        var tx = await LibZap.transactionBroadcast(spendTx);
+        var tx = await LibZap().transactionBroadcast(spendTx);
         if (tx == null) {
           flushbarMsg(context, 'failed to broadcast transaction',
               category: MessageCategory.Warning);

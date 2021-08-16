@@ -16,15 +16,10 @@ dependencies:
   cupertino_icons: ^1.0.2
 
   # ios & android only
-  shared_preferences: ^2.0.5
   package_info: ^2.0.0
   qr_code_scanner: ^0.4.0
   url_launcher: ^6.0.3 # has flutter-desktop-go native plugin for desktop
   path_provider: ^2.0.1
-  device_info: ^2.0.0
-  
-  # for desktop
-  ini: ^2.1.0-beta
 
   intl: ^0.17.0
   decimal: ^1.0.0+1
@@ -41,12 +36,9 @@ dependencies:
   flutter_inappwebview: ^5.3.2
   uni_links: ^0.5.1
   synchronized: ^3.0.0
-  firebase_core: ^1.0.3
-  firebase_messaging: ^9.1.1
+  firebase_core: ^1.4.0
+  firebase_messaging: ^10.0.4
   email_validator: ^2.0.1
-  image_picker: ^0.7.4
-  extended_image: ^4.0.1
-  image: ^3.0.2
   audioplayers: ^0.18.3
   flutter_icons:
     git:
@@ -60,13 +52,11 @@ dependencies:
   flutter_html: ^2.0.0
   share_plus: ^2.1.4
   flutter_phoenix: ^1.0.0
-  intl_phone_number_input: ^0.7.0+2
-  debounce_throttle: ^2.0.0
 
   zapdart:
     git:
       url: https://github.com/zap-me/zapdart.git
-      ref: 15705cdf8cc25af65e1abcf54092ab019aeddefc
+      ref: 8bbe1880749c2a119af0e3d5d7e73e5462130034
     #path: ../zapdart
 
 dev_dependencies:

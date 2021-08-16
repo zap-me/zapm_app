@@ -13,8 +13,8 @@ import 'package:zapdart/widgets.dart';
 import 'package:zapdart/colors.dart';
 import 'package:zapdart/utils.dart';
 import 'package:zapdart/libzap.dart';
+import 'package:zapdart/hmac.dart';
 
-import 'hmac.dart';
 import 'prefs.dart';
 import 'wallet_state.dart';
 import 'send_receive.dart';
@@ -446,7 +446,7 @@ class BronzeFormState extends State<BronzeForm> {
     var bronze = Bronze(widget._ws.testnet);
     showAlertDialog(context, 'registering...');
     var registration =
-        await bronze.register(email, await widget._ws.deviceName());
+        await bronze.register(email, await deviceName());
     Navigator.pop(context);
     if (registration.empty()) {
       return false;

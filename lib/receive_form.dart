@@ -6,10 +6,10 @@ import 'package:zapdart/qrwidget.dart';
 import 'package:zapdart/libzap.dart';
 import 'package:zapdart/widgets.dart';
 import 'package:zapdart/colors.dart';
+import 'package:zapdart/hmac.dart';
 
 import 'config.dart';
 import 'prefs.dart';
-import 'hmac.dart';
 import 'merchant.dart';
 import 'paydb.dart';
 import 'ui_strings.dart';

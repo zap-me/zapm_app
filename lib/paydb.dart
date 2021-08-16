@@ -8,10 +8,12 @@ import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import 'hmac.dart';
+import 'package:zapdart/utils.dart';
+import 'package:zapdart/hmac.dart';
+import 'package:zapdart/account_forms.dart';
+
 import 'config.dart';
 import 'prefs.dart';
-import 'package:zapdart/utils.dart';
 
 Future<String?> _server() async {
   var testnet = await Prefs.testnetGet();
@@ -79,36 +81,6 @@ class PayDbUri {
     }
     return null;
   }
-}
-
-class AccountRegistration {
-  final String firstName;
-  final String lastName;
-  final String email;
-  final String mobileNumber;
-  final String address;
-  final String currentPassword;
-  final String newPassword;
-  final String? photo;
-  final String? photoType;
-
-  AccountRegistration(
-      this.firstName,
-      this.lastName,
-      this.email,
-      this.mobileNumber,
-      this.address,
-      this.currentPassword,
-      this.newPassword,
-      this.photo,
-      this.photoType);
-}
-
-class AccountRequestApiKey {
-  final String email;
-  final String deviceName;
-
-  AccountRequestApiKey(this.email, this.deviceName);
 }
 
 class UserInfo {

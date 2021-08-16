@@ -25,7 +25,7 @@ class WavesSendingFormState extends State<WavesSendingForm> {
 
   void send() async {
     // broadcast tx
-    var tx = await LibZap.transactionBroadcast(widget._spendTx);
+    var tx = await LibZap().transactionBroadcast(widget._spendTx);
     setState(() {
       _sending = false;
       _tx = tx;
