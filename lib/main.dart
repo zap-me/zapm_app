@@ -705,20 +705,33 @@ class _ZapHomePageState extends State<ZapHomePage>
   }
 
   Widget _buildPrice({bool small = false}) {
+    const smIndicator = 14.0;
+    const lgIndicator = 28.0;
+    const smFont = 12.0;
+    const lgFont = 28.0;
+    const smIcon = 12.0;
+    const lgIcon = 20.0;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         _updatingBalance
             ? SizedBox(
                 child: CircularProgressIndicator(strokeWidth: small ? 2 : 4),
-                height: small ? 14 : 28,
-                width: small ? 14 : 28)
+                height: small ? smIndicator : lgIndicator,
+                width: small ? smIndicator : lgIndicator)
             : Text(_ws.balanceText,
-                style: TextStyle(color: ZapBlue, fontSize: small ? 12 : 28)),
-        SizedBox(width: small ? 4 : 4),
-        AssetBalanceIcon.toLowerCase().endsWith('.svg')
-            ? SvgPicture.asset(AssetBalanceIcon, height: small ? 12 : 20)
-            : Image.asset(AssetBalanceIcon, height: small ? 12 : 20),
+                style: TextStyle(
+                    color: ZapBlue, fontSize: small ? smFont : lgFont)),
+        SizedBox(width: 4),
+        AssetBalanceIcon == null
+            ? Text(AssetShortNameUpper,
+                style: TextStyle(
+                    color: ZapBlue, fontSize: small ? smFont : lgFont))
+            : AssetBalanceIcon!.toLowerCase().endsWith('.svg')
+                ? SvgPicture.asset(AssetBalanceIcon!,
+                    height: small ? smIcon : lgIcon)
+                : Image.asset(AssetBalanceIcon!,
+                    height: small ? smIcon : lgIcon),
         SizedBox(width: small ? 2 : 0),
       ],
     );

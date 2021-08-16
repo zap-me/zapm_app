@@ -21,7 +21,7 @@ const AssetShortNameUpper = 'FRT';
 // the 'zap' icon on the header of the home page
 const AssetHeaderIconPng = 'assets/icon.png';
 // the lightning icon on the home page balance widget
-const AssetBalanceIcon = 'assets/frt.svg';
+const String? AssetBalanceIcon = null;
 // whether to disable some repeated/redundant titles
 const DontRepeatTitles = true;
 // enable/disable reward UI/feature
@@ -110,7 +110,11 @@ const String PremioStageLinkScheme = 'premiostagefrankie';
 
 void initConfig() {
   const color = Color.fromARGB(255, 53, 150, 192);
-  const grad = LinearGradient(colors: [Color.fromARGB(255, 65, 234, 193), Color.fromARGB(255, 65, 190, 192), Color.fromARGB(255, 53, 150, 192)]);
+  const grad = LinearGradient(colors: [
+    Color.fromARGB(255, 65, 234, 193),
+    Color.fromARGB(255, 65, 190, 192),
+    Color.fromARGB(255, 53, 150, 192)
+  ]);
   overrideTheme(
       zapWhite: Colors.white,
       zapYellow: color,
