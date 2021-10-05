@@ -32,6 +32,7 @@ const UseSettlement = false;
 const UseMerchantApi = false;
 // enable/disable a webview homepage (null = disabled)
 const String? WebviewURL = 'https://zap-me.github.io/zap-spa/index.html';
+const WebviewURLWhitelist = [];
 // enable/disable the centered ZAP button
 const ZapButton = true;
 const ZapButtonIcon = FlutterIcons.bolt_faw5s;
