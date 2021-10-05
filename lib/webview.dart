@@ -6,14 +6,24 @@ import 'package:location/location.dart';
 
 class Webview extends StatefulWidget {
   final String url;
+  final List<String> whitelistedUrls;
 
-  Webview(this.url);
+  Webview(this.url, this.whitelistedUrls);
 
   @override
   _WebviewState createState() => _WebviewState();
 }
 
 class _WebviewState extends State<Webview> with AutomaticKeepAliveClientMixin {
+  bool allowUrl(String url) {
+    if (url.startsWith(widget.url))
+      return true;
+    for (var url in widget.whitelistedUrls)
+      if (url.startsWith(widget.url))
+        return true;
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -42,7 +52,7 @@ class _WebviewState extends State<Webview> with AutomaticKeepAliveClientMixin {
       },
       shouldOverrideUrlLoading: (controller, navigationAction) async {
         var url = navigationAction.request.url!.toString();
-        if (!url.startsWith(widget.url)) {
+        if (!allowUrl(url)) {
           launch(url);
           return NavigationActionPolicy.CANCEL;
         }

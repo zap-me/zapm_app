@@ -696,7 +696,7 @@ class _ZapHomePageState extends State<ZapHomePage>
   List<Widget> _buildTabBodies(Widget body) {
     var content = [body, TransactionsScreen(_ws), SettingsScreen(_ws, _fcm)];
     if (WebviewURL != null) {
-      content.insert(0, Webview(WebviewURL!));
+      content.insert(0, Webview(WebviewURL!, WebviewURLWhitelist));
     }
     if (ZapButton) {
       content.insert(content.length ~/ 2, Text('dummy tab'));
