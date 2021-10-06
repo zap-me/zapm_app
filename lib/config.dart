@@ -31,8 +31,8 @@ const UseSettlement = false;
 // enable/disable merchant api (including all references/conversions to NZD)
 const UseMerchantApi = false;
 // enable/disable a webview homepage (null = disabled)
-const String? WebviewURL = 'https://www.frankietoken.com';
-const WebviewURLWhitelist = ['https://sharethis.com', 'http://sharethis.com', 'https://t.sharethis.com', 'http://t.sharethis.com'];
+const String? WebviewURL = 'http://frankie-promo.zap.me';
+const WebviewURLWhitelist = ['https://frankie-promo.zap.me'];
 // enable/disable the centered ZAP button
 const ZapButton = true;
 const ZapButtonIcon = FlutterIcons.plus_faw5s;
