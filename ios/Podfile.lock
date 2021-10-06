@@ -35,19 +35,19 @@ PODS:
   - file_picker (0.0.1):
     - DKImagePickerController/PhotoGallery
     - Flutter
-  - Firebase/CoreOnly (8.3.0):
-    - FirebaseCore (= 8.3.0)
-  - Firebase/Messaging (8.3.0):
+  - Firebase/CoreOnly (8.7.0):
+    - FirebaseCore (= 8.7.0)
+  - Firebase/Messaging (8.7.0):
     - Firebase/CoreOnly
-    - FirebaseMessaging (~> 8.3.0)
-  - firebase_core (1.4.0):
-    - Firebase/CoreOnly (= 8.3.0)
+    - FirebaseMessaging (~> 8.7.0)
+  - firebase_core (1.7.0):
+    - Firebase/CoreOnly (= 8.7.0)
     - Flutter
-  - firebase_messaging (10.0.4):
-    - Firebase/Messaging (= 8.3.0)
+  - firebase_messaging (10.0.8):
+    - Firebase/Messaging (= 8.7.0)
     - firebase_core
     - Flutter
-  - FirebaseCore (8.3.0):
+  - FirebaseCore (8.7.0):
     - FirebaseCoreDiagnostics (~> 8.0)
     - GoogleUtilities/Environment (~> 7.4)
     - GoogleUtilities/Logger (~> 7.4)
@@ -61,13 +61,15 @@ PODS:
     - GoogleUtilities/Environment (~> 7.4)
     - GoogleUtilities/UserDefaults (~> 7.4)
     - PromisesObjC (< 3.0, >= 1.2)
-  - FirebaseMessaging (8.3.0):
+  - FirebaseMessaging (8.7.0):
     - FirebaseCore (~> 8.0)
     - FirebaseInstallations (~> 8.0)
+    - GoogleDataTransport (~> 9.0)
     - GoogleUtilities/AppDelegateSwizzler (~> 7.4)
     - GoogleUtilities/Environment (~> 7.4)
     - GoogleUtilities/Reachability (~> 7.4)
     - GoogleUtilities/UserDefaults (~> 7.4)
+    - nanopb (~> 2.30908.0)
   - Flutter (1.0.0)
   - flutter_inappwebview (0.0.1):
     - Flutter
@@ -246,13 +248,13 @@ SPEC CHECKSUMS:
   DKImagePickerController: b5eb7f7a388e4643264105d648d01f727110fc3d
   DKPhotoGallery: fdfad5125a9fdda9cc57df834d49df790dbb4179
   file_picker: 3e6c3790de664ccf9b882732d9db5eaf6b8d4eb1
-  Firebase: 817b9171d0d51dccc458b94a5e8edff6b1dd323d
-  firebase_core: 72374607c8c6f5a0adc0559e5c5bf57deda975e3
-  firebase_messaging: 55c5b8184efd330b9d1f1765b55c4ae57e015c5e
-  FirebaseCore: a6dba751680d7033b9d3831e1cfc95ead0605118
+  Firebase: bc9325d5ee2041524bac78a5213d0e530c651309
+  firebase_core: f5ac1f2726a2bd0468cea0161eddeea3d83d7e3e
+  firebase_messaging: cfee8830477d2f1875e027a65cce7f6239ebf583
+  FirebaseCore: f4804c1d3f4bbbefc88904d15653038f2c99ddf7
   FirebaseCoreDiagnostics: fe77f42da6329d6d83d21fd9d621a6b704413bfc
   FirebaseInstallations: 2563cb18a723ef9c6ef18318a49519b75dce613c
-  FirebaseMessaging: 42252b79b860482021483748669ec32e22196462
+  FirebaseMessaging: 93227dd71d7888e200baef65043f81acb2b6596e
   Flutter: 434fef37c0980e73bb6479ef766c45957d4b510c
   flutter_inappwebview: bfd58618f49dc62f2676de690fc6dcda1d6c3721
   flutter_share: 4be0208963c60b537e6255ed2ce1faae61cd9ac2
@@ -279,8 +281,8 @@ SPEC CHECKSUMS:
   uni_links: d97da20c7701486ba192624d99bffaaffcfc298a
   url_launcher: 6fef411d543ceb26efce54b05a0a40bfd74cbbef
   video_player: 9cc823b1d9da7e8427ee591e8438bfbcde500e6e
-  wakelock: b0843b2479edbf6504d8d262c2959446f35373aa
-  webview_flutter: 9f491a9b5a66f2573946a389b2677987b0ff8c0b
+  wakelock: d0fc7c864128eac40eba1617cb5264d9c940b46f
+  webview_flutter: 3603125dfd3bcbc9d8d418c3f80aeecf331c068b
 
 PODFILE CHECKSUM: 3f885c66bf37ee0410ee86a94bd9fab6be27c926
 

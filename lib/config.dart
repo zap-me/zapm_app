@@ -32,7 +32,7 @@ const UseSettlement = false;
 const UseMerchantApi = false;
 // enable/disable a webview homepage (null = disabled)
 const String? WebviewURL = 'https://www.frankietoken.com';
-const WebviewURLWhitelist = ['https://sharethis.com', 'http://sharethis.com'];
+const WebviewURLWhitelist = ['https://sharethis.com', 'http://sharethis.com', 'https://t.sharethis.com', 'http://t.sharethis.com'];
 // enable/disable the centered ZAP button
 const ZapButton = true;
 const ZapButtonIcon = FlutterIcons.plus_faw5s;
