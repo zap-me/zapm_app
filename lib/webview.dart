@@ -18,8 +18,8 @@ class _WebviewState extends State<Webview> with AutomaticKeepAliveClientMixin {
   bool allowUrl(String url) {
     if (url.startsWith(widget.url))
       return true;
-    for (var url in widget.whitelistedUrls)
-      if (url.startsWith(widget.url))
+    for (var whitelistUrl in widget.whitelistedUrls)
+      if (url.startsWith(whitelistUrl))
         return true;
     return false;
   }
@@ -53,6 +53,7 @@ class _WebviewState extends State<Webview> with AutomaticKeepAliveClientMixin {
       shouldOverrideUrlLoading: (controller, navigationAction) async {
         var url = navigationAction.request.url!.toString();
         if (!allowUrl(url)) {
+          print('disallowed url ($url), launching in OS browser');
           launch(url);
           return NavigationActionPolicy.CANCEL;
         }
