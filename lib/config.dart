@@ -32,7 +32,7 @@ const UseSettlement = false;
 const UseMerchantApi = false;
 // enable/disable a webview homepage (null = disabled)
 const String? WebviewURL = 'https://frankie-promo.zap.me';
-const WebviewURLWhitelist = [];
+const WebviewURLWhitelist = <String>[];
 // enable/disable the centered ZAP button
 const ZapButton = true;
 const ZapButtonIcon = FlutterIcons.plus_faw5s;
@@ -63,7 +63,8 @@ const String? NodeUrlTestnet = null;
 const String? PayDBServerMainnet = 'https://frankie.zap.me/paydb/';
 const String? PayDBServerTestnet = 'https://mtoken-test.zap.me/paydb/';
 // registration
-const bool RequireMobileNumber = true;
+const bool ShowMobileNumber = true;
+const bool RequireMobileNumber = false;
 const String? InitialMobileCountry = 'WS';
 const List<String>? PreferredMobileCountries = [
   'Samoa',
@@ -71,7 +72,8 @@ const List<String>? PreferredMobileCountries = [
   'Australia',
   'United States of America'
 ];
-const bool RequireAddress = true;
+const bool ShowAddress = true;
+const bool RequireAddress = false;
 const String? GooglePlaceApiKeyIOS = null;
 const String? GooglePlaceApiKeyAndroid = null;
 const String? GooglePlaceApiKeyWeb = null;

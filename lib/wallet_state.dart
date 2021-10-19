@@ -653,10 +653,12 @@ class WalletState {
               context,
               MaterialPageRoute(
                   builder: (context) => AccountRegisterForm(registration,
-                      showMobileNumber: RequireMobileNumber,
+                      showMobileNumber: ShowMobileNumber,
+                      requireMobileNumber: RequireMobileNumber,
                       initialMobileCountry: InitialMobileCountry,
                       preferredMobileCountries: PreferredMobileCountries,
-                      showAddress: RequireAddress,
+                      showAddress: ShowAddress,
+                      requireAddress: RequireAddress,
                       googlePlaceApiKey: googlePlaceApiKey(),
                       locationIqApiKey: locationIqApiKey())),
             );
@@ -682,7 +684,7 @@ class WalletState {
                   accountEmail = await _paydbLogin(
                       context,
                       AccountLogin(
-                          registration.email, registration.newPassword),
+                          registration.email, registration.newPassword, ''),
                       silent: true);
                 }
                 Navigator.pop(context);
