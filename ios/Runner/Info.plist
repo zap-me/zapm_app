@@ -29,7 +29,7 @@
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Needed show location on store map</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>File access is used to load transaction files</string>
+	<string>Photo access is used to create a profile image</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
